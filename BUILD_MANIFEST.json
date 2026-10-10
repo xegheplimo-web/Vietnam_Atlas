@@ -1,0 +1,50 @@
+{
+  "product": "Vietnam Atlas Map & Memory",
+  "version": "2.0-full-starter-2026-10-11",
+  "build_date_utc": "2026-10-10T23:29:39.410163+00:00",
+  "code_test_result": "8 HTTP/storage integration tests passed",
+  "validated_admin": "34 new province names; 63 legacy province names mapped",
+  "downloads_not_embedded": [
+    "vietnam-latest.osm.pbf",
+    "tile imagery",
+    "Google Maps listing data"
+  ],
+  "known_limitations": [
+    "No offline tile server",
+    "no official new provincial polygon dataset",
+    "not deployed to user Windows drive",
+    "OSM PBF ingestion requires optional pyosmium"
+  ],
+  "files": {
+    ".gitignore": "b5db4f4c612834d59c8fdced2757cd3df117b9c6f5ff0fb92ca481d53c7b0c42",
+    "Dockerfile": "63e09a00c805fd74a4645af363fdf14eb6dfe00356eeec670ff8abbd383a9a3c",
+    "README.md": "b139811ffb79e5f74089a96bed875492d1e7d41a322a1db1657eeb3319fd869d",
+    "RUN_CHECKS_WINDOWS.bat": "bad466d1745c67e2c1f779f4c91bf1a62277707de94eedf469a28e03a4599986",
+    "START_DOCKER_WINDOWS.bat": "0b9752be6a9c5d67bafb51a7f9500f0163ad3e145ae5e34bcef4049f3c499d7a",
+    "START_WINDOWS.bat": "ecc35076cdd46011b44126ad8ed2b9e56a70b7324d2c6515f02b7e8277146aa4",
+    "compose.yaml": "f3e84a77d2bee97cc33aec7aae5c264597eb92098511c3ed5326b5492abc84ba",
+    "data/province_mergers_2025.json": "3450afeea2adb8648225f2dff60d520fd17c3d09fe8b3487ab0c1ac5d15b1109",
+    "data/provinces_34.json": "bfa682830f9507d09c506a74e696bea146391f33898b37f005729e699e09775d",
+    "data/sample_import.csv": "247477d4f784c9a2428271d124294191906e2499e3ccaf3070db19868b0d1d41",
+    "data/sample_places_synthetic.geojson": "ea451c70d9c8c32de152d5590998d33b33e511ff3af9fc749523b208ab9e77c3",
+    "docs/API.md": "793f73d5f8337a84488f0aee0ecb3143225a3ac092e366911bebd21ddcb4c699",
+    "docs/ARCHITECTURE.md": "6e32d9a562e5373507416eed0d36b32b39aae2d7d4575c6cbdb7876298863359",
+    "docs/LICENSING.md": "e584096c3a9242deb3afac5dc88fed96dc8cbefb906e886d85dbe655d7481a36",
+    "docs/OFFLINE_ROADS.md": "cd642a2c805a3d5a591108dbd04c9943e83af44ff436db6844aae3dc47725cfd",
+    "docs/VERIFICATION.md": "aa16303e72b635a40d40ce8a964dc37ace43e4e3534cab6433f83238ea9611bb",
+    "docs/schema_postgis_optional.sql": "fa8107777017e317099434531d6aed173404ca4c8477b6f024e13c3557bfee93",
+    "server/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "server/app.py": "c595e3785f29b187890c5b7dbbd11d36990be19705a9ee5680a9bc5b4c007daa",
+    "server/store.py": "d28282d9bdc23b3bd8143c98f5c50dffabc4fde5c7ca7f11b0a536e8c4c885f8",
+    "tests/test_server.py": "278f9a8b8ebcb986933f92491b8c145d931c1342ef38779d2d7975cd63d01c16",
+    "tools/backup_database.py": "f3e4c19c5830551d96c8e889112a42ce343b18ff4d7f18148de987fccc4494ef",
+    "tools/download_vietnam_osm.py": "18d3ae77a01dc3d4fb969f1c4a0f2b3c7128786ac70cab784c12857de45a8887",
+    "tools/extract_roads.py": "cbbc25eed01c001945a3dd46dc2521746b3ebd9fa32420ce7e7a8590605cdf1b",
+    "tools/import_csv.py": "3d90d2fa3daa45271ec330b0d63bef73c17af8a8dd54318fccb152296ea1bee3",
+    "tools/import_osm_poi.py": "544ceeed3a89d0041d0c6ae93951873d0d654ead44a05f10c3be9ea51816a6f5",
+    "tools/migrate_old_provinces.py": "3542688ce058603a251d571a5604be0fc72407bdc7b767c1e28ae4f86e55217d",
+    "web/app.js": "34626a8a83195950d51c2cfe0ac50fb164fd021bd04bf919b07b9a7bb93e2c14",
+    "web/index.html": "f8b0d9efee80a6d7019e3e8535d7d7025bc437ad69ce165172d82477078d057a",
+    "web/style.css": "4d925da9dc026519532c4c827b36f0b8dc7c877db68e83adb5b680b3dc8f4d84"
+  }
+}

@@ -1,0 +1,3 @@
+name,category,address,province,phone,website,lat,lon,notes,source,source_id,status
+Điểm DEMO Hà Nội,sample,Dữ liệu minh họa,Hà Nội,,,21.0285,105.8542,Xóa điểm DEMO trước khi sử dụng thực tế,synthetic-demo,example-hanoi,unverified
+Điểm DEMO Đà Nẵng,sample,Dữ liệu minh họa,Đà Nẵng,,,16.0544,108.2022,Xóa điểm DEMO trước khi sử dụng thực tế,synthetic-demo,example-danang,unverified

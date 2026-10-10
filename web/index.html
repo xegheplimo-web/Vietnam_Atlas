@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VietNam Atlas · Map & Memory</title>
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">VN</div><div><div class="eyebrow">ATLAS / MEMORY</div><h1>Vietnam Atlas</h1><p>Bản đồ & kho dữ liệu địa lý</p></div></div>
+    <div class="status"><span class="pulse"></span><span id="serverStatus">Đang kết nối bộ nhớ…</span><span class="status-right">OSM</span></div>
+    <label class="field-label" for="search">Tìm địa điểm trong kho dữ liệu</label>
+    <div class="search-wrap"><span>⌕</span><input id="search" placeholder="Tên, loại, địa chỉ…" autocomplete="off"></div>
+    <label class="field-label" for="province">Đơn vị hành chính cấp tỉnh</label>
+    <select id="province"><option value="">Toàn quốc</option></select>
+    <div class="section-head"><h2>Lớp bản đồ</h2><span class="muted">BASE LAYER</span></div>
+    <div class="layer-buttons">
+      <button class="layer active" data-layer="osm">Đường phố</button>
+      <button class="layer" data-layer="light">Sáng tối giản</button>
+      <button class="layer" data-layer="topo">Địa hình</button>
+    </div>
+    <div class="section-head"><h2>Bộ nhớ địa điểm</h2><span id="count" class="count">0</span></div>
+    <p class="helper">Chọn “Thêm điểm” rồi bấm bản đồ. Địa điểm được lưu trên máy chủ SQLite, có lịch sử thay đổi.</p><p class="helper" id="visibleCount">Đang tải…</p>
+    <div id="places" class="places"><div class="empty">Chưa có địa điểm.<br>Hãy bấm lên bản đồ để thêm điểm.</div></div>
+    <div class="actions">
+      <button id="export" class="btn primary">Xuất GeoJSON</button>
+      <label class="btn secondary import-btn">Nhập GeoJSON<input id="import" type="file" accept=".json,.geojson,application/geo+json,application/json"></label>
+      <button id="exportCsv" class="btn secondary">Xuất CSV (20.000 điểm)</button><button id="refresh" class="btn subtle">Làm mới dữ liệu</button>
+      <label class="btn secondary import-btn">Nạp lớp đường GeoJSON<input id="roadsFile" type="file" accept=".geojson,.json,application/geo+json"></label>
+      <button id="clearRoads" class="btn secondary">Ẩn lớp đường nạp thêm</button>
+    </div>
+    <div class="footnote">Bản đồ cần Internet · Kho dữ liệu SQLite tại máy chủ · © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Ghi công & giấy phép</a></div>
+  </aside>
+  <main class="map-area">
+    <div id="map"></div>
+    <div class="map-top">
+      <div class="map-title"><span class="map-kicker">EXPLORER</span><strong>Việt Nam</strong><span class="map-sub">Địa lý · Đường sá · Địa điểm</span></div>
+      <div class="map-actions"><button id="home" title="Về toàn quốc">⌂ <span>Toàn quốc</span></button><button id="addMode" title="Bấm bản đồ để thêm điểm">＋ <span>Thêm điểm</span></button></div>
+    </div>
+    <div class="map-legend"><span><i class="legend-dot"></i> Điểm bộ nhớ</span><span><i class="legend-line"></i> Đường từ lớp nền</span></div>
+    <div id="toast" class="toast" role="status"></div>
+  </main>
+</div>
+<dialog id="editor">
+  <form method="dialog" id="placeForm">
+    <div class="dialog-head"><div><div class="eyebrow">PLACE MEMORY</div><h2 id="dialogTitle">Thêm địa điểm</h2></div><button class="x" value="cancel" aria-label="Đóng">×</button></div>
+    <input id="placeId" type="hidden">
+    <div class="form-grid">
+      <label>Tên địa điểm *<input id="name" required maxlength="240" placeholder="Ví dụ: Cửa hàng ABC"></label>
+      <label>Loại / danh mục<input id="category" maxlength="120" placeholder="Cửa hàng, cơ quan, trường học…"></label>
+      <label>Địa chỉ<input id="address" maxlength="500" placeholder="Số nhà, đường, phường/xã…"></label>
+      <label>Tỉnh / thành<select id="formProvince"><option value="">Chưa xác định</option></select></label>
+      <label>Điện thoại<input id="phone" maxlength="80" placeholder="Không bắt buộc"></label>
+      <label>Website<input id="website" maxlength="500" placeholder="https://…"></label>
+      <label>Vĩ độ<input id="lat" type="number" step="any" required></label>
+      <label>Kinh độ<input id="lon" type="number" step="any" required></label>
+      <label class="full">Ghi chú / thông tin bộ nhớ<textarea id="notes" rows="3" maxlength="5000" placeholder="Mô tả, thông tin cần xác minh, lịch sử cập nhật…"></textarea></label>
+      <label>Nguồn dữ liệu<input id="source" maxlength="240" placeholder="Ví dụ: người dùng nhập, OSM, API được cấp phép"></label>
+      <label>Mã bản ghi tại nguồn<input id="source_id" maxlength="250" placeholder="ID nguồn (nếu có)"></label><label>Trạng thái<select id="status"><option value="unverified">Chưa xác minh</option><option value="verified">Đã xác minh</option><option value="inactive">Không còn hoạt động</option></select></label>
+    </div>
+    <p class="dialog-note">Tọa độ WGS84. Ghi nguồn dữ liệu và mã bản ghi để đối soát/truy xuất. Mỗi cập nhật được lưu vào nhật ký.</p>
+    <details class="memory-panel"><summary>Bộ nhớ chi tiết · sự kiện và thông tin</summary>
+      <div id="factsList" class="history-list">Lưu địa điểm để thêm bộ nhớ.</div>
+      <div class="inline-create"><select id="factKind"><option value="fact">Sự kiện</option><option value="note">Ghi chú</option><option value="verification">Xác minh</option><option value="change">Thay đổi</option></select><input id="factContent" placeholder="Nội dung thông tin muốn lưu" maxlength="5000"><button type="button" id="addFact" class="mini">Lưu bộ nhớ</button></div>
+    </details>
+    <details class="memory-panel"><summary>Ảnh và tài liệu tham chiếu (có quyền sử dụng)</summary>
+      <div id="mediaList" class="history-list">Chưa có ảnh/tài liệu.</div>
+      <div class="inline-create"><input id="mediaUrl" placeholder="https://... URL ảnh" maxlength="3000"><input id="mediaRights" placeholder="Căn cứ quyền sử dụng (bắt buộc)" maxlength="500"><button type="button" id="addMedia" class="mini">Lưu liên kết</button></div>
+    </details>
+    <details id="historyPanel"><summary>Lịch sử thay đổi</summary><div id="historyList" class="history-list">Chưa có lịch sử.</div></details>
+    <div class="dialog-actions"><button class="btn secondary" value="cancel">Hủy</button><button id="save" class="btn primary" value="default">Lưu địa điểm</button></div>
+  </form>
+</dialog>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

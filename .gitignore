@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+backups/
+data/*.sqlite3*
+data/*.osm.pbf
+storage/
+.env

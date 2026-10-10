@@ -1,0 +1,148 @@
+{
+  "reference": "Nghị quyết 202/2025/QH15, Quốc hội Việt Nam",
+  "source_url": "https://baochinhphu.vn/nghi-quyet-cua-quoc-hoi-ve-sap-xep-don-vi-hanh-chinh-cap-tinh-102250612191145158.htm",
+  "in_force_date": "2025-06-12",
+  "administrations_operational_from": "2025-07-01",
+  "legacy_provinces_count": 63,
+  "new_provinces_count": 34,
+  "new_to_old": {
+    "An Giang": [
+      "An Giang",
+      "Kiên Giang"
+    ],
+    "Bắc Ninh": [
+      "Bắc Giang",
+      "Bắc Ninh"
+    ],
+    "Cà Mau": [
+      "Bạc Liêu",
+      "Cà Mau"
+    ],
+    "Cao Bằng": [
+      "Cao Bằng"
+    ],
+    "Đắk Lắk": [
+      "Đắk Lắk",
+      "Phú Yên"
+    ],
+    "Điện Biên": [
+      "Điện Biên"
+    ],
+    "Đồng Nai": [
+      "Bình Phước",
+      "Đồng Nai"
+    ],
+    "Đồng Tháp": [
+      "Đồng Tháp",
+      "Tiền Giang"
+    ],
+    "Gia Lai": [
+      "Bình Định",
+      "Gia Lai"
+    ],
+    "Hà Tĩnh": [
+      "Hà Tĩnh"
+    ],
+    "Hải Phòng": [
+      "Hải Dương",
+      "Hải Phòng"
+    ],
+    "Hồ Chí Minh": [
+      "Bà Rịa - Vũng Tàu",
+      "Bình Dương",
+      "Hồ Chí Minh"
+    ],
+    "Huế": [
+      "Huế"
+    ],
+    "Hưng Yên": [
+      "Hưng Yên",
+      "Thái Bình"
+    ],
+    "Khánh Hòa": [
+      "Khánh Hòa",
+      "Ninh Thuận"
+    ],
+    "Lai Châu": [
+      "Lai Châu"
+    ],
+    "Lâm Đồng": [
+      "Bình Thuận",
+      "Đắk Nông",
+      "Lâm Đồng"
+    ],
+    "Lạng Sơn": [
+      "Lạng Sơn"
+    ],
+    "Lào Cai": [
+      "Lào Cai",
+      "Yên Bái"
+    ],
+    "Nghệ An": [
+      "Nghệ An"
+    ],
+    "Ninh Bình": [
+      "Hà Nam",
+      "Nam Định",
+      "Ninh Bình"
+    ],
+    "Phú Thọ": [
+      "Hòa Bình",
+      "Phú Thọ",
+      "Vĩnh Phúc"
+    ],
+    "Quảng Ngãi": [
+      "Kon Tum",
+      "Quảng Ngãi"
+    ],
+    "Quảng Ninh": [
+      "Quảng Ninh"
+    ],
+    "Quảng Trị": [
+      "Quảng Bình",
+      "Quảng Trị"
+    ],
+    "Sơn La": [
+      "Sơn La"
+    ],
+    "Tây Ninh": [
+      "Long An",
+      "Tây Ninh"
+    ],
+    "Thái Nguyên": [
+      "Bắc Kạn",
+      "Thái Nguyên"
+    ],
+    "Thanh Hóa": [
+      "Thanh Hóa"
+    ],
+    "Tuyên Quang": [
+      "Hà Giang",
+      "Tuyên Quang"
+    ],
+    "Vĩnh Long": [
+      "Bến Tre",
+      "Trà Vinh",
+      "Vĩnh Long"
+    ],
+    "Đà Nẵng": [
+      "Đà Nẵng",
+      "Quảng Nam"
+    ],
+    "Hà Nội": [
+      "Hà Nội"
+    ],
+    "Cần Thơ": [
+      "Cần Thơ",
+      "Hậu Giang",
+      "Sóc Trăng"
+    ]
+  },
+  "historical_aliases": {
+    "Thừa Thiên Huế": "Huế",
+    "TP. Hồ Chí Minh": "Hồ Chí Minh",
+    "Thành phố Hồ Chí Minh": "Hồ Chí Minh",
+    "TP HCM": "Hồ Chí Minh",
+    "Bà Rịa–Vũng Tàu": "Hồ Chí Minh"
+  }
+}
