@@ -1,0 +1,9 @@
+# Chuẩn hóa line-ending và phân loại file cho cross-platform (Windows/macOS/Linux).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.ico binary
+*.jpg binary
+*.pbf binary
+*.sqlite3 binary

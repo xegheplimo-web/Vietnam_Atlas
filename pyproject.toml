@@ -1,0 +1,35 @@
+# Cấu hình công cụ phát triển (dev tooling) của Vietnam Atlas.
+#
+# Lưu ý kiến trúc: ứng dụng chính chạy thuần Python standard library —
+# KHÔNG có phụ thuộc runtime. File này không khai báo package để cài;
+# nó chỉ cấu hình công cụ kiểm tra mã (ruff), được CI sử dụng.
+# Xem README mục 8 và .github/workflows/ci.yml.
+
+[tool.ruff]
+# Hỗ trợ Python 3.10 trở lên (xem README mục 1).
+target-version = "py310"
+# Codebase dùng một số dòng dài có chủ ý (ví dụ bảng cột CSV, danh sách trường).
+line-length = 150
+extend-exclude = ["data", "docs"]
+
+[tool.ruff.lint]
+select = [
+    "E4",  # pycodestyle: lỗi import
+    "E7",  # pycodestyle: lỗi câu lệnh
+    "E9",  # pycodestyle: lỗi runtime
+    "F",   # pyflakes: biến/import thừa, lỗi logic
+    "W",   # pycodestyle: cảnh báo (whitespace, blank line...)
+    "I",   # isort: sắp xếp import
+    "UP",  # pyupgrade: cú pháp cũ → mới (theo target py310)
+    "B",   # flake8-bugbear: bug tiềm ẩn
+    "PIE", # flake8-pie: gộp mã thừa
+    "RUF", # quy tắc riêng của ruff
+    "PLW", # pylint: cảnh báo
+]
+ignore = [
+    "E501", # giới hạn dòng do line-length quản lý; nhiều dòng dài là chủ ý
+]
+
+[tool.ruff.lint.per-file-ignores]
+# CLI tools chủ động bắt Exception rộng để in lỗi thân thiện rồi thoát.
+"tools/*.py" = ["BLE001"]

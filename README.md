@@ -1,5 +1,10 @@
 # Vietnam Atlas 2026 — Bản đồ Việt Nam và bộ nhớ địa lý
 
+[![CI](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/codeql.yml/badge.svg)](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+
 Bộ mã nguồn mở rộng tự chạy trên Windows hoặc Docker: **bản đồ đẹp + đường sá OpenStreetMap + địa điểm lưu bền vững trong SQLite + tìm kiếm tiếng Việt không dấu + API + dữ liệu 34 tỉnh/thành + công cụ tải dữ liệu OSM toàn quốc**.
 
 > **Phạm vi thực tế:** đây là ứng dụng đầy đủ chức năng cơ bản và bộ pipeline dữ liệu đầu vào, không phải bản sao cơ sở dữ liệu toàn bộ mọi tuyến đường/cửa hàng ở Việt Nam. Các lớp đường hiển thị khi trực tuyến lấy từ OpenStreetMap. Để có bản dữ liệu đường gốc toàn quốc, chạy trình tải Geofabrik (~314 MB ở thời điểm kiểm tra 10/10/2026). Cần quá trình import/render riêng để dựng bản đồ offline toàn quốc. Không nhúng ảnh Google Maps hoặc dữ liệu hàng loạt chưa xác minh quyền vào ZIP.
@@ -147,6 +152,16 @@ py -m unittest discover -s tests -v
 ```
 
 Test kiểm tra REST API thực qua HTTP, SQLite lưu dữ liệu và lịch sử, GeoJSON, lọc bbox, tìm kiếm không dấu, CSV, kiểm soát Origin, validation và danh mục tỉnh.
+
+### CI tự động (GitHub Actions)
+
+Mỗi push / pull request chạy tự động qua `.github/workflows/ci.yml`:
+
+- **Test**: 8 integration tests trên ma trận Python 3.10–3.14 (Ubuntu) và Windows (3.12); báo cáo coverage trên Ubuntu/Python 3.12.
+- **Lint & static checks**: `ruff check` + `ruff format --check`, cú pháp Python (`compileall`), JavaScript (`node --check`), hợp lệ dữ liệu JSON.
+- **Docker**: build image và smoke test endpoint `/api/health` trong container.
+
+Quét bảo mật bằng CodeQL định kỳ (`.github/workflows/codeql.yml`). Dependabot tự đề xuất cập nhật GitHub Actions và base image Docker hằng tuần.
 
 ## Nguồn tham khảo
 
