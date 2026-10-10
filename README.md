@@ -2,12 +2,30 @@
 
 [![CI](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/codeql.yml/badge.svg)](https://github.com/xegheplimo-web/Vietnam_Atlas/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 
 Bộ mã nguồn mở rộng tự chạy trên Windows hoặc Docker: **bản đồ đẹp + đường sá OpenStreetMap + địa điểm lưu bền vững trong SQLite + tìm kiếm tiếng Việt không dấu + API + dữ liệu 34 tỉnh/thành + công cụ tải dữ liệu OSM toàn quốc**.
 
 > **Phạm vi thực tế:** đây là ứng dụng đầy đủ chức năng cơ bản và bộ pipeline dữ liệu đầu vào, không phải bản sao cơ sở dữ liệu toàn bộ mọi tuyến đường/cửa hàng ở Việt Nam. Các lớp đường hiển thị khi trực tuyến lấy từ OpenStreetMap. Để có bản dữ liệu đường gốc toàn quốc, chạy trình tải Geofabrik (~314 MB ở thời điểm kiểm tra 10/10/2026). Cần quá trình import/render riêng để dựng bản đồ offline toàn quốc. Không nhúng ảnh Google Maps hoặc dữ liệu hàng loạt chưa xác minh quyền vào ZIP.
+
+## Giấy phép: công khai mã nguồn, không cấp quyền sử dụng thương mại
+
+**Dự án Public nhưng là source-available, không phải open source theo định nghĩa OSI.**
+Phần mềm thuộc quyền tác giả của dự án trong các bản phân phối theo LICENSE hiện
+sử dụng **[PolyForm Noncommercial 1.0.0](LICENSE)**. Bạn có thể đọc, nghiên cứu,
+chỉnh sửa và chia sẻ cho những mục đích phi thương mại được giấy phép cho phép.
+
+**Không được mặc nhiên khai thác thương mại**: bán mã, kinh doanh dịch vụ dựa
+trên mã, cung cấp SaaS/API thu phí, tích hợp vào sản phẩm thương mại, hoặc triển khai
+nhằm phục vụ hoạt động kinh doanh có tính thương mại nếu không có quyền cấp phép riêng
+bằng văn bản. Xem [giải thích và yêu cầu sử dụng thương mại](COMMERCIAL_USE.md).
+
+**Quan trọng:** Phiên bản đã phát hành trước đây theo MIT vẫn có quyền tương ứng
+với giấy phép MIT được cấp hợp lệ khi đó; chuyển giấy phép không thu hồi quyền hồi tố.
+Dữ liệu OpenStreetMap (ODbL), Leaflet và tài sản bên thứ ba có giấy phép riêng,
+không bị áp đặt lệnh cấm thương mại từ giấy phép mã nguồn dự án.
+Xem [nguồn, ghi công và phạm vi giấy phép](docs/LICENSING.md).
 
 ## 1. Mở ngay trên Windows 11
 
