@@ -82,7 +82,7 @@ function renderMarkers(){
     }else{
       const ll=marker.getLatLng();
       if(ll.lat!==p.lat||ll.lng!==p.lon)marker.setLatLng([p.lat,p.lon]);
-      if(marker._atlasPopup!==popup){marker.setPopupContent(popup);marker._atlasPopup=popup}
+      if(marker._atlasPopup!==popup){marker.setPopupContent(popup);marker._atlasPopup=popup;bindPopupButton(marker.getPopup()?.getElement())}
     }
   }
   for(const [id,marker] of markers){
@@ -156,7 +156,12 @@ $('addMedia').addEventListener('click',async()=>{
 });
 map.on('click',e=>{if(adding){editor(e.latlng);adding=false;$('addMode').classList.remove('active')}});
 map.on('moveend',()=>{clearTimeout(moveTimer);moveTimer=setTimeout(refresh,90)});
-map.getContainer().addEventListener('click',e=>{const b=e.target.closest('button[data-popup-edit]');if(b)editById(b.dataset.popupEdit)});
+function bindPopupButton(root){
+  const b=root?.querySelector('button[data-popup-edit]');
+  if(!b||b.dataset.bound==='1')return;
+  b.dataset.bound='1';b.addEventListener('click',e=>editById(e.currentTarget.dataset.popupEdit));
+}
+map.on('popupopen',e=>bindPopupButton(e.popup.getElement()));
 $('addMode').addEventListener('click',()=>{adding=!adding;$('addMode').classList.toggle('active',adding);toast(adding?'Bấm vị trí trên bản đồ để tạo hồ sơ.':'Đã tắt chế độ thêm điểm.')});
 $('home').addEventListener('click',()=>map.setView([16.2,107.8],5.5));
 document.querySelectorAll('.layer').forEach(b=>b.addEventListener('click',()=>{
