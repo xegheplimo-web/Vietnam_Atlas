@@ -70,11 +70,18 @@ Nếu có máy chủ XYZ dùng ảnh sở hữu hoặc được phép xử lý, 
 
 **AI + GPU RTX 3090 (định hướng, chưa triển khai worker):** catalog ảnh có license, import COG, tạo raster tile, segmentation công trình, change detection, siêu phân giải chỉ phục vụ xem trước; kết quả phải kiểm duyệt trước khi đưa vào kho địa điểm. Xem [kiến trúc và điều kiện triển khai](docs/SATELLITE_AI_GPU_ARCHITECTURE.md). **Không thể dùng GPU tái tạo chi tiết nhà thật từ ảnh Sentinel-2 10 m/pixel.**
 
+## 1c. Cập nhật địa điểm giữa nhiều trình duyệt theo thời gian thực
+
+Giao diện tự kết nối `GET /api/live` (Server-Sent Events). Khi thêm/sửa/xóa địa điểm hoặc nhập GeoJSON thành công, máy chủ phát revision sau khi SQLite commit. Các tab khác đồng bộ lại **chỉ vùng bản đồ đang xem**, tối ưu việc giữ nguyên marker không đổi; thao tác kéo/zoom bỏ các truy vấn cũ. Không cần GPU để đẩy dữ liệu.
+
+SSE tối đa **32 kết nối đồng thời mỗi tiến trình** và phát hiện thay đổi từ lệnh CLI sau khoảng 1 giây. Đây là chế độ nhỏ **localhost/môi trường kiểm thử**; trước khi công bố Internet cần TLS + xác thực người ghi, rate limiting, moderation và thiết kế broadcast đa tiến trình. Xem [kiến trúc realtime, mục tiêu hiệu năng và giới hạn ảnh vệ tinh](docs/REALTIME_MAP.md).
+
 ## 2. Chức năng chạy được
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
 | Bản đồ toàn Việt Nam, đường phố | Hoạt động qua Internet | Tiles OSM, có nền sáng, địa hình |
+| Cập nhật POI live SSE | Có cho 1 máy chủ | Revision event → refresh viewport, giới hạn 32 stream, không yêu cầu GPU |
 | Ảnh vệ tinh nhà/cửa hàng | Tuỳ chọn, cần nguồn ảnh được cấp phép | MapTiler origin-restricted browser key hoặc XYZ riêng; không có dữ liệu offline đóng gói |
 | AI/GPU xử lý ảnh vệ tinh | Chưa triển khai | Thiết kế pipeline tùy chọn, không suy diễn ảnh vệ tinh chi tiết từ dữ liệu 10 m |
 | Bộ nhớ địa điểm | Hoạt động | SQLite ở máy chủ; khác localStorage |
