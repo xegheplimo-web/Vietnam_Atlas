@@ -50,6 +50,9 @@ def search_alias_map(con):
         return {}
 
 
+_AND = " AND "
+
+
 def build_match_query(tokens, aliases):
     """FTS5 MATCH expression: tokens are prefix-matched; alias tokens also OR their expansion phrase."""
     parts = []
@@ -60,7 +63,7 @@ def build_match_query(tokens, aliases):
         else:
             parts.append('"' + token + '"*')
     # Explicit AND: FTS5 rejects an implicit conjunction right after a parenthesised group.
-    return " AND ".join(parts)
+    return _AND.join(parts)
 
 
 def connect(dbpath):
@@ -279,6 +282,47 @@ def add_media(con, place_id, payload):
     return dict(con.execute("SELECT * FROM place_media WHERE id=?", (mid,)).fetchone())
 
 
+def _search_clause(con, search, where, args):
+    """Extend where/args with the search predicate; return (join fragment, ranked flag)."""
+    tokens = re.findall(r"[\w]+", normalize(search))[:8]
+    fts = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='places_fts'").fetchone()
+    if tokens and fts:
+        join = " JOIN places_fts ON places.rowid=places_fts.rowid"
+        # Phrase-first: a contiguous phrase match on the raw token order pins name-shaped
+        # queries regardless of BM25 doc-length bias (a long exact name can otherwise rank
+        # below many short token-sharing names). Fall back to AND-of-prefixes + aliases
+        # when no contiguous match exists (aliases, partial input, reordered words).
+        match_expr = build_match_query(tokens, search_alias_map(con))
+        if len(tokens) >= 2:
+            phrase = '"' + " ".join(tokens) + '"'
+            probe = con.execute(
+                "SELECT 1 FROM places" + join + " WHERE " + _AND.join([*where, "places_fts MATCH ?"]) + " LIMIT 1",
+                [*args, phrase],
+            ).fetchone()
+            if probe:
+                match_expr = phrase
+        where.append("places_fts MATCH ?")
+        args.append(match_expr)
+        return join, True
+    for token in tokens:
+        where.append("places.search_text LIKE ?")
+        args.append("%" + token + "%")
+    return "", False
+
+
+def _bbox_clause(bbox, where, args):
+    """Extend where/args with the viewport bbox predicate (handles antimeridian wrap)."""
+    w, s, e, n = bbox
+    if w <= e:
+        where.append("places.lon BETWEEN ? AND ?")
+        args.extend((w, e))
+    else:
+        where.append("(places.lon >= ? OR places.lon <= ?)")
+        args.extend((w, e))
+    where.append("places.lat BETWEEN ? AND ?")
+    args.extend((s, n))
+
+
 def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
     where = []
     args = []
@@ -288,42 +332,11 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
         where.append("places.province = ?")
         args.append(province)
     if search:
-        tokens = re.findall(r"[\w]+", normalize(search))[:8]
-        fts = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='places_fts'").fetchone()
-        if tokens and fts:
-            join = " JOIN places_fts ON places.rowid=places_fts.rowid"
-            # Phrase-first: a contiguous phrase match on the raw token order pins name-shaped
-            # queries regardless of BM25 doc-length bias (a long exact name can otherwise rank
-            # below many short token-sharing names). Fall back to AND-of-prefixes + aliases
-            # when no contiguous match exists (aliases, partial input, reordered words).
-            match_expr = build_match_query(tokens, search_alias_map(con))
-            if len(tokens) >= 2:
-                phrase = '"' + " ".join(tokens) + '"'
-                probe = con.execute(
-                    "SELECT 1" + " FROM places" + join + " WHERE " + " AND ".join([*where, "places_fts MATCH ?"]) + " LIMIT 1",
-                    [*args, phrase],
-                ).fetchone()
-                if probe:
-                    match_expr = phrase
-            where.append("places_fts MATCH ?")
-            args.append(match_expr)
-            ranked = True
-        else:
-            for token in tokens:
-                where.append("places.search_text LIKE ?")
-                args.append("%" + token + "%")
+        join, ranked = _search_clause(con, search, where, args)
     if bbox:
-        w, s, e, n = bbox
-        if w <= e:
-            where.append("places.lon BETWEEN ? AND ?")
-            args.extend((w, e))
-        else:
-            where.append("(places.lon >= ? OR places.lon <= ?)")
-            args.extend((w, e))
-        where.append("places.lat BETWEEN ? AND ?")
-        args.extend((s, n))
+        _bbox_clause(bbox, where, args)
     base = " FROM places" + join
-    predicate = (" WHERE " + " AND ".join(where)) if where else ""
+    predicate = (" WHERE " + _AND.join(where)) if where else ""
     count = con.execute("SELECT COUNT(*)" + base + predicate, args).fetchone()[0]
     if ranked:
         # Relevance order: BM25 first; an exact normalized-name match is boosted to the front
