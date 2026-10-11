@@ -15,6 +15,7 @@ const layers = {
 };
 layers.osm.addTo(map);
 // Imagery is opt-in: the API only advertises sources configured by the operator.
+let satelliteSource=null;
 // Provider imagery stays with the provider; this client does not prefetch or cache tiles.
 async function configureSatelliteLayer(){
   const button=document.querySelector('.layer[data-layer="satellite"]');
@@ -22,6 +23,7 @@ async function configureSatelliteLayer(){
     const config=await api('/api/map-config');
     const sat=config.satellite;
     if(!sat){button.title='Thiết lập ATLAS_MAPTILER_KEY hoặc nguồn XYZ được cấp phép';return}
+    satelliteSource=sat.source;
     layers.satellite=L.tileLayer(sat.url,{
       maxZoom:20,maxNativeZoom:Math.min(20,Math.max(0,Number(sat.maxNativeZoom)||19)),
       attribution:sat.attribution,updateWhenIdle:true
@@ -142,6 +144,7 @@ document.querySelectorAll('.layer').forEach(b=>b.addEventListener('click',()=>{
   const selected=layers[b.dataset.layer];
   if(!selected)return toast("Lớp nền chưa được cấu hình.");
   Object.values(layers).forEach(layer=>map.removeLayer(layer));selected.addTo(map);
+  $('maptilerLogo').hidden=!(b.dataset.layer==="satellite"&&satelliteSource==="maptiler");
   document.querySelectorAll('.layer').forEach(other=>other.classList.toggle('active',other===b));
 }));
 $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(refresh,300)});
