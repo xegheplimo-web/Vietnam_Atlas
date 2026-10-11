@@ -73,10 +73,19 @@ def import_file(path, db, source_name, source_url, rights_basis):
             content = json.dumps([name, address, *vals], ensure_ascii=False)
             content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
             before = con.execute(
-                "SELECT content_hash FROM legal_entities WHERE source_name=? AND enterprise_id=?", (source_name, identifier)
+                "SELECT content_hash, source_url, rights_basis FROM legal_entities WHERE source_name=? AND enterprise_id=?",
+                (source_name, identifier),
             ).fetchone()
             if before and before[0] == content_hash:
-                counts["unchanged"] += 1
+                if before[1] != source_url or before[2] != rights_basis:
+                    # Same business content but corrected/renewed provenance: refresh metadata, count as changed.
+                    con.execute(
+                        "UPDATE legal_entities SET source_url=?, rights_basis=?, last_imported=? WHERE source_name=? AND enterprise_id=?",
+                        (source_url, rights_basis, stamp, source_name, identifier),
+                    )
+                    counts["changed"] += 1
+                else:
+                    counts["unchanged"] += 1
                 continue
             con.execute(
                 """INSERT INTO legal_entities (source_name,enterprise_id,legal_name,registered_address,tax_code,status,observed_at,source_url,rights_basis,content_hash,first_imported,last_imported)

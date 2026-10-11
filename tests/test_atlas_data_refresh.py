@@ -164,8 +164,12 @@ class RefreshTests(unittest.TestCase):
         again = reg.import_file(src, db, "test", "https://example.org/license", "Synthetic fixture only")
         self.assertEqual(again["created"], 0)
         self.assertEqual(again["unchanged"], 2)
+        corrected = reg.import_file(src, db, "test", "https://example.org/license-v2", "Synthetic fixture only")
+        self.assertEqual(corrected["changed"], 2)
+        self.assertEqual(corrected["unchanged"], 0)
         with closing(sqlite3.connect(db)) as c:
             self.assertEqual(c.execute("SELECT count(*) FROM legal_entities").fetchone()[0], 2)
+            self.assertEqual({r[0] for r in c.execute("SELECT source_url FROM legal_entities")}, {"https://example.org/license-v2"})
 
     def test_atlas_dry_run_is_safe(self):
         if not (ROOT / "server/store.py").is_file():
@@ -202,6 +206,28 @@ class RefreshTests(unittest.TestCase):
             row = c.execute("SELECT name,notes FROM places WHERE source_id='node/1001'").fetchone()
             self.assertEqual(row[0], "Quán cà phê THỬ NGHIỆM")
             self.assertEqual(row[1], "User-verified note")
+
+    def test_retired_staging_records_mark_unverified_atlas_rows_inactive(self):
+        if not (ROOT / "server/store.py").is_file():
+            self.skipTest("Run after copying toolkit into a Vietnam_Atlas checkout")
+        osm.create_snapshot(self.xml, self.osm_db)
+        sync.sync(self.osm_db, self.atlas_db, apply=True)
+        with closing(sqlite3.connect(self.atlas_db)) as c:
+            c.execute("UPDATE places SET status='verified' WHERE source_id='node/1001'")
+            c.commit()
+        data = self.xml.read_text(encoding="utf-8").replace('    <tag k="name" v="Nhà hàng THỬ NGHIỆM"/>', '    <tag k="name" v=""/>')
+        changed = self.d / "changed.osm"
+        changed.write_text(data, encoding="utf-8")
+        osm.create_snapshot(changed, self.osm_db, mark_missing=True)
+        preview = sync.sync(self.osm_db, self.atlas_db)
+        self.assertEqual(preview["would_retire"], 1)
+        self.assertEqual(preview["retired"], 0)
+        result = sync.sync(self.osm_db, self.atlas_db, apply=True)
+        self.assertEqual(result["retired"], 1)
+        with closing(sqlite3.connect(self.atlas_db)) as c:
+            self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='relation/3001'").fetchone()[0], "inactive")
+            self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='node/1001'").fetchone()[0], "verified")
+            self.assertEqual(c.execute("SELECT count(*) FROM places WHERE status='inactive'").fetchone()[0], 1)
 
 
 if __name__ == "__main__":

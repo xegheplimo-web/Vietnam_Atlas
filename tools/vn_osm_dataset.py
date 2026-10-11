@@ -64,6 +64,12 @@ def centroid(coords: list[tuple[float, float]]) -> tuple[float, float] | None:
     return cy / (3 * double_a), cx / (3 * double_a)
 
 
+def ring_area(pts: list[tuple[float, float]]) -> float:
+    """Absolute planar area (shoelace) used only to rank outer rings for a map locator, not legal GIS area."""
+    closed = [*pts, pts[0]]
+    return abs(sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in itertools.pairwise(closed))) / 2
+
+
 def locator(coords: list[tuple[float, float]]) -> tuple[float, float] | None:
     p = centroid(coords)
     return p if p is not None and coordinates_valid(*p) else None
@@ -278,8 +284,8 @@ def import_national_pbf(path: Path, collector: Collector):
                 if not all_rings:
                     collector.counts["invalid_geometry"] += 1
                     return
-                # Choose largest outer ring for map locator; never use this as precise polygon data.
-                pts = max(all_rings, key=len)
+                # Choose the largest outer ring by planar area for the map locator; never use this as precise polygon data.
+                pts = max(all_rings, key=ring_area)
                 collector.add("relation", area.orig_id(), tags, locator(pts))
             except (ValueError, TypeError, RuntimeError):
                 collector.counts["invalid_geometry"] += 1

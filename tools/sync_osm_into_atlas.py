@@ -3,6 +3,8 @@
 
 Defaults to dry-run, only inserts new OpenStreetMap source IDs, keeps verified
 and user-created records untouched; makes an online backup before any write.
+Retired staging rows (is_active=0 from a full --mark-missing import) mark the
+matching unverified OSM atlas rows inactive; verified/user records stay protected.
 """
 
 from __future__ import annotations
@@ -28,7 +30,7 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
 
     if apply and atlas_db.is_file():
         preview = sync(osm_db, atlas_db, apply=False, update_existing=update_existing, limit=limit)
-        if preview["would_insert"] == 0 and preview["would_update"] == 0:
+        if preview["would_insert"] == 0 and preview["would_update"] == 0 and preview["would_retire"] == 0:
             preview["mode"] = "APPLY_NO_CHANGES"
             return preview  # avoids repeated multi-GB backups on unchanged daily snapshots
 
@@ -41,6 +43,9 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
         "existing": 0,
         "would_update": 0,
         "protected": 0,
+        "would_retire": 0,
+        "retired": 0,
+        "retire_skipped_limit": False,
         "inserted": 0,
         "updated": 0,
         "skipped_invalid": 0,
@@ -116,6 +121,26 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
                     payload.update(fields)
                     save_place(dest, payload, place_id=previous["id"])
                     result["updated"] += 1
+        if limit:
+            # Retirement derives from a full --mark-missing snapshot; never evaluate it on a bounded pilot.
+            result["retire_skipped_limit"] = True
+        else:
+            for row in src.execute("SELECT osm_type,osm_id FROM osm_places WHERE is_active=0 ORDER BY osm_type,osm_id"):
+                sid = f"{row['osm_type']}/{row['osm_id']}"
+                previous = None
+                if dest is not None:
+                    previous = dest.execute("SELECT * FROM places WHERE source='OpenStreetMap' AND source_id=?", (sid,)).fetchone()
+                if previous is None:
+                    continue
+                if previous["status"] != "unverified":
+                    result["protected"] += 1
+                    continue
+                result["would_retire"] += 1
+                if apply:
+                    payload = dict(previous)
+                    payload["status"] = "inactive"
+                    save_place(dest, payload, place_id=previous["id"])
+                    result["retired"] += 1
         if apply:
             dest.commit()
         return result
@@ -135,7 +160,7 @@ def main():
     p.add_argument("--atlas-db", type=Path, default=Path("data/atlas.sqlite3"))
     p.add_argument("--apply", action="store_true", help="explicitly apply inserts after online backup")
     p.add_argument("--update-existing", action="store_true", help="update only unverified OSM rows; never verified/user records")
-    p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--limit", type=int, default=0, help="pilot: sync first N staging rows; disables retirement evaluation")
     a = p.parse_args()
     try:
         print(json.dumps(sync(a.osm_db, a.atlas_db, a.apply, a.update_existing, a.limit), indent=2, ensure_ascii=False))

@@ -46,14 +46,17 @@ def source_meta(url: str = URL):
 
 def download(dst: Path, force=False, attempts=3):
     dst.parent.mkdir(parents=True, exist_ok=True)
-    info = source_meta()
     manifest = dst.with_suffix(dst.suffix + ".provenance.json")
     if dst.is_file() and manifest.is_file() and not force:
         try:
             old = json.loads(manifest.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             old = {}
-        same_remote = old.get("source_url") == info["source_url"] and (
+        try:
+            info = source_meta()  # HEAD is only needed for the not-modified check here
+        except (OSError, RuntimeError):
+            info = {}
+        same_remote = old.get("source_url") == info.get("source_url") and (
             (info.get("etag") and info["etag"] == old.get("etag"))
             or (info.get("last_modified") and info["last_modified"] == old.get("last_modified"))
         )
@@ -63,6 +66,9 @@ def download(dst: Path, force=False, attempts=3):
     partial = dst.with_name(dst.name + ".partial")
     for attempt in range(1, attempts + 1):
         try:
+            # Fresh HEAD per attempt: the "latest" object can rotate between metadata and GET,
+            # and a transient HEAD failure must not bypass the retry loop.
+            info = source_meta()
             req = urllib.request.Request(URL, headers={"User-Agent": UA, "Accept-Encoding": "identity"})
             with urllib.request.urlopen(req, timeout=120) as resp, partial.open("wb") as f:
                 if resp.status != 200 or not resp.geturl().startswith("https://"):
