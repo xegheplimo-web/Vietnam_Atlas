@@ -14,6 +14,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from server.app import make_handler, satellite_layer_config
+from server.live import LiveChanges
 from server.store import init_db, normalize, session
 
 
@@ -299,6 +300,44 @@ class AtlasTest(unittest.TestCase):
 
         place_id = created["item"]["id"]
         self.request("/api/places/" + place_id, "DELETE")
+
+    def test_11_live_reconnect_recovers_missed_changes(self):
+        # A reconnecting EventSource sends Last-Event-ID; if the committed
+        # revision is newer, the stream must emit `changed` right away so a
+        # tab that missed events while disconnected resyncs.
+        code, created = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Điểm reconnect demo", "lat": 21.04, "lon": 105.86, "source": "test_live", "source_id": "reconnect-01"},
+        )
+        self.assertIn(code, (200, 201))
+        req = Request(self.base + "/api/live", headers={"Last-Event-ID": "0"})
+        with urlopen(req, timeout=5) as stream:
+            seen = []
+            while "event: changed" not in seen:
+                line = stream.readline().decode("utf-8").strip()
+                if line.startswith("event: "):
+                    seen.append(line)
+        self.assertIn("event: ready", seen)
+        self.request("/api/places/" + created["item"]["id"], "DELETE")
+
+    def test_12_live_capacity_rejects_extra_stream_with_503(self):
+        class FakeHandler:
+            def __init__(self):
+                self.headers = {}
+                self.status = None
+
+            def json(self, status, _payload):
+                self.status = status
+
+        live = LiveChanges(self.db, capacity=1)
+        self.assertTrue(live.slots.acquire(blocking=False))
+        try:
+            handler = FakeHandler()
+            live.serve(handler)
+            self.assertEqual(503, handler.status)
+        finally:
+            live.slots.release()
 
 
 if __name__ == "__main__":

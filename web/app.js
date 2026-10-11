@@ -215,19 +215,26 @@ $('roadsFile').addEventListener('change',async e=>{
 });
 $('clearRoads').addEventListener('click',()=>{if(roadOverlay){map.removeLayer(roadOverlay);roadOverlay=null;toast('Đã ẩn lớp đường tự nạp.')}});
 $('refresh').addEventListener('click',()=>Promise.all([refresh(),refreshStats()]));
+function invalidateLive(){
+  // Leading-edge coalescing: while a refresh is pending, further events are
+  // dropped on purpose — the pending fetch already reads the newest state,
+  // and resetting the timer on every event would starve continuous edits.
+  if(document.hidden||liveTimer)return;
+  liveTimer=setTimeout(()=>{liveTimer=null;Promise.all([refresh(),refreshStats()])},120);
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)invalidateLive()});
 function connectLiveUpdates(){
-  const invalidate=()=>{
-    clearTimeout(liveTimer);
-    if(document.hidden)return;
-    liveTimer=setTimeout(()=>Promise.all([refresh(),refreshStats()]),120);
-  };
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)invalidate()});
   if(typeof EventSource==='undefined'){
-    setInterval(invalidate,6000);return;
+    setInterval(invalidateLive,6000);return;
   }
   const events=new EventSource('/api/live');
-  events.addEventListener('ready',invalidate);
-  events.addEventListener('changed',invalidate);
+  events.addEventListener('ready',invalidateLive);
+  events.addEventListener('changed',invalidateLive);
+  events.addEventListener('error',()=>{
+    // A rejected stream (503 at capacity) closes EventSource for good — it
+    // never retries. Open a fresh connection instead of going silent.
+    if(events.readyState===EventSource.CLOSED)setTimeout(connectLiveUpdates,5000);
+  });
   // EventSource reconnects with Last-Event-ID; the existing REST endpoint remains the source of truth.
   window.addEventListener('beforeunload',()=>events.close());
 }

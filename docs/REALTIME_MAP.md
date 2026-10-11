@@ -19,7 +19,7 @@ Tham khảo:
 ## Chức năng đã triển khai trong nhánh live SSE
 
 - `GET /api/live`: luồng SSE read-only; trường `id` là **revision** tăng dần từ bảng `changes.seq`, payload chỉ có revision (không bao gồm địa điểm/ảnh riêng tư).
-- Stream gửi `ready` khi kết nối, `changed` sau commit, heartbeat mỗi 15 giây và tự reconnect sau tối đa 120 giây. EventSource dùng `Last-Event-ID` cho lần kết nối lại; đồng bộ luôn qua REST.
+- Stream gửi `ready` khi kết nối, `changed` sau commit, heartbeat mỗi 15 giây và tự reconnect sau tối đa 120 giây. EventSource dùng `Last-Event-ID` cho lần kết nối lại; đồng bộ luôn qua REST. Nếu EventSource bị đóng hẳn (ví dụ `503` khi đủ 32 stream), client tự mở kết nối mới sau 5 giây thay vì im lặng.
 - `notify()` sau transaction tạo/sửa/xóa hoặc nhập GeoJSON hoàn tất. Không phát trước khi commit.
 - Thay đổi từ lệnh CLI / tiến trình thứ hai trên cùng SQLite phát hiện qua kiểm tra revision mỗi 1 giây.
 - Giới hạn 32 stream đồng thời **mỗi tiến trình**; nếu quá hạn `503`. Đây là thiết kế nhỏ cho local/nhóm test, không phải gateway nhiều ngàn người.
@@ -69,6 +69,7 @@ Các REST endpoint vẫn hoạt động. Trình duyệt cũ không hỗ trợ Ev
 ## Hạn chế của implementation hiện tại
 
 - 32 SSE streams/process là giới hạn chủ ý và có thread/SQLite poll mỗi client/giây; không scale tới hàng ngàn clients.
+- Trình duyệt giới hạn khoảng 6 kết nối HTTP/1.x mỗi origin: nhiều tab trong cùng một trình duyệt có thể khiến request REST xếp hàng sau các SSE đang mở (tối đa 120 giây). Giai đoạn public dùng HTTP/2 multiplexing qua TLS hoặc chia sẻ một kết nối live giữa các tab; hiện chấp nhận cho localhost/nhóm thử nghiệm.
 - Events thông báo thay đổi **địa điểm**, không phát ảnh vệ tinh live. `/api/live` không chứa ảnh/capture timestamps.
 - SSE không làm rõ ảnh: AI/GPU xử lý batch với ảnh được cấp phép, phát hành kết quả khi sẵn, không nằm trên critical path của map.
 - `places`/SQLite chưa có phân quyền Internet; địa điểm người dùng thêm cần duyệt trước khi xuất bản nếu dùng công khai.
@@ -79,4 +80,4 @@ Các REST endpoint vẫn hoạt động. Trình duyệt cũ không hỗ trợ Ev
 - Unit/integration tests xác minh SSE sau commit, không phát dữ liệu PII, event id tăng, reconnect/capacity, đường cũ vẫn hoạt động.
 - Benchmark 1, 10 và 32 client trên Windows/Docker, lỗi 503 không làm API chính chậm.
 - Trên mạng thật đo thời gian click → commit → browser B cập nhật; so sánh before/after về FPS, HTTP requests/zoom.
-- CI Python matrix, Ruff, JS syntax, Docker, CodeQL đều xanh; browser E2E thực trên Windows còn phải xác minh trước triển khai public.
+- CI Python matrix, Ruff, JS syntax, Docker, CodeQL đều xanh; browser E2E thực trên Windows còn phải xác minh trước triển khai public (gồm kịch bản ≥6 tab cùng trình duyệt để đo REST refresh không xếp hàng sau SSE trên HTTP/1.x).

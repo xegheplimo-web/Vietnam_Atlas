@@ -85,13 +85,21 @@ class LiveChanges:
             # In-process HTTP writes wake this immediately; external SQLite
             # writers are discovered by the 1-second periodic checkpoint.
             with self.condition:
-                if self.generation == observed:
+                woke = self.generation != observed
+                if not woke:
                     self.condition.wait(timeout=1.0)
+                    woke = self.generation != observed
                 observed = self.generation
 
             latest = self.revision()
             if latest != cursor:
                 cursor = latest
+                emit("changed", cursor)
+                last_heartbeat = monotonic()
+            elif woke:
+                # A same-process write may commit without a new history row
+                # (a no-op upsert still touches updated_at and can reorder
+                # listings), so notify-driven wakes always invalidate clients.
                 emit("changed", cursor)
                 last_heartbeat = monotonic()
             elif monotonic() - last_heartbeat >= 15:
