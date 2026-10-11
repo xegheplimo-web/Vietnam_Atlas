@@ -35,6 +35,7 @@ JSON mẫu:
 - `POST /api/import`: request body GeoJSON FeatureCollection (chỉ Point). Tối đa 10.000 features hoặc 16 MiB/call. Trả `created,updated,rejected,errors`. Features có `properties.id` hoặc `feature.id` sẽ được dùng như stable identity; nếu thiếu, dùng `(source,source_id)` khi có, nếu thiếu nữa sẽ sinh UUID mới, dễ trùng khi import lại.
 - `GET /api/provinces`: tên 34 đơn vị cấp tỉnh, thông báo `boundary_available:false`.
 - `GET /api/health`: kiểm tra database.
+- `GET /api/live`: SSE stream read-only (\`text/event-stream\`) phát `ready` và `changed` với JSON `{\"revision\":<changes.seq>}`. Browser `EventSource` tự reconnect bằng `Last-Event-ID`; phát lại invalidation khi có commit. Chỉ báo cập nhật POI, không phải ảnh vệ tinh trực tiếp. Tối đa 32 luồng đồng thời trên một tiến trình. Xem [Realtime Map](REALTIME_MAP.md).
 - `GET /api/stats`: số địa điểm, sự kiện lịch sử và tỉnh có dữ liệu.
 
 ### Test API trên Windows PowerShell
