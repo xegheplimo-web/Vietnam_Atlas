@@ -7,13 +7,15 @@ from __future__ import annotations
 
 import argparse
 import csv
+import html
 import io
 import json
 import os
+import re
 import sqlite3
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, unquote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from .store import (
     add_media,
@@ -41,6 +43,62 @@ MIME = {
     ".png": "image/png",
     ".ico": "image/x-icon",
 }
+
+
+CREDIT_LINK = re.compile(r'<a href="(https://[^"<>\s]+)">([^<>]*)</a>')
+
+
+def credit_html(value: str) -> str:
+    """Escape attribution text while keeping simple https credit links clickable.
+
+    Attribution comes from the operator's environment, not from end users, but we
+    still allow only a single anchor form with an https URL so a stray value cannot
+    inject scripts into the Leaflet attribution control.
+    """
+
+    parts = []
+    pos = 0
+    for match in CREDIT_LINK.finditer(value):
+        parts.append(html.escape(value[pos : match.start()]))
+        parts.append(f'<a href="{match.group(1)}" target="_blank" rel="noopener noreferrer">{html.escape(match.group(2))}</a>')
+        pos = match.end()
+    parts.append(html.escape(value[pos:]))
+    return "".join(parts)
+
+
+def satellite_layer_config():
+    """Describe a licensed XYZ satellite source without proxying or downloading tiles.
+
+    A MapTiler browser key is intentionally visible to the client: restrict it by
+    Allowed HTTP Origin in the provider dashboard. Never use a secret server token.
+    """
+
+    custom_url = os.getenv("ATLAS_SATELLITE_TILES_URL", "").strip()
+    if custom_url:
+        parsed = urlsplit(custom_url)
+        permitted = parsed.scheme == "https" or (parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"})
+        attribution = os.getenv("ATLAS_SATELLITE_ATTRIBUTION", "").strip()
+        if permitted and parsed.netloc and attribution and all("{" + axis + "}" in custom_url for axis in ("z", "x", "y")):
+            return {
+                "url": custom_url,
+                "attribution": credit_html(attribution),
+                "maxNativeZoom": 19,
+                "tileSize": 256,
+                "source": "custom",
+            }
+        # Invalid custom configuration: fall through to MapTiler instead of disabling imagery entirely.
+
+    key = os.getenv("ATLAS_MAPTILER_KEY", "").strip()
+    if not key or len(key) > 256:
+        return None
+    return {
+        "url": "https://api.maptiler.com/tiles/satellite-v4/{z}/{x}/{y}?key=" + quote(key, safe=""),
+        "attribution": '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> | Satellite imagery providers',
+        # Provider zoom 19 maps to Leaflet zoom 20 with tileSize 512 and zoomOffset -1.
+        "maxNativeZoom": 20,
+        "tileSize": 512,
+        "source": "maptiler",
+    }
 
 
 def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
@@ -105,6 +163,8 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
         def do_GET(self):
             path, params = self.route()
             try:
+                if path == "/api/map-config":
+                    return self.json(200, {"satellite": satellite_layer_config()})
                 if path == "/api/health":
                     with session(db_path) as c:
                         c.execute("SELECT 1")

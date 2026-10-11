@@ -22,6 +22,7 @@
       <button class="layer active" data-layer="osm">Đường phố</button>
       <button class="layer" data-layer="light">Sáng tối giản</button>
       <button class="layer" data-layer="topo">Địa hình</button>
+      <button class="layer" data-layer="satellite" disabled title="Cần cấu hình nguồn vệ tinh hợp lệ">Vệ tinh</button>
     </div>
     <div class="section-head"><h2>Bộ nhớ địa điểm</h2><span id="count" class="count">0</span></div>
     <p class="helper">Chọn “Thêm điểm” rồi bấm bản đồ. Địa điểm được lưu trên máy chủ SQLite, có lịch sử thay đổi.</p><p class="helper" id="visibleCount">Đang tải…</p>
@@ -37,6 +38,9 @@
   </aside>
   <main class="map-area">
     <div id="map"></div>
+    <a id="maptilerLogo" class="maptiler-logo" href="https://www.maptiler.com/" target="_blank" rel="noopener noreferrer" hidden aria-label="MapTiler">
+      <img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler">
+    </a>
     <div class="map-top">
       <div class="map-title"><span class="map-kicker">EXPLORER</span><strong>Việt Nam</strong><span class="map-sub">Địa lý · Đường sá · Địa điểm</span></div>
       <div class="map-actions"><button id="home" title="Về toàn quốc">⌂ <span>Toàn quốc</span></button><button id="addMode" title="Bấm bản đồ để thêm điểm">＋ <span>Thêm điểm</span></button></div>
