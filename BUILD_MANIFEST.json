@@ -1,7 +1,7 @@
 {
   "product": "Vietnam Atlas Map & Memory",
   "version": "2.1-round-a-2026-10-11",
-  "build_date_utc": "2026-10-11T04:24:40.582871+00:00",
+  "build_date_utc": "2026-10-11T04:30:34.013979+00:00",
   "code_test_result": "31 tests passed (17 HTTP/storage integration incl. SSE reconnect + capacity + search relevance/aliases/bbox, 14 data-refresh toolkit)",
   "validated_admin": "34 new province names; 63 legacy province names mapped",
   "downloads_not_embedded": [
@@ -33,6 +33,7 @@
     "RUN_UPDATE_WINDOWS.ps1": "cfe731936958125c1268033cf19d776271c532fa19b3866097d040db1319a78f",
     "START_DOCKER_WINDOWS.bat": "0b9752be6a9c5d67bafb51a7f9500f0163ad3e145ae5e34bcef4049f3c499d7a",
     "START_WINDOWS.bat": "ecc35076cdd46011b44126ad8ed2b9e56a70b7324d2c6515f02b7e8277146aa4",
+    "benchmarks/README.md": "d0933ebfd9d685f17a1f13ab6af3d6027f1a6b78e662cc7bddb77ecec0e5e228",
     "benchmarks/after_full_import.json": "7090eeecd06c0ff18617174edf4f16ddeddab97b569e7d5b1fea78ca833c452b",
     "benchmarks/after_search_v1.json": "638a7809e1fe51011eba56919a56f82ea008edb8b0d8c45714a8d2e3e497adee",
     "benchmarks/baseline_before.json": "2cec33d268e1fbf75c13a6ea72f2fe0bccfe6ebaad15d20a6dba8708b18c5e3c",
