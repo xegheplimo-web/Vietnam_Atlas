@@ -1,17 +1,19 @@
 """Integration tests: real HTTP server + persistent SQLite memory."""
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from server.app import make_handler
+from server.app import make_handler, satellite_layer_config
 from server.store import init_db, normalize, session
 
 
@@ -190,6 +192,39 @@ class AtlasTest(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             with session(db) as c:
                 self.assertEqual(c.execute("SELECT COUNT(*) FROM places").fetchone()[0], 2)
+
+    def test_09_satellite_opt_in_and_url_validation(self):
+        with patch.dict(os.environ, {
+            "ATLAS_MAPTILER_KEY": "",
+            "ATLAS_SATELLITE_TILES_URL": "",
+            "ATLAS_SATELLITE_ATTRIBUTION": "",
+        }):
+            code, data = self.request("/api/map-config")
+            self.assertEqual(code, 200)
+            self.assertIsNone(data["satellite"])
+
+        with patch.dict(os.environ, {
+            "ATLAS_MAPTILER_KEY": "browser-key-test",
+            "ATLAS_SATELLITE_TILES_URL": "",
+            "ATLAS_SATELLITE_ATTRIBUTION": "",
+        }):
+            code, data = self.request("/api/map-config")
+            self.assertEqual(code, 200)
+            self.assertEqual(data["satellite"]["source"], "maptiler")
+            self.assertIn("key=browser-key-test", data["satellite"]["url"])
+
+        with patch.dict(os.environ, {
+            "ATLAS_SATELLITE_TILES_URL": "https://tiles.example.test/{z}/{x}/{y}.png",
+            "ATLAS_SATELLITE_ATTRIBUTION": "Imagery & Maps",
+        }):
+            self.assertEqual(satellite_layer_config()["source"], "custom")
+            self.assertIn("&amp;", satellite_layer_config()["attribution"])
+
+        with patch.dict(os.environ, {
+            "ATLAS_SATELLITE_TILES_URL": "http://external.example.test/{z}/{x}/{y}.png",
+            "ATLAS_SATELLITE_ATTRIBUTION": "Unsafe",
+        }):
+            self.assertIsNone(satellite_layer_config())
 
 
 if __name__ == "__main__":
