@@ -232,11 +232,36 @@ class AtlasTest(unittest.TestCase):
         with patch.dict(
             os.environ,
             {
+                "ATLAS_MAPTILER_KEY": "",
                 "ATLAS_SATELLITE_TILES_URL": "http://external.example.test/{z}/{x}/{y}.png",
                 "ATLAS_SATELLITE_ATTRIBUTION": "Unsafe",
             },
         ):
             self.assertIsNone(satellite_layer_config())
+
+        with patch.dict(
+            os.environ,
+            {
+                "ATLAS_MAPTILER_KEY": "browser-key-test",
+                "ATLAS_SATELLITE_TILES_URL": "http://external.example.test/{z}/{x}/{y}.png",
+                "ATLAS_SATELLITE_ATTRIBUTION": "Unsafe",
+            },
+        ):
+            fallback = satellite_layer_config()
+            self.assertEqual(fallback["source"], "maptiler")
+
+        with patch.dict(
+            os.environ,
+            {
+                "ATLAS_SATELLITE_TILES_URL": "https://tiles.example.test/{z}/{x}/{y}.png",
+                "ATLAS_SATELLITE_ATTRIBUTION": '<a href="https://example.org/credits">Imagery</a> & <script>alert(1)</script>',
+            },
+        ):
+            credit = satellite_layer_config()["attribution"]
+            self.assertIn('<a href="https://example.org/credits" target="_blank"', credit)
+            self.assertIn("&amp;", credit)
+            self.assertNotIn("&lt;a", credit)
+            self.assertNotIn("<script>", credit)
 
 
 if __name__ == "__main__":

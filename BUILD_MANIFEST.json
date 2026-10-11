@@ -1,8 +1,8 @@
 {
   "product": "Vietnam Atlas Map & Memory",
   "version": "2.0-full-starter-2026-10-11",
-  "build_date_utc": "2026-10-11T01:38:07.072211+00:00",
-  "code_test_result": "22 tests passed (8 HTTP/storage integration + 14 data-refresh toolkit)",
+  "build_date_utc": "2026-10-11T01:49:15.109265+00:00",
+  "code_test_result": "23 tests passed (9 HTTP/storage integration + 14 data-refresh toolkit)",
   "validated_admin": "34 new province names; 63 legacy province names mapped",
   "downloads_not_embedded": [
     "vietnam-latest.osm.pbf",
@@ -14,7 +14,8 @@
     "no official new provincial polygon dataset",
     "not deployed to user Windows drive",
     "OSM PBF ingestion requires optional pyosmium",
-    "full VN PBF import pending (pilot: 5,000 POIs imported + verified 2026-10-11)"
+    "full VN PBF import pending (pilot: 5,000 POIs imported + verified 2026-10-11)",
+    "satellite imagery rendering not verified with a live provider key (config-level HTTP smoke only)"
   ],
   "files": {
     ".editorconfig": "0c8d40ddd18d5b5a112c3500b1a5f699dbf2439776a9c6c03165723da4a69207",
@@ -27,13 +28,13 @@
     "Dockerfile": "63e09a00c805fd74a4645af363fdf14eb6dfe00356eeec670ff8abbd383a9a3c",
     "LICENSE": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
     "NOTICE": "94b4ea0137cebdc64efd3d39957bacd8b2233689ecfab87575f9f703d2611d7b",
-    "README.md": "98b04e9121f2c468e714950ace46f8d1203c9e39d9db77071823778a3815c2e2",
+    "README.md": "96742ab7561c93d47d4e8d1bdb6c05425e883c5593599d358f4fd72dfc4dda92",
     "RUN_CHECKS_WINDOWS.bat": "bad466d1745c67e2c1f779f4c91bf1a62277707de94eedf469a28e03a4599986",
     "RUN_UPDATE_WINDOWS.bat": "ec42039a9f6475f9ad1365f43befe5cc142d8e03ee939a4874076a370542f658",
     "RUN_UPDATE_WINDOWS.ps1": "cfe731936958125c1268033cf19d776271c532fa19b3866097d040db1319a78f",
     "START_DOCKER_WINDOWS.bat": "0b9752be6a9c5d67bafb51a7f9500f0163ad3e145ae5e34bcef4049f3c499d7a",
     "START_WINDOWS.bat": "ecc35076cdd46011b44126ad8ed2b9e56a70b7324d2c6515f02b7e8277146aa4",
-    "compose.yaml": "f3e84a77d2bee97cc33aec7aae5c264597eb92098511c3ed5326b5492abc84ba",
+    "compose.yaml": "826db24477fafaf4d534ad37f06b1ba3abf5087fc6ae04ba7934f34314804e2e",
     "data/SOURCE_STATUS_2026-10-11.json": "1c0882dbb7bdf48b266fceab4d1aa75dbf40ca4ff26874ed55c89f7854fb680f",
     "data/province_mergers_2025.json": "3450afeea2adb8648225f2dff60d520fd17c3d09fe8b3487ab0c1ac5d15b1109",
     "data/provinces_34.json": "bfa682830f9507d09c506a74e696bea146391f33898b37f005729e699e09775d",
@@ -46,17 +47,18 @@
     "docs/DATA_RIGHTS.md": "087ca5e3b6be2441d638af15e1c247036039a611e629a0418721918d4ff9fb49",
     "docs/LICENSING.md": "7c136b3f21003b3f7b4656c2a595eea4759a782da92b5336e1afee7130dd5d03",
     "docs/OFFLINE_ROADS.md": "cd642a2c805a3d5a591108dbd04c9943e83af44ff436db6844aae3dc47725cfd",
-    "docs/ROADMAP.md": "6b2ce62f241b82840acf94e734ead236a2713802475ff596434e4707e5776368",
+    "docs/ROADMAP.md": "10384f772058c409c31ff9d9c936346bdba3ded921b4e724c65b33fdb90cdfed",
+    "docs/SATELLITE_AI_GPU_ARCHITECTURE.md": "5886ca855a85aecc65ba938b113069e49404a42f089ba45cf5010ff02a8f8f20",
     "docs/VERIFICATION.md": "aa16303e72b635a40d40ce8a964dc37ace43e4e3534cab6433f83238ea9611bb",
     "docs/schema_postgis_optional.sql": "fa8107777017e317099434531d6aed173404ca4c8477b6f024e13c3557bfee93",
     "examples/registry_authorized_synthetic.csv": "b5c181e574b17bbd0496522e1f70be628b395a23d5a9e3e547c7e53946a97130",
     "examples/small_osm_synthetic.osm": "c2bc4085dca1e82ce544df538edc1559ac9f11f006ca898c1fa31a318169028d",
     "pyproject.toml": "9d7b09d0859ac6bfa0712f4b9547e2d4665d9892bd4f4cba6600d98c0c14808c",
     "server/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "server/app.py": "67413912cb40d0dfa9aa2d4b0e61632ba49dc7f96b7257440c7f8b889b742474",
+    "server/app.py": "16dd66d018914512ac7589d5f440ce3b554590c115fdb0e53432c1de4c1c60b0",
     "server/store.py": "adf96967b1c2c721cc2b11bbdf4549b0ccbba6b0522a9814eb048c2a01bbc35f",
     "tests/test_atlas_data_refresh.py": "49d90682458ea1b231cbcfd53e540f7ac7924d2505ee6227f4f32c719ac6815e",
-    "tests/test_server.py": "6c22763bd7e0b3f6a5ef89cb94310e2ecb77e33a2a4c3206a968671258c0b5cb",
+    "tests/test_server.py": "436b37333934e852eeb4ae1f22518f6c9e3ba2404c13af8435b2c201de14fb4b",
     "tools/backup_database.py": "59c1f39fb74adcd5fdc5540a4675cdc5c856dad145169bc97e4d489ddec904be",
     "tools/download_vietnam_osm.py": "7491b91b44ba848e0270850cb147bfcc4b2a95a135dca57090f10895684983c3",
     "tools/export_osm_csv_gz.py": "e108c8fa3896c85554f17f07a039ec228e2b9b169b3998c0b29494b92cf31c94",
@@ -70,14 +72,14 @@
     "tools/sync_osm_into_atlas.py": "c5d24f1106d149daa6035cc0612bae8e8b86ff8cc7446119e01ef4e5dde702bd",
     "tools/verify_osm_snapshot.py": "0d10e1634ba0b4faf1d2fee2e99b55d6302b285501ca6a3b7b257b0c5fc4890e",
     "tools/vn_osm_dataset.py": "6685d59e1d64430edb299a5f3bff9bdaa599999a02a2fa82a97bc3ce48782b49",
-    "web/app.js": "34626a8a83195950d51c2cfe0ac50fb164fd021bd04bf919b07b9a7bb93e2c14",
-    "web/index.html": "f8b0d9efee80a6d7019e3e8535d7d7025bc437ad69ce165172d82477078d057a",
-    "web/style.css": "4d925da9dc026519532c4c827b36f0b8dc7c877db68e83adb5b680b3dc8f4d84"
+    "web/app.js": "0d4daed6f3dfafb86e648f2b5447a4a28f001ec80f108767c06cd6d197174b12",
+    "web/index.html": "a9fcd058a909d48cf251754d0aad3b33132d0bf097cad904d4277ca58ec58f89",
+    "web/style.css": "f6f1eb77532111d56ea3df04f78f67f50aba38b24a17c158befcea2aedb7c53d"
   },
   "repo_publication": {
     "repository": "https://github.com/xegheplimo-web/Vietnam_Atlas",
     "ci": "GitHub Actions: test matrix (Ubuntu Python 3.10-3.14, Windows 3.12), ruff lint + format check, compileall, node --check, JSON validation, Docker build + /api/health smoke test, CodeQL",
-    "verified_locally_before_publish": "8/8 integration tests (Python 3.14.7), ruff check clean, ruff format clean, compileall OK, node --check OK, JSON valid, docker build OK, container /api/health OK; 2026-10-11 data toolkit: 22/22 tests (Python 3.14.7), ruff check + format clean, compileall OK, JSON valid, docker smoke /api/health OK, real-PBF pilot (Geofabrik 2026-10-09, 330 MB): 5,000 POIs imported + verify_osm_snapshot PASS (0 dup, 0 invalid)",
-    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section; license switched MIT->PolyForm Noncommercial 1.0.0 (PR #1, merged 2026-10-10T23:57:18Z), prior MIT grants remain valid for earlier revisions; see NOTICE, COMMERCIAL_USE.md, docs/LICENSING.md; docs/ROADMAP.md added (core-first order; Map-Anything 3D deferred 2026-10-11); data-refresh toolkit merged via PR #3 (fc740e7, 2026-10-11T01:36:36Z): fetch_vn_geofabrik (provenance/cache/retry), vn_osm_dataset (staging importer node/way/relation, dedup, snapshots), sync_osm_into_atlas (dry-run, online backup, retire propagation, verified/user protection), verify_osm_snapshot, export_osm_csv_gz (ODbL attribution + formula-injection guard), package_osm_dataset_zip, import_authorized_registry (rights-basis required); 14 new tests; review findings (Codex + Devin) addressed; legacy node-only tools marked superseded"
+    "verified_locally_before_publish": "8/8 integration tests (Python 3.14.7), ruff check clean, ruff format clean, compileall OK, node --check OK, JSON valid, docker build OK, container /api/health OK; 2026-10-11 data toolkit: 22/22 tests (Python 3.14.7), ruff check + format clean, compileall OK, JSON valid, docker smoke /api/health OK, real-PBF pilot (Geofabrik 2026-10-09, 330 MB): 5,000 POIs imported + verify_osm_snapshot PASS (0 dup, 0 invalid); 2026-10-11 satellite viewer: 23/23 tests, ruff/format/compileall/node clean, /api/map-config HTTP smoke (custom source + no-config fallback), SonarCloud gate OK, Docker smoke OK",
+    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section; license switched MIT->PolyForm Noncommercial 1.0.0 (PR #1, merged 2026-10-10T23:57:18Z), prior MIT grants remain valid for earlier revisions; see NOTICE, COMMERCIAL_USE.md, docs/LICENSING.md; docs/ROADMAP.md added (core-first order; Map-Anything 3D deferred 2026-10-11); data-refresh toolkit merged via PR #3 (fc740e7, 2026-10-11T01:36:36Z): fetch_vn_geofabrik (provenance/cache/retry), vn_osm_dataset (staging importer node/way/relation, dedup, snapshots), sync_osm_into_atlas (dry-run, online backup, retire propagation, verified/user protection), verify_osm_snapshot, export_osm_csv_gz (ODbL attribution + formula-injection guard), package_osm_dataset_zip, import_authorized_registry (rights-basis required); 14 new tests; review findings (Codex + Devin) addressed; legacy node-only tools marked superseded; satellite viewer opt-in merged via PR #2 (2026-10-11): MapTiler or self-hosted XYZ baselayer disabled by default, GET /api/map-config, credit-link sanitizer (https anchors only), origin-restricted browser key policy, review findings (Devin) addressed; AI/GPU pipeline architecture documented in docs/SATELLITE_AI_GPU_ARCHITECTURE.md (architecture only, no worker deployed)"
   }
 }
