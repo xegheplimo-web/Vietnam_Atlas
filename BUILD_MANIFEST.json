@@ -1,8 +1,8 @@
 {
   "product": "Vietnam Atlas Map & Memory",
   "version": "2.0-full-starter-2026-10-11",
-  "build_date_utc": "2026-10-11T02:26:05.044430+00:00",
-  "code_test_result": "24 tests passed (10 HTTP/storage integration + 14 data-refresh toolkit)",
+  "build_date_utc": "2026-10-11T02:44:23.630002+00:00",
+  "code_test_result": "26 tests passed (12 HTTP/storage integration incl. SSE reconnect + capacity, 14 data-refresh toolkit)",
   "validated_admin": "34 new province names; 63 legacy province names mapped",
   "downloads_not_embedded": [
     "vietnam-latest.osm.pbf",
@@ -14,8 +14,7 @@
     "no official new provincial polygon dataset",
     "not deployed to user Windows drive",
     "OSM PBF ingestion requires optional pyosmium",
-    "full VN PBF import pending (pilot: 5,000 POIs imported + verified 2026-10-11)",
-    "satellite imagery rendering not verified with a live provider key (config-level HTTP smoke only)"
+    "full VN PBF import pending (pilot: 5,000 POIs imported + verified 2026-10-11)"
   ],
   "files": {
     ".editorconfig": "0c8d40ddd18d5b5a112c3500b1a5f699dbf2439776a9c6c03165723da4a69207",
@@ -56,11 +55,11 @@
     "examples/small_osm_synthetic.osm": "c2bc4085dca1e82ce544df538edc1559ac9f11f006ca898c1fa31a318169028d",
     "pyproject.toml": "9d7b09d0859ac6bfa0712f4b9547e2d4665d9892bd4f4cba6600d98c0c14808c",
     "server/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "server/app.py": "cc07ec289942676b8333f4cae9ea98d8e07e4cff7c7b4c55a646e862d66e34af",
+    "server/app.py": "abd36d7c9d12e8dccad6cfeb132ab2d49490e3991b1506d82ed990c9fd8af417",
     "server/live.py": "37a66a8adc263070f22afc930774bf2432d1f001d0a03c5484d748ec39804431",
     "server/store.py": "adf96967b1c2c721cc2b11bbdf4549b0ccbba6b0522a9814eb048c2a01bbc35f",
     "tests/test_atlas_data_refresh.py": "49d90682458ea1b231cbcfd53e540f7ac7924d2505ee6227f4f32c719ac6815e",
-    "tests/test_server.py": "9c54534820b8d8c3e55241dcba403e644f3e74765452252fbdeb5f5028d084f1",
+    "tests/test_server.py": "cee3c16fb26ff7f053d4b6c3ebc25d2c37228ee7ebc4ad2d53e3f5ea8ee205a5",
     "tools/backup_database.py": "59c1f39fb74adcd5fdc5540a4675cdc5c856dad145169bc97e4d489ddec904be",
     "tools/download_vietnam_osm.py": "7491b91b44ba848e0270850cb147bfcc4b2a95a135dca57090f10895684983c3",
     "tools/export_osm_csv_gz.py": "e108c8fa3896c85554f17f07a039ec228e2b9b169b3998c0b29494b92cf31c94",
@@ -81,8 +80,8 @@
   "repo_publication": {
     "repository": "https://github.com/xegheplimo-web/Vietnam_Atlas",
     "ci": "GitHub Actions: test matrix (Ubuntu Python 3.10-3.14, Windows 3.12), ruff lint + format check, compileall, node --check, JSON validation, Docker build + /api/health smoke test, CodeQL",
-    "verified_locally_before_publish": "8/8 integration tests (Python 3.14.7), ruff check clean, ruff format clean, compileall OK, node --check OK, JSON valid, docker build OK, container /api/health OK; 2026-10-11 data toolkit: 22/22 tests (Python 3.14.7), ruff check + format clean, compileall OK, JSON valid, docker smoke /api/health OK, real-PBF pilot (Geofabrik 2026-10-09, 330 MB): 5,000 POIs imported + verify_osm_snapshot PASS (0 dup, 0 invalid); 2026-10-11 satellite viewer: 23/23 tests, ruff/format/compileall/node clean, /api/map-config HTTP smoke (custom source + no-config fallback), SonarCloud gate OK, Docker smoke OK; 2026-10-11 live SSE: 24/24 tests (incl. real SSE stream test), ruff/format/compileall/node clean",
-    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section; license switched MIT->PolyForm Noncommercial 1.0.0 (PR #1, merged 2026-10-10T23:57:18Z), prior MIT grants remain valid for earlier revisions; see NOTICE, COMMERCIAL_USE.md, docs/LICENSING.md; docs/ROADMAP.md added (core-first order; Map-Anything 3D deferred 2026-10-11); data-refresh toolkit merged via PR #3 (fc740e7, 2026-10-11T01:36:36Z): fetch_vn_geofabrik (provenance/cache/retry), vn_osm_dataset (staging importer node/way/relation, dedup, snapshots), sync_osm_into_atlas (dry-run, online backup, retire propagation, verified/user protection), verify_osm_snapshot, export_osm_csv_gz (ODbL attribution + formula-injection guard), package_osm_dataset_zip, import_authorized_registry (rights-basis required); 14 new tests; review findings (Codex + Devin) addressed; legacy node-only tools marked superseded; satellite viewer opt-in merged via PR #2 (2026-10-11): MapTiler or self-hosted XYZ baselayer disabled by default, GET /api/map-config, credit-link sanitizer (https anchors only), origin-restricted browser key policy, review findings (Devin) addressed; AI/GPU pipeline architecture documented in docs/SATELLITE_AI_GPU_ARCHITECTURE.md (architecture only, no worker deployed); live POI updates via PR #4 (2026-10-11): GET /api/live SSE (revision-only invalidation, 32-connection cap, heartbeat, Last-Event-ID), viewport-only refresh with AbortController + incremental marker reuse, docs/REALTIME_MAP.md (SLO targets, scaling limits, browser E2E on real network pending)"
+    "verified_locally_before_publish": "8/8 integration tests (Python 3.14.7), ruff check clean, ruff format clean, compileall OK, node --check OK, JSON valid, docker build OK, container /api/health OK; 2026-10-11 data toolkit: 22/22 tests (Python 3.14.7), ruff check + format clean, compileall OK, JSON valid, docker smoke /api/health OK, real-PBF pilot (Geofabrik 2026-10-09, 330 MB): 5,000 POIs imported + verify_osm_snapshot PASS (0 dup, 0 invalid); 2026-10-11 satellite viewer: 23/23 tests, ruff/format/compileall/node clean, /api/map-config HTTP smoke (custom source + no-config fallback), SonarCloud gate OK, Docker smoke OK; 2026-10-11 live SSE: 24/24 tests (incl. real SSE stream test), ruff/format/compileall/node clean; 2026-10-11 satellite imagery E2E with a live MapTiler browser key: provider zooms 5/16/19 tiles all 512px loaded, 0 failed",
+    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section; license switched MIT->PolyForm Noncommercial 1.0.0 (PR #1, merged 2026-10-10T23:57:18Z), prior MIT grants remain valid for earlier revisions; see NOTICE, COMMERCIAL_USE.md, docs/LICENSING.md; docs/ROADMAP.md added (core-first order; Map-Anything 3D deferred 2026-10-11); data-refresh toolkit merged via PR #3 (fc740e7, 2026-10-11T01:36:36Z): fetch_vn_geofabrik (provenance/cache/retry), vn_osm_dataset (staging importer node/way/relation, dedup, snapshots), sync_osm_into_atlas (dry-run, online backup, retire propagation, verified/user protection), verify_osm_snapshot, export_osm_csv_gz (ODbL attribution + formula-injection guard), package_osm_dataset_zip, import_authorized_registry (rights-basis required); 14 new tests; review findings (Codex + Devin) addressed; legacy node-only tools marked superseded; satellite viewer opt-in merged via PR #2 (2026-10-11): MapTiler or self-hosted XYZ baselayer disabled by default, GET /api/map-config, credit-link sanitizer (https anchors only), origin-restricted browser key policy, review findings (Devin) addressed; AI/GPU pipeline architecture documented in docs/SATELLITE_AI_GPU_ARCHITECTURE.md (architecture only, no worker deployed); live POI updates via PR #4 (2026-10-11): GET /api/live SSE (revision-only invalidation, 32-connection cap, heartbeat, Last-Event-ID), viewport-only refresh with AbortController + incremental marker reuse, docs/REALTIME_MAP.md (SLO targets, scaling limits, browser E2E on real network pending); satellite tile URL corrected to the MapTiler maps/satellite raster endpoint via PR #5 (previous tiles/satellite-v4 path returned 404 with a real key)"
   },
   "checksum_basis": "sha256 over git blob content (LF-normalized; verify: git cat-file blob :<path> | sha256sum)"
 }

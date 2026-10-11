@@ -93,7 +93,7 @@ def satellite_layer_config():
     if not key or len(key) > 256:
         return None
     return {
-        "url": "https://api.maptiler.com/tiles/satellite-v4/{z}/{x}/{y}?key=" + quote(key, safe=""),
+        "url": "https://api.maptiler.com/maps/satellite/{z}/{x}/{y}.jpg?key=" + quote(key, safe=""),
         "attribution": '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> | Satellite imagery providers',
         # Provider zoom 19 maps to Leaflet zoom 20 with tileSize 512 and zoomOffset -1.
         "maxNativeZoom": 20,
