@@ -1,0 +1,15 @@
+{
+  "snapshot_checked_on": "2026-10-11",
+  "openstreetmap_source": "https://download.geofabrik.de/asia/vietnam.html",
+  "source_reported_data_timestamp_utc": "2026-10-09T20:21:04Z",
+  "source_reported_size": "approximately 314 MB",
+  "pbf_downloaded_in_this_artifact": false,
+  "real_poi_records_in_artifact": 0,
+  "real_business_registry_records_in_artifact": 0,
+  "synthetic_fixtures_included": true,
+  "province_list_origin": "Existing Vietnam_Atlas starter bundle; official polygons not provided",
+  "license_of_osm_data": "ODbL-1.0",
+  "license_of_project_owned_code": "PolyForm Noncommercial 1.0.0 in GitHub project",
+  "claim_of_complete_business_registry": false,
+  "warning": "A national business register is not an OSM POI dataset. Obtain an authorized source before importing official businesses."
+}

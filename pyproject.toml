@@ -33,3 +33,5 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # CLI tools chủ động bắt Exception rộng để in lỗi thân thiện rồi thoát.
 "tools/*.py" = ["BLE001"]
+# Test fixtures import module từ tools/ sau sys.path.insert (pattern chủ ý).
+"tests/test_atlas_data_refresh.py" = ["E402"]
