@@ -335,7 +335,7 @@ class AtlasTest(unittest.TestCase):
         try:
             handler = FakeHandler()
             live.serve(handler)
-            self.assertEqual(503, handler.status)
+            self.assertEqual(handler.status, 503)
         finally:
             live.slots.release()
 

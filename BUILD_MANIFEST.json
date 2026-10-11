@@ -1,7 +1,7 @@
 {
   "product": "Vietnam Atlas Map & Memory",
   "version": "2.0-full-starter-2026-10-11",
-  "build_date_utc": "2026-10-11T02:15:22.875379+00:00",
+  "build_date_utc": "2026-10-11T02:20:44.137977+00:00",
   "code_test_result": "24 tests passed (10 HTTP/storage integration + 14 data-refresh toolkit)",
   "validated_admin": "34 new province names; 63 legacy province names mapped",
   "downloads_not_embedded": [

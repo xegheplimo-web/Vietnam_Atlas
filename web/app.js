@@ -64,7 +64,9 @@ async function refresh(){
     places=data.items;renderMarkers();renderPlaces();
     $('visibleCount').textContent=`Đang hiển thị ${places.length.toLocaleString('vi-VN')} / ${data.total.toLocaleString('vi-VN')} địa điểm trong vùng bản đồ${data.total>500?' (giới hạn 500/lần)':''}`;
     $('serverStatus').textContent='Kho bộ nhớ đã kết nối';
-  }catch(e){if(seq!==loadSeq||e.name==='AbortError')return;$('serverStatus').textContent='Không kết nối được máy chủ';$('visibleCount').textContent=e.message;toast('Lỗi tải dữ liệu: '+e.message)}
+  }catch(e){
+    if(seq===loadSeq&&e.name!=='AbortError'){$('serverStatus').textContent='Không kết nối được máy chủ';$('visibleCount').textContent=e.message;toast('Lỗi tải dữ liệu: '+e.message)}
+  }
   finally{if(refreshAbort===controller)refreshAbort=null}
 }
 async function refreshStats(){try{const d=await api('/api/stats');$('count').textContent=d.total_places.toLocaleString('vi-VN')}catch{$('count').textContent='–'}}
@@ -220,7 +222,7 @@ function invalidateLive(){
   // dropped on purpose — the pending fetch already reads the newest state,
   // and resetting the timer on every event would starve continuous edits.
   if(document.hidden||liveTimer)return;
-  liveTimer=setTimeout(()=>{liveTimer=null;Promise.all([refresh(),refreshStats()])},120);
+  liveTimer=setTimeout(()=>{liveTimer=null;Promise.all([refresh(),refreshStats()]).catch(()=>{})},120);
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)invalidateLive()});
 function connectLiveUpdates(){
