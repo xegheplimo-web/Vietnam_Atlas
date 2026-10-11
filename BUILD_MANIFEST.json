@@ -72,7 +72,7 @@
     "tests/test_atlas_data_refresh.py": "35731c498e4e5469eaeb6f7afa944089d1f6391912ebccc49275e856c76bda03",
     "tests/test_geo.py": "76f533b4daab8ebc4e47541cfb249110f76ea8c9abe118730c568f6002a753c6",
     "tests/test_server.py": "192a619ac0cd8020943f1bf80a913d0cfd892784da61c3d35316a6b69781b3b8",
-    "tools/backfill_province_codes.py": "0aa98bed0a95bafe32583bdfb069b5552f6928f6175822de76aa4159172c0007",
+    "tools/backfill_province_codes.py": "b23440f2fc56f84f16eaa9f190212d25c4ae426587e3b667176a73cbdc393062",
     "tools/backup_database.py": "59c1f39fb74adcd5fdc5540a4675cdc5c856dad145169bc97e4d489ddec904be",
     "tools/download_vietnam_osm.py": "7491b91b44ba848e0270850cb147bfcc4b2a95a135dca57090f10895684983c3",
     "tools/export_osm_csv_gz.py": "e108c8fa3896c85554f17f07a039ec228e2b9b169b3998c0b29494b92cf31c94",

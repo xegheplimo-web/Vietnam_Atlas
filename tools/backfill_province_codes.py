@@ -37,15 +37,8 @@ def _read_rows(db_path, only_null):
         con.close()
 
 
-def main():
-    ap = argparse.ArgumentParser(description="Backfill places.province_code via point-in-polygon (GSO 34 provinces)")
-    ap.add_argument("--db", default=str(ROOT / "data" / "atlas.sqlite3"))
-    ap.add_argument("--apply", action="store_true", help="execute backfill after automatic backup")
-    ap.add_argument("--only-null", action="store_true", help="chỉ tính cho POI chưa có province_code (mặc định tính lại toàn bộ)")
-    args = ap.parse_args()
-    if not Path(args.db).exists():
-        raise SystemExit("SQLite database not found: " + args.db)
-    rows, has_code = _read_rows(args.db, args.only_null)
+def _build_plan(rows):
+    """Tính plan updates (code, id, lat, lon) + danh sách outside + số unchanged từ rows scan."""
     plan = []
     outside = []
     unchanged = 0
@@ -58,6 +51,19 @@ def main():
             plan.append((code, row["id"], row["lat"], row["lon"]))
         else:
             unchanged += 1
+    return plan, outside, unchanged
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Backfill places.province_code via point-in-polygon (GSO 34 provinces)")
+    ap.add_argument("--db", default=str(ROOT / "data" / "atlas.sqlite3"))
+    ap.add_argument("--apply", action="store_true", help="execute backfill after automatic backup")
+    ap.add_argument("--only-null", action="store_true", help="chỉ tính cho POI chưa có province_code (mặc định tính lại toàn bộ)")
+    args = ap.parse_args()
+    if not Path(args.db).exists():
+        raise SystemExit("SQLite database not found: " + args.db)
+    rows, has_code = _read_rows(args.db, args.only_null)
+    plan, outside, unchanged = _build_plan(rows)
     assigned = sum(1 for code, *_ in plan if code is not None)
     print(f"Total rows scanned: {len(rows)}")
     print(f"- already correct : {unchanged}")
