@@ -3,6 +3,10 @@ services:
     build: .
     ports:
       - "127.0.0.1:8765:8765"
+    environment:
+      ATLAS_MAPTILER_KEY: ${ATLAS_MAPTILER_KEY:-}
+      ATLAS_SATELLITE_TILES_URL: ${ATLAS_SATELLITE_TILES_URL:-}
+      ATLAS_SATELLITE_ATTRIBUTION: ${ATLAS_SATELLITE_ATTRIBUTION:-}
     volumes:
       - atlas_storage:/app/storage
     restart: unless-stopped
