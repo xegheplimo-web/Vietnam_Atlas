@@ -220,8 +220,10 @@ class AtlasTest(unittest.TestCase):
             self.assertEqual(data["satellite"]["source"], "maptiler")
             url = data["satellite"]["url"]
             self.assertIn("key=browser-key-test", url)
-            # Regression: the configured raster endpoint must be a live MapTiler path
+            # Regression guard: pins the endpoint path verified live on 2026-10-11
             # (tiles/satellite-v4 shipped once and returned 404 with a real key).
+            # Shape check only — live availability is covered by manual browser E2E,
+            # not CI (tests make no external network calls).
             self.assertTrue(url.startswith("https://api.maptiler.com/maps/satellite/{z}/{x}/{y}.jpg?"), url)
 
         with patch.dict(
