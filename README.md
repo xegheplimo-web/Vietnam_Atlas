@@ -65,8 +65,8 @@ Sau đó mở http://localhost:8765. Docker mặc định chỉ mở cổng trê
 | Sao lưu SQLite | CLI | Sao lưu online an toàn và integrity_check |
 | Danh mục 34 tỉnh/thành | Có | Tên; chưa gồm polygon địa giới pháp lý |
 | Bảng chuyển 63 tỉnh cũ → 34 mới | Có | Kèm script dry-run, backup và thực thi |
-| Tải PBF OSM Việt Nam | Có script | Tải riêng, cần Internet |
-| Nhập tên POI nút OSM từ PBF | CLI tùy chọn | Cần `osmium`, không bao gồm POI dạng way/relation |
+| Tải PBF OSM Việt Nam | Có script | fetch_vn_geofabrik.py: provenance SHA-256 + cache; cần Internet |
+| Nhập POI OSM (node/way/relation) | CLI toolkit | staging DB + dedup + sync dry-run an toàn; cần `osmium` cho PBF |
 | Trích xuất đường OSM vùng chọn | CLI tùy chọn | Cần `osmium`, xuất GeoJSON xem trước |
 | Nạp overlay đường GeoJSON lên bản đồ | Hoạt động | Giới hạn 25 MB / 20.000 features |
 | Offline tile server toàn quốc | Chưa có | Cần dựng renderer/vector tile server riêng |
@@ -78,19 +78,20 @@ Sau đó mở http://localhost:8765. Docker mặc định chỉ mở cổng trê
 Tại thư mục giải nén:
 
 ```powershell
-py tools/download_vietnam_osm.py
+py tools/fetch_vn_geofabrik.py --out data/vietnam-latest.osm.pbf
 ```
 
-Tệp được tải thành `data/vietnam-latest.osm.pbf`, chứa các đối tượng OSM của Việt Nam: đường, nút, quan hệ... theo phạm vi của Geofabrik tại thời điểm tải. Tải PBF từ **Geofabrik**, không download hàng loạt tile của OpenStreetMap.
+Tệp được tải thành `data/vietnam-latest.osm.pbf`, chứa các đối tượng OSM của Việt Nam: đường, nút, quan hệ... theo phạm vi của Geofabrik tại thời điểm tải. Script ghi kèm provenance SHA-256/Last-Modified và bỏ qua tải khi nguồn chưa đổi (bản cũ `tools/download_vietnam_osm.py` vẫn chạy được nhưng không có các tính năng này). Tải PBF từ **Geofabrik**, không download hàng loạt tile của OpenStreetMap.
 
-Muốn nhập địa điểm OSM kiểu nút có tên vào SQLite (bước tùy chọn):
+Muốn nhập địa điểm OSM (node/way/relation) vào SQLite — dùng bộ toolkit dữ liệu (khuyến nghị):
 
 ```powershell
 py -m pip install osmium
-py tools/import_osm_poi.py data/vietnam-latest.osm.pbf --limit 5000
+py tools/vn_osm_dataset.py data/vietnam-latest.osm.pbf --db data/osm_vietnam.sqlite3 --limit 5000
+py tools/sync_osm_into_atlas.py        # dry-run; thêm --apply để ghi (tự backup trước)
 ```
 
-Bỏ `--limit 5000` để nạp tất cả POI *node* được bộ lọc hỗ trợ. Tên tỉnh của các điểm OSM **không tự suy ra từ tên tỉnh cũ**; cần chính xác polygon của 34 tỉnh mới và phép spatial join. Dữ liệu có thể lớn, nên backup trước và đo tốc độ trên một mẫu nhỏ.
+Importer nhập cả POI dạng node/way/relation, chống trùng theo `(osm_type, osm_id)`, lưu snapshot nhập và chỉ đồng bộ dữ liệu mới vào kho chính; bản ghi đã xác minh/do người dùng tạo không bao giờ bị ghi đè. Bỏ `--limit 5000` để nạp toàn bộ. Xem `docs/DATA_COVERAGE.md` và `docs/DATA_RIGHTS.md`; importer cũ chỉ-node (`tools/import_osm_poi.py`) vẫn dùng được cho trường hợp đơn giản. Tên tỉnh của các điểm OSM **không tự suy ra từ tên tỉnh cũ**; cần chính xác polygon của 34 tỉnh mới và phép spatial join.
 
 Muốn trích xuất đường ở một vùng **làm overlay xem trước**:
 

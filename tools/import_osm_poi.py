@@ -3,6 +3,9 @@
 Requires `pip install osmium`. Nodes only! Does NOT ingest way/relation POIs,
 photographs, registered-company status, or full administrative boundary polygons.
 Designed for large input with bounded in-memory buffers.
+
+SUPERSEDED (2026-10-11): prefer tools/vn_osm_dataset.py + tools/sync_osm_into_atlas.py
+for full node/way/relation ingestion with dedup, snapshots and dry-run sync.
 """
 
 import argparse
