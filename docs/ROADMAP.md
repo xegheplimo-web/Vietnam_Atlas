@@ -19,6 +19,7 @@ Cập nhật: 2026-10-11. Trạng thái hiện tại: v2.0 full-starter, repo Pu
 3. Nhập đầy đủ POI OSM (node/way/relation) + chống trùng theo `(source, source_id)`; giữ provenance. **Cập nhật 2026-10-11: bộ toolkit đã tích hợp (PR #3, `fc740e7`)** — fetch PBF kèm provenance/cache/retry, staging importer node/way/relation + snapshot + dedup, sync dry-run an toàn (online backup, retire propagation, bảo vệ bản ghi verified/người dùng), verify + export ODbL + packer; pilot 5.000 POI nạp thật đạt verify. Còn lại: chạy nạp toàn bộ PBF và lịch cập nhật định kỳ (mục 4).
 4. Tối ưu tìm kiếm tiếng Việt không dấu, tile server/offline, quy trình cập nhật dữ liệu định kỳ.
 5. (Mở rộng — chỉ khi có use case thật) Dịch vụ GPU tùy chọn dựng 3D từ ảnh/video của cửa hàng/phố/công trình.
+6. **Cập nhật 2026-10-11:** lớp ảnh vệ tinh **opt-in** đã tích hợp qua PR #2 (`662a56c`) — MapTiler/XYZ riêng, mặc định tắt, chỉ dùng nguồn được cấp phép; kiến trúc AI/GPU (worker tách rời, chưa triển khai) ghi tại `docs/SATELLITE_AI_GPU_ARCHITECTURE.md`.
 
 ## Điều kiện xem xét lại Map-Anything
 
