@@ -1,7 +1,7 @@
 {
   "product": "Vietnam Atlas Map & Memory",
   "version": "2.1-round-a-2026-10-11",
-  "build_date_utc": "2026-10-11T04:07:19.245936+00:00",
+  "build_date_utc": "2026-10-11T04:07:35.733780+00:00",
   "code_test_result": "29 tests passed (15 HTTP/storage integration incl. SSE reconnect + capacity + search relevance/aliases, 14 data-refresh toolkit)",
   "validated_admin": "34 new province names; 63 legacy province names mapped",
   "downloads_not_embedded": [
@@ -52,7 +52,7 @@
     "docs/LICENSING.md": "7c136b3f21003b3f7b4656c2a595eea4759a782da92b5336e1afee7130dd5d03",
     "docs/OFFLINE_ROADS.md": "cd642a2c805a3d5a591108dbd04c9943e83af44ff436db6844aae3dc47725cfd",
     "docs/REALTIME_MAP.md": "9b8e8a7cf44b0f10a4c5c64604bd3ac90ac2d33d367b3ecfd817a050e315a1ee",
-    "docs/ROADMAP.md": "07948b77b6de92907efeff2ecbc8b443e03288341271e826600f84aa79ab96f1",
+    "docs/ROADMAP.md": "77e109ee8747e49c15e5fcc479b4d1e01a683145054358c2c3624bde40be196a",
     "docs/SATELLITE_AI_GPU_ARCHITECTURE.md": "5886ca855a85aecc65ba938b113069e49404a42f089ba45cf5010ff02a8f8f20",
     "docs/VERIFICATION.md": "aa16303e72b635a40d40ce8a964dc37ace43e4e3534cab6433f83238ea9611bb",
     "docs/schema_postgis_optional.sql": "fa8107777017e317099434531d6aed173404ca4c8477b6f024e13c3557bfee93",
