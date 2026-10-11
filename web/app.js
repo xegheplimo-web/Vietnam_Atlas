@@ -39,6 +39,7 @@ async function configureSatelliteLayer(){
 }
 const pointIcon = L.divIcon({className:'',html:'<div style="width:17px;height:17px;border:3px solid white;border-radius:50%;background:#10a58f;box-shadow:0 2px 9px #0b46555e"></div>',iconSize:[17,17],iconAnchor:[8,8]});
 let places=[],markers=new Map(),adding=false,toastTimer,loadSeq=0,searchTimer,roadOverlay=null;
+let refreshAbort=null,moveTimer=null,liveTimer=null;
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 function toast(message){const e=$('toast');e.textContent=message;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),3300)}
 async function api(path,options={}){
@@ -51,24 +52,43 @@ function populateProvinces(names){for(const select of [$('province'),$('formProv
 function currentBBox(){const b=map.getBounds();return [b.getWest(),b.getSouth(),b.getEast(),b.getNorth()].map(n=>n.toFixed(6)).join(',')}
 async function refresh(){
   const seq=++loadSeq;
+  if(refreshAbort)refreshAbort.abort();
+  const controller=new AbortController();
+  refreshAbort=controller;
   try{
     const qs=new URLSearchParams({limit:'500',bbox:currentBBox()});
     if($('search').value.trim())qs.set('search',$('search').value.trim());
     if($('province').value)qs.set('province',$('province').value);
-    const data=await api('/api/places?'+qs);
+    const data=await api('/api/places?'+qs,{signal:controller.signal});
     if(seq!==loadSeq)return;
     places=data.items;renderMarkers();renderPlaces();
     $('visibleCount').textContent=`Đang hiển thị ${places.length.toLocaleString('vi-VN')} / ${data.total.toLocaleString('vi-VN')} địa điểm trong vùng bản đồ${data.total>500?' (giới hạn 500/lần)':''}`;
     $('serverStatus').textContent='Kho bộ nhớ đã kết nối';
-  }catch(e){if(seq!==loadSeq)return;$('serverStatus').textContent='Không kết nối được máy chủ';$('visibleCount').textContent=e.message;toast('Lỗi tải dữ liệu: '+e.message)}
+  }catch(e){
+    if(seq===loadSeq&&e.name!=='AbortError'){$('serverStatus').textContent='Không kết nối được máy chủ';$('visibleCount').textContent=e.message;toast('Lỗi tải dữ liệu: '+e.message)}
+  }
+  finally{if(refreshAbort===controller)refreshAbort=null}
 }
 async function refreshStats(){try{const d=await api('/api/stats');$('count').textContent=d.total_places.toLocaleString('vi-VN')}catch{$('count').textContent='–'}}
 function renderMarkers(){
-  markers.forEach(m=>map.removeLayer(m));markers.clear();
+  // Reuse markers on live refresh; only changed positions/popup data are updated.
+  const keep=new Set();
   for(const p of places){
-    const m=L.marker([p.lat,p.lon],{icon:pointIcon}).addTo(map);
+    keep.add(p.id);
     const popup=`<div class="popup-title">${escapeHtml(p.name)}</div><div class="popup-meta">${escapeHtml(p.category||'Chưa phân loại')}<br>${escapeHtml(p.address||'Chưa có địa chỉ')}<br>${escapeHtml(p.province||'Chưa xác định')} · ${escapeHtml(p.status)}</div><button class="popup-edit" data-popup-edit="${escapeHtml(p.id)}">Mở hồ sơ</button>`;
-    m.bindPopup(popup);markers.set(p.id,m);
+    let marker=markers.get(p.id);
+    if(!marker){
+      marker=L.marker([p.lat,p.lon],{icon:pointIcon}).addTo(map);
+      marker.bindPopup(popup);marker._atlasPopup=popup;
+      markers.set(p.id,marker);
+    }else{
+      const ll=marker.getLatLng();
+      if(ll.lat!==p.lat||ll.lng!==p.lon)marker.setLatLng([p.lat,p.lon]);
+      if(marker._atlasPopup!==popup){marker.setPopupContent(popup);marker._atlasPopup=popup;bindPopupButton(marker.getPopup()?.getElement())}
+    }
+  }
+  for(const [id,marker] of markers){
+    if(!keep.has(id)){map.removeLayer(marker);markers.delete(id)}
   }
 }
 function renderPlaces(){
@@ -137,8 +157,13 @@ $('addMedia').addEventListener('click',async()=>{
   }catch(e){toast(e.message)}
 });
 map.on('click',e=>{if(adding){editor(e.latlng);adding=false;$('addMode').classList.remove('active')}});
-map.on('moveend',()=>refresh());
-map.on('popupopen',()=>{document.querySelector('.leaflet-popup-content button[data-popup-edit]')?.addEventListener('click',e=>editById(e.currentTarget.dataset.popupEdit))});
+map.on('moveend',()=>{clearTimeout(moveTimer);moveTimer=setTimeout(refresh,90)});
+function bindPopupButton(root){
+  const b=root?.querySelector('button[data-popup-edit]');
+  if(!b||b.dataset.bound==='1')return;
+  b.dataset.bound='1';b.addEventListener('click',e=>editById(e.currentTarget.dataset.popupEdit));
+}
+map.on('popupopen',e=>bindPopupButton(e.popup.getElement()));
 $('addMode').addEventListener('click',()=>{adding=!adding;$('addMode').classList.toggle('active',adding);toast(adding?'Bấm vị trí trên bản đồ để tạo hồ sơ.':'Đã tắt chế độ thêm điểm.')});
 $('home').addEventListener('click',()=>map.setView([16.2,107.8],5.5));
 document.querySelectorAll('.layer').forEach(b=>b.addEventListener('click',()=>{
@@ -192,7 +217,31 @@ $('roadsFile').addEventListener('change',async e=>{
 });
 $('clearRoads').addEventListener('click',()=>{if(roadOverlay){map.removeLayer(roadOverlay);roadOverlay=null;toast('Đã ẩn lớp đường tự nạp.')}});
 $('refresh').addEventListener('click',()=>Promise.all([refresh(),refreshStats()]));
+function invalidateLive(){
+  // Leading-edge coalescing: while a refresh is pending, further events are
+  // dropped on purpose — the pending fetch already reads the newest state,
+  // and resetting the timer on every event would starve continuous edits.
+  if(document.hidden||liveTimer)return;
+  liveTimer=setTimeout(()=>{liveTimer=null;Promise.all([refresh(),refreshStats()]).catch(()=>{})},120);
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)invalidateLive()});
+function connectLiveUpdates(){
+  if(typeof EventSource==='undefined'){
+    setInterval(invalidateLive,6000);return;
+  }
+  const events=new EventSource('/api/live');
+  events.addEventListener('ready',invalidateLive);
+  events.addEventListener('changed',invalidateLive);
+  events.addEventListener('error',()=>{
+    // A rejected stream (503 at capacity) closes EventSource for good — it
+    // never retries. Open a fresh connection instead of going silent.
+    if(events.readyState===EventSource.CLOSED)setTimeout(connectLiveUpdates,5000);
+  });
+  // EventSource reconnects with Last-Event-ID; the existing REST endpoint remains the source of truth.
+  window.addEventListener('beforeunload',()=>events.close());
+}
 (async()=>{
   try{const d=await api('/api/provinces');populateProvinces(d.items)}catch{populateProvinces(fallbackProvinces)}
   await Promise.all([configureSatelliteLayer(),refresh(),refreshStats()]);
+  connectLiveUpdates();
 })();

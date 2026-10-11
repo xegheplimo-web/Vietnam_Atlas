@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
+from .live import LiveChanges
 from .store import (
     add_media,
     add_memory,
@@ -104,6 +105,7 @@ def satellite_layer_config():
 def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
     db_path = Path(db_path)
     web_dir = Path(web_dir or ROOT / "web").resolve()
+    live = LiveChanges(db_path)
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "VietnamAtlas/2.0"
@@ -163,6 +165,8 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
         def do_GET(self):
             path, params = self.route()
             try:
+                if path == "/api/live":
+                    return live.serve(self)
                 if path == "/api/map-config":
                     return self.json(200, {"satellite": satellite_layer_config()})
                 if path == "/api/health":
@@ -283,6 +287,7 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                 if path == "/api/places":
                     with session(db_path) as c:
                         p, action = save_place(c, data)
+                    live.notify()
                     return self.json(201 if action == "create" else 200, {"item": p, "action": action})
                 if path.startswith("/api/places/") and (path.endswith(("/memories", "/media"))):
                     pid, category = path[len("/api/places/") :].rsplit("/", 1)
@@ -312,6 +317,8 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                                     errors.append({"index": idx, "reason": str(exc)})
                             finally:
                                 c.execute("RELEASE SAVEPOINT atlas_import_item")
+                    if created or updated:
+                        live.notify()
                     return self.json(
                         200, {"created": created, "updated": updated, "rejected": len(data["features"]) - created - updated, "errors": errors}
                     )
@@ -336,6 +343,7 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                     if not get_place(c, pid):
                         return self.json(404, {"error": "Không tìm thấy địa điểm"})
                     p, action = save_place(c, data, pid)
+                live.notify()
                 return self.json(200, {"item": p, "action": action})
             except (ValueError, TypeError) as e:
                 return self.json(400, {"error": str(e)})
@@ -351,6 +359,8 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
             pid = path[len("/api/places/") :]
             with session(db_path) as c:
                 deleted = delete_place(c, pid)
+            if deleted:
+                live.notify()
             return self.json(200 if deleted else 404, {"deleted": deleted})
 
     return Handler
