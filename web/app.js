@@ -14,6 +14,26 @@ const layers = {
   topo:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'&copy; OpenStreetMap contributors | OpenTopoMap, SRTM'})
 };
 layers.osm.addTo(map);
+// Imagery is opt-in: the API only advertises sources configured by the operator.
+// Provider imagery stays with the provider; this client does not prefetch or cache tiles.
+async function configureSatelliteLayer(){
+  const button=document.querySelector('.layer[data-layer="satellite"]');
+  try{
+    const config=await api('/api/map-config');
+    const sat=config.satellite;
+    if(!sat){button.title='Thiết lập ATLAS_MAPTILER_KEY hoặc nguồn XYZ được cấp phép';return}
+    layers.satellite=L.tileLayer(sat.url,{
+      maxZoom:20,maxNativeZoom:Math.min(20,Math.max(0,Number(sat.maxNativeZoom)||19)),
+      attribution:sat.attribution,updateWhenIdle:true
+    });
+    let warned=false;
+    layers.satellite.on('tileerror',()=>{
+      if(!warned){warned=true;toast('Không tải được ảnh vệ tinh: kiểm tra API key, hạn mức hoặc máy chủ tile.')}
+    });
+    button.disabled=false;
+    button.title='Ảnh vệ tinh từ nguồn '+sat.source+' (không phải ảnh trực tiếp thời gian thực)';
+  }catch(_error){button.title='Không tải được cấu hình ảnh vệ tinh'}
+}
 const pointIcon = L.divIcon({className:'',html:'<div style="width:17px;height:17px;border:3px solid white;border-radius:50%;background:#10a58f;box-shadow:0 2px 9px #0b46555e"></div>',iconSize:[17,17],iconAnchor:[8,8]});
 let places=[],markers=new Map(),adding=false,toastTimer,loadSeq=0,searchTimer,roadOverlay=null;
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
@@ -119,7 +139,9 @@ map.on('popupopen',()=>{document.querySelector('.leaflet-popup-content button[da
 $('addMode').addEventListener('click',()=>{adding=!adding;$('addMode').classList.toggle('active',adding);toast(adding?'Bấm vị trí trên bản đồ để tạo hồ sơ.':'Đã tắt chế độ thêm điểm.')});
 $('home').addEventListener('click',()=>map.setView([16.2,107.8],5.5));
 document.querySelectorAll('.layer').forEach(b=>b.addEventListener('click',()=>{
-  Object.values(layers).forEach(layer=>map.removeLayer(layer));layers[b.dataset.layer].addTo(map);
+  const selected=layers[b.dataset.layer];
+  if(!selected)return toast("Lớp nền chưa được cấu hình.");
+  Object.values(layers).forEach(layer=>map.removeLayer(layer));selected.addTo(map);
   document.querySelectorAll('.layer').forEach(other=>other.classList.toggle('active',other===b));
 }));
 $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(refresh,300)});
@@ -168,5 +190,5 @@ $('clearRoads').addEventListener('click',()=>{if(roadOverlay){map.removeLayer(ro
 $('refresh').addEventListener('click',()=>Promise.all([refresh(),refreshStats()]));
 (async()=>{
   try{const d=await api('/api/provinces');populateProvinces(d.items)}catch{populateProvinces(fallbackProvinces)}
-  await Promise.all([refresh(),refreshStats()]);
+  await Promise.all([configureSatelliteLayer(),refresh(),refreshStats()]);
 })();
