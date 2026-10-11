@@ -1,5 +1,5 @@
 {
-  "description": "Bộ truy vấn chuẩn (locked 2026-10-11, cập nhật expected cho full import 98.617 POI). Đo Hit@10/MRR@10/p95 cho tìm kiếm Vietnam Atlas; expected IDs trỏ vào POI thật của snapshot full (id nội bộ giữ ổn định; category expected tính lại trên dữ liệu full).",
+  "description": "Bộ truy vấn chuẩn 150 câu (round B, 2026-10-11; 31 câu đầu locked từ round A). Đo Hit@10/MRR@10/Recall@10/p95 cho tìm kiếm Vietnam Atlas; expected IDs trỏ vào POI thật của snapshot full 98.617 POI (2026-10-09). Nhóm admin_legacy đánh dấu coverage_gap khi snapshot không có dữ liệu khớp — báo riêng, không tính hit-rate chính.",
   "queries": [
     {
       "id": "exact_01",
@@ -6453,6 +6453,1690 @@
       "query": "quán ăn qwertyuiop",
       "expected_ids": [],
       "note": "không có kết quả đúng"
+    },
+    {
+      "kind": "exact",
+      "query": "QT Yến Kim ( Nguyễn Thị Yến ) pơng đrang",
+      "expected_ids": [
+        "17ce246b-6734-4138-8ca5-587e1c2ce561"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_32"
+    },
+    {
+      "kind": "exact",
+      "query": "Quán Bar Whisky & Wares",
+      "expected_ids": [
+        "21f31c7e-a0dd-4029-a590-be5a70322782"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_33"
+    },
+    {
+      "kind": "exact",
+      "query": "No.23 Nail Artist",
+      "expected_ids": [
+        "57308a0e-75c7-46e4-bad3-8c2edfa7b199"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_34"
+    },
+    {
+      "kind": "exact",
+      "query": "Nhà Bè Sướng loan",
+      "expected_ids": [
+        "71164237-7990-422e-b1d3-ae678f728a45"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_35"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Tiểu học Đồng Nguyên 1 (cũ)",
+      "expected_ids": [
+        "59af903a-d0ed-42ce-a6e8-fc2f9b1f9252"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_36"
+    },
+    {
+      "kind": "exact",
+      "query": "Công Viên Văn Hóa Di Linh",
+      "expected_ids": [
+        "856bf2d6-3725-4650-ba25-6bd4b5573035"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_37"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Cao đẳng Lê Quý Đôn",
+      "expected_ids": [
+        "84d54b65-cf34-41b9-bda9-fa89c3669d63"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_38"
+    },
+    {
+      "kind": "exact",
+      "query": "Cửa hàng bán đồ trang sức",
+      "expected_ids": [
+        "18fafd53-8b7e-4682-b029-9d696ad147f6"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_39"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Tiểu học Bạch Hạ",
+      "expected_ids": [
+        "d51b4d04-98af-4de6-a0a2-e04f2c3bb152"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_40"
+    },
+    {
+      "kind": "exact",
+      "query": "Trạm khí tượng Cửa Ông",
+      "expected_ids": [
+        "30eece09-ed78-4836-bae2-87210aea66d4"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_41"
+    },
+    {
+      "kind": "exact",
+      "query": "UBND Phường Đông Triều",
+      "expected_ids": [
+        "adc16741-0a2c-497c-8a8e-e57dc224828b"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_42"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Nguyễn Bỉnh Khiêm - Cầu Giấy",
+      "expected_ids": [
+        "0d21b21c-4783-4eb1-bfbe-79e2733bef05"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_43"
+    },
+    {
+      "kind": "exact",
+      "query": "Công Ty TNHH Cá Heo Lớn",
+      "expected_ids": [
+        "09aac383-887a-43b0-aad7-eecf42941578"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_44"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Tiểu học Nguyễn Lượng Thái - Khu 2",
+      "expected_ids": [
+        "8b7606a8-29f4-40cf-8599-63ae39dbf88b"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_45"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Tiểu học Ngọc Đường",
+      "expected_ids": [
+        "98bcafdc-82f0-4554-92c4-a82e30520ad6"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_46"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Trung học cơ sở Quảng Phú Cầu",
+      "expected_ids": [
+        "db16db4b-e3a7-4d21-a694-18da45cef579"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_47"
+    },
+    {
+      "kind": "exact",
+      "query": "UBND Xã Bắc Ninh Hòa",
+      "expected_ids": [
+        "35a33fd3-c4d1-4581-b2b3-62c3ffe3bd2a"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_48"
+    },
+    {
+      "kind": "exact",
+      "query": "Công an xã Phù Đổng",
+      "expected_ids": [
+        "44eaf4af-d33d-4123-a6b1-b291d45c29b0"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_49"
+    },
+    {
+      "kind": "exact",
+      "query": "Trạm Y tế xã Xà Bang",
+      "expected_ids": [
+        "a6ba0127-8b77-4f58-8330-ecf10ab884e6"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_50"
+    },
+    {
+      "kind": "exact",
+      "query": "Ngân hàng TMCP Đại Tín",
+      "expected_ids": [
+        "1dcfee5a-1216-4ab6-863f-758d413487d4"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_51"
+    },
+    {
+      "kind": "exact",
+      "query": "Cửa Hàng Tony Huy",
+      "expected_ids": [
+        "1a3e075a-59e8-4d21-bee3-73f45b1b1876"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_52"
+    },
+    {
+      "kind": "exact",
+      "query": "Trung tâm thông tin du lịch",
+      "expected_ids": [
+        "8594cb7d-3f79-4a12-9760-733b098320f2"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_53"
+    },
+    {
+      "kind": "exact",
+      "query": "Quán phở Vĩnh Phúc",
+      "expected_ids": [
+        "561df095-589e-4aa8-845b-481ec4fe7c1f"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_54"
+    },
+    {
+      "kind": "exact",
+      "query": "Mì Cay SanU An Nhơn",
+      "expected_ids": [
+        "62d19ac3-171e-43bf-9a9c-4ed3b592addf"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_55"
+    },
+    {
+      "kind": "exact",
+      "query": "Công viên Trần Hưng Đạo",
+      "expected_ids": [
+        "4c945784-5e2e-4ec0-8a07-37a56f5fcba5"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_56"
+    },
+    {
+      "kind": "exact",
+      "query": "UBND xã Thiệu Trung",
+      "expected_ids": [
+        "b9ea2fa3-15f5-4cb8-815f-3af66ed0ea3a"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_57"
+    },
+    {
+      "kind": "exact",
+      "query": "QT Thiện Nhân ( Ngô Minh Thiện ) c2 dlieya",
+      "expected_ids": [
+        "65ff8670-6960-415d-bfc2-9a0057445360"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_58"
+    },
+    {
+      "kind": "exact",
+      "query": "Bánh bao Thọ Phát",
+      "expected_ids": [
+        "4fddaf76-b945-43a6-ac09-a0ed160cc7b0"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_59"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường tiểu học Nguyễn Văn Trỗi",
+      "expected_ids": [
+        "9dd619a0-ddc4-4cb7-8242-4d6a98e32d04"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_60"
+    },
+    {
+      "kind": "exact",
+      "query": "Đại sứ quán Cộng hòa Dominica",
+      "expected_ids": [
+        "d7c684e9-18ba-4fbf-bec7-e88f1af96873"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_61"
+    },
+    {
+      "kind": "exact",
+      "query": "Trường Tiểu học Lý Tự Trọng",
+      "expected_ids": [
+        "1dbc1f39-ae32-4ac5-9a4e-b7c7c0c65026"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_62"
+    },
+    {
+      "kind": "exact",
+      "query": "Đảng Ủy - HĐND - UBND - UBMTTQ Phường 1 Bảo Lộc",
+      "expected_ids": [
+        "0a75f101-b95a-4bfb-b2cc-49a528fc4f57"
+      ],
+      "note": "tên POI thật có dấu",
+      "id": "exact_63"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "quang truong trung tam trang bang",
+      "expected_ids": [
+        "8caca3b4-f70b-4a0b-aa47-9fceae288f71"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_64"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "tram khi tuong pha din",
+      "expected_ids": [
+        "b02446ba-c919-4a30-9b79-6af8d102c3c5"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_65"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "phong cong chung so 8 thanh pho ha noi",
+      "expected_ids": [
+        "56aba0cf-e318-4ab9-98d5-29f9c125cddd"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_66"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "trai phong quy hoa",
+      "expected_ids": [
+        "9ab2447e-2ba6-40a7-80ab-cf55c7123426"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_67"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "benh vien da khoa phu xuyen",
+      "expected_ids": [
+        "11c7143c-deb3-4c81-a698-1d99b402e364"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_68"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "nha nghi minh chau",
+      "expected_ids": [
+        "5b93df2e-75f3-4d7a-a4ff-af1c426f0800"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_69"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "lam nguyen house",
+      "expected_ids": [
+        "a2d13b60-fb55-406d-95b9-71342b937b6d"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_70"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "nha tho bui phat",
+      "expected_ids": [
+        "6848790a-ffff-4434-b3c6-7233cb5a7c74"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_71"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "truong mam non sao sang",
+      "expected_ids": [
+        "619f1f07-84df-42b8-8a8c-be071cb4638e"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_72"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "cong ty tnhh mtv dich vu cong ich quan go vap",
+      "expected_ids": [
+        "73ce621a-460f-4140-a481-dc558326cbd1"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_73"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "khach san cao son",
+      "expected_ids": [
+        "6b513bdc-cb0b-4b21-83d5-5b7506796e0a"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_74"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "tong lanh su quan canada",
+      "expected_ids": [
+        "dbb3cc1d-b7d2-4e1d-acbf-3077fcbf70a0"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_75"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "khu quan ly duong bo iii",
+      "expected_ids": [
+        "e1fa0202-3a8c-450e-89f0-4bcdb5451063"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_76"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "phong sieu am vo thi thuy",
+      "expected_ids": [
+        "a2cd3f5e-089d-4299-a66a-c36802b6314e"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_77"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "phong giao duc va dao tao huyen chiem hoa",
+      "expected_ids": [
+        "88867e2f-0cdd-4125-8107-358cd4a2f92e"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_78"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "vinfast (xe may dien)",
+      "expected_ids": [
+        "10b45292-52c4-4fff-9e0f-b67aa3f00664"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_79"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "nha van hoa to dan pho do nha",
+      "expected_ids": [
+        "691474c4-ca46-4a9d-b3e1-1c6c76ab07c7"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_80"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "nha tro hoai trang",
+      "expected_ids": [
+        "612022c7-d8ac-4c2a-b127-6a8d5e1c950e"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_81"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "th-binh ly-ap tan duc- minh tan- dau tieng-0964468819",
+      "expected_ids": [
+        "b5f374e3-f357-4004-bc93-1e490759def6"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_82"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "san bong lien mac",
+      "expected_ids": [
+        "e2621512-40d7-47eb-be0f-24a63b2975cd"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_83"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "olong pho co hotel",
+      "expected_ids": [
+        "aa7b67dc-de89-41ba-9df6-8d558cd35164"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_84"
+    },
+    {
+      "kind": "no_diacritics",
+      "query": "trung tam the thao lu doan phao binh 25",
+      "expected_ids": [
+        "3f7f6418-6c87-4f64-a772-449a01cbef2b"
+      ],
+      "note": "tên thật viết không dấu",
+      "id": "nodiac_85"
+    },
+    {
+      "kind": "alias",
+      "query": "bv tam than hue",
+      "expected_ids": [
+        "bbe8c33e-2e09-44da-aec9-48405071ec2f"
+      ],
+      "note": "bv -> benh vien",
+      "id": "alias_86"
+    },
+    {
+      "kind": "alias",
+      "query": "bv tai-mui-hong thanh pho can tho",
+      "expected_ids": [
+        "b793a638-1429-44bb-888b-2e7c0ba42dc9"
+      ],
+      "note": "bv -> benh vien",
+      "id": "alias_87"
+    },
+    {
+      "kind": "alias",
+      "query": "bv nhi dong 2",
+      "expected_ids": [
+        "ec14bd81-c615-4ed5-8ef0-60ba80fdea76"
+      ],
+      "note": "bv -> benh vien",
+      "id": "alias_88"
+    },
+    {
+      "kind": "alias",
+      "query": "bv dong ho 367 nguyen oanh",
+      "expected_ids": [
+        "79a50859-f7f5-4679-8f01-be388c34deb9"
+      ],
+      "note": "bv -> benh vien",
+      "id": "alias_89"
+    },
+    {
+      "kind": "alias",
+      "query": "ks equatorial",
+      "expected_ids": [
+        "2361085e-16d2-4310-974b-52f3c8dc33bd"
+      ],
+      "note": "ks -> khach san",
+      "id": "alias_90"
+    },
+    {
+      "kind": "alias",
+      "query": "ks uyen anh",
+      "expected_ids": [
+        "022f9f3b-a110-40af-a504-cb2a9328bccc"
+      ],
+      "note": "ks -> khach san",
+      "id": "alias_91"
+    },
+    {
+      "kind": "alias",
+      "query": "ks camellia",
+      "expected_ids": [
+        "2ec3bc45-d502-4a9c-8776-5cbc96a6800c"
+      ],
+      "note": "ks -> khach san",
+      "id": "alias_92"
+    },
+    {
+      "kind": "alias",
+      "query": "ks pt",
+      "expected_ids": [
+        "475414d8-37db-4049-886a-a467f831939a"
+      ],
+      "note": "ks -> khach san",
+      "id": "alias_93"
+    },
+    {
+      "kind": "alias",
+      "query": "truong dh ton duc thang",
+      "expected_ids": [
+        "d9f70f32-9638-4fc1-8366-47c0196d83e6"
+      ],
+      "note": "dh -> dai hoc",
+      "id": "alias_94"
+    },
+    {
+      "kind": "alias",
+      "query": "truong dh pham van dong",
+      "expected_ids": [
+        "4763e680-25fc-491c-b381-777494441833"
+      ],
+      "note": "dh -> dai hoc",
+      "id": "alias_95"
+    },
+    {
+      "kind": "alias",
+      "query": "dh duy tan",
+      "expected_ids": [
+        "a422cbf2-eeea-4a14-a516-d148af30a7dc"
+      ],
+      "note": "dh -> dai hoc",
+      "id": "alias_96"
+    },
+    {
+      "kind": "alias",
+      "query": "dai truyen thanh tp ba ria",
+      "expected_ids": [
+        "bab871de-8669-4284-9dc3-c92ee8df0269"
+      ],
+      "note": "tp -> thanh pho",
+      "id": "alias_97"
+    },
+    {
+      "kind": "alias",
+      "query": "nha hat tp hai phong",
+      "expected_ids": [
+        "16a1d6c2-f2e5-463a-b4db-42223f8640ce"
+      ],
+      "note": "tp -> thanh pho",
+      "id": "alias_98"
+    },
+    {
+      "kind": "alias",
+      "query": "truong dai hoc mo tp ho chi minh",
+      "expected_ids": [
+        "14b85619-2110-43dd-a8a7-0f5b07b0fdfa"
+      ],
+      "note": "tp -> thanh pho",
+      "id": "alias_99"
+    },
+    {
+      "kind": "alias",
+      "query": "ben xe khach tx muong lay",
+      "expected_ids": [
+        "0ac8d542-d509-4181-8adb-820e99b13e70"
+      ],
+      "note": "tx -> thi xa",
+      "id": "alias_100"
+    },
+    {
+      "kind": "alias",
+      "query": "cong vien van hoa tx duyen hai",
+      "expected_ids": [
+        "7e4d801a-6ea4-462e-9b47-8a08f9ce992c"
+      ],
+      "note": "tx -> thi xa",
+      "id": "alias_101"
+    },
+    {
+      "kind": "alias",
+      "query": "truong tieu hoc tt co to",
+      "expected_ids": [
+        "96905783-5ffd-4198-80ac-e562a45c7585"
+      ],
+      "note": "tt -> thi tran",
+      "id": "alias_102"
+    },
+    {
+      "kind": "alias",
+      "query": "ubnd thanh pho can tho",
+      "expected_ids": [
+        "163c54aa-0234-4e5e-9099-095c9f0eb178"
+      ],
+      "note": "ubnd -> uy ban nhan dan",
+      "id": "alias_103"
+    },
+    {
+      "kind": "alias",
+      "query": "ubnd phuong lai thieu",
+      "expected_ids": [
+        "27153372-2492-4d39-be45-b0bd380cfe2a"
+      ],
+      "note": "ubnd -> uy ban nhan dan",
+      "id": "alias_104"
+    },
+    {
+      "kind": "category_place",
+      "query": "cơm hồ chí minh",
+      "expected_ids": [
+        "36d66a5e-7212-4859-b3c8-cdc878e31a91",
+        "d1c20ff8-4611-4b57-84ad-b2bf52106709",
+        "4dd3446b-4fbf-40a3-8bb5-354cb7f67cf3",
+        "c3ce82d2-c1bc-401c-b4a1-f4effaa0447e",
+        "a71c1c7e-54ba-4a7d-9834-f8048edb4c08",
+        "4db7c3dc-97b1-456d-9dfb-527e1f49e44a",
+        "804b4293-31b0-4509-a297-db1727ef7b99",
+        "ba346f6e-f3cf-4025-a74b-0525452b86d9",
+        "8a1fc0cd-ba74-410e-b9d8-786864412a94",
+        "f02ab872-789e-4436-821d-893b03c84748",
+        "8538d442-9e36-4e52-bd5f-e9e0ee50fe5f",
+        "2c274431-a4cc-4ebf-bc9b-381ac8b0175f",
+        "f69400b3-866f-406c-afa7-d8e3989d3992",
+        "1c9362cb-b122-4e83-9559-7399228e05ce",
+        "1de80e61-0373-45fd-bf7a-d984a21e417d",
+        "da1b663a-95ec-4c6c-b6ac-e95e6a4dc67b",
+        "7ed523a3-6075-4951-b836-39f3944ceb01",
+        "ecaf954f-75a0-4829-a6d6-4f462f94c97d"
+      ],
+      "note": "18 POI khớp token-boundary (cap 50)",
+      "id": "catplace_105"
+    },
+    {
+      "kind": "category_place",
+      "query": "chùa uông bí",
+      "expected_ids": [
+        "63cba0bb-4f1f-4973-a411-c562074ff79e"
+      ],
+      "note": "1 POI khớp token-boundary (cap 50)",
+      "id": "catplace_106"
+    },
+    {
+      "kind": "category_place",
+      "query": "phở hồ chí minh",
+      "expected_ids": [
+        "2b416c1b-3dc0-4116-94fd-edf2101b22ec",
+        "77bc3f9b-473d-4929-844e-c5136d8a41c9",
+        "05b31ed5-9a7e-4eb6-8ea5-ee6b78d33470",
+        "b0453fdc-0c1f-4e88-ad2d-a9a09df553a3",
+        "be02e88c-c4d4-4b45-9ea6-3347e61fbe6a",
+        "b86cb991-9155-477c-a209-47612b63a8f9",
+        "51b2e4cf-e81c-4e57-a6f1-8b0d1a6a2131",
+        "2eeed300-1bf2-4a15-aada-1f600789ee01",
+        "a10d432f-2f3c-4bfc-a532-3292b2009624",
+        "6126689a-8a5d-4cfb-82ef-45c20f6d996d",
+        "bea8a8f6-8592-43ab-8a68-f75eba1f804b",
+        "f24baa70-2a8c-4b22-8e9d-37c234f7a585",
+        "1976ea65-b911-4a00-a5ee-94f8ca143616",
+        "ee69af19-fa01-4922-bd9a-4bd45b756031",
+        "64566dad-98e9-4aac-a8ee-e8e366640173",
+        "3e83fd24-e2db-41d1-9523-3c088bc075a3",
+        "9cf62ae8-aaa5-4460-838a-4ed4606a2540",
+        "0a4ffe41-a607-46ec-bdd1-972865630149",
+        "bf1283c7-7d8a-4164-ac8f-ee13b2bf7183",
+        "39155726-a883-4705-b5e1-f335557ab33f",
+        "5436b6a3-5cb6-4ecc-858d-a5afdc8e373b",
+        "e99059c4-8918-4df3-8e03-6627d2e58876",
+        "4fe86b48-282d-4fed-9785-bde93e927a34",
+        "5de4ac0e-7d3d-4c00-9995-ef94546171c7",
+        "29da3332-f938-4f2f-8fea-92b101ce5a4e",
+        "2db538f6-5b08-4e0d-bb02-39934c8e6daa",
+        "43411ca7-a6b6-40e5-a6e2-0c7e16da4b5d",
+        "df5318b4-020b-46aa-b379-df875cff071a",
+        "42cc4914-0429-46d2-99cf-0c3c1ab7764d",
+        "a1b86d05-b966-4d3a-b9b7-365dbb6a5794",
+        "6cb3f497-7bc7-440b-9755-d2f026a4ab6f",
+        "65d82b68-5b9a-4c1a-a7b6-40af4d3e3c85",
+        "a6878248-9f86-4827-9d63-9a1cc157ae33",
+        "3dac4646-fe58-4f01-acf0-94386f42304e",
+        "040638e2-b19c-470e-8551-e2e72fc4f03e",
+        "19acaf58-db43-43e3-960d-e358a8b59117",
+        "71b3bd8e-099b-4397-b89d-1827325a784e",
+        "eacad1b3-8400-4888-9636-1fb6f680f0c2",
+        "6e0724ab-8a93-4163-9adc-75936494ea94",
+        "b65d3a1a-0c77-4819-877f-e4eaedff6f30",
+        "e2785210-626d-4d03-96bf-e68351ae192f",
+        "eca01d46-4459-4157-9d69-c23a8b299df3",
+        "5b42e36e-e211-4f49-9db6-94b1b8a018ef",
+        "18687f7d-ce2d-4b04-8289-a016d00b01c2",
+        "e66883e0-83c5-4c49-9265-0467428ba470",
+        "616e935b-9f1b-4648-9908-5f8f4729f808",
+        "e984450d-926a-414f-aff2-b62d1ac50e7b",
+        "f7963a12-a953-4d8f-bf82-5edd5e14c500",
+        "9f44a8e7-b8c6-4596-ab63-838a1f94bd31",
+        "86a1a5a3-ec71-49df-877d-865bc51830a5"
+      ],
+      "note": "ground-truth fix 2026-10-11: quán phở trong bbox TP.HCM (274 POI khớp token \"phở\" đúng dấu, cap 50). Matcher cũ khớp \"pho\"=\"phố\" (Thành phố) → label rác trường học. Engine AND-token hiện chưa trả quán phở (round C: geo-aware category search).",
+      "id": "catplace_107"
+    },
+    {
+      "kind": "category_place",
+      "query": "trường học hồ chí minh",
+      "expected_ids": [
+        "14b85619-2110-43dd-a8a7-0f5b07b0fdfa",
+        "54bf9116-7b53-499c-8d6a-895663390819",
+        "dbdceadb-5381-402c-9778-12677ca3d2b3",
+        "e4dc12ac-92a4-41dd-ae2c-97929642e84d",
+        "b0507651-e2c6-484f-bc34-771c36722fe3",
+        "a802cc34-5273-4360-bae3-2063bf0ae89c",
+        "66b3d833-438c-40dc-b453-1814ba54bc9b",
+        "d8feb3c6-228f-4ed6-bd92-d75c530a3bcb",
+        "dfdc0627-c26c-4cb1-85a4-4a69f51998a3",
+        "6fc79eb0-7c4f-4d2e-a9b7-b8db982a56ed",
+        "e8e8647d-0e8b-43bb-b723-4a0c41b70f54",
+        "9eb90cfd-d93e-4b6d-9033-c2978994381c",
+        "a2e7b64d-6ee0-41c3-8c92-dbddec1335a7",
+        "6197242e-b1a1-463c-9b7f-1f20f2e963fb",
+        "40dec4d6-c41d-414e-92e8-79c734741f99",
+        "9baf37f4-3790-4fe6-90e0-f491d0a6490f",
+        "6da14635-4136-41f7-beca-434e93d7eabe",
+        "c4da19c5-c88c-4d0d-bee5-2d9e8ff292d5",
+        "6ff0340b-e98d-4e41-bebf-65cd155c4091",
+        "86ebf11a-a59d-4722-83a6-50963cf29f28",
+        "a2cbb026-b9fb-4c64-b1e5-4e7c01c6dd28",
+        "e59dc4f0-b395-4c0e-af9e-e6e33ac265c1",
+        "448b3173-5e72-49d9-b7e0-7854c411cc17",
+        "942bc18b-32bf-4a8e-96b1-845a083f18a6",
+        "e52dcaf8-67cc-464b-9d62-9cd8b1ccf30b",
+        "29f4d9e6-a1fd-433f-8e59-614b858fdb1c",
+        "0a9ffd1c-1f9b-4ef7-8780-d6dbe9d2e1c1",
+        "914f656c-6b89-48a3-a3ae-48f6f20d3871",
+        "0e7c69af-41e6-460e-99bb-4dd4d5e6310a",
+        "06173833-d59d-4978-bc9f-0deb7247219b",
+        "08a1fff7-3b9b-4592-bf37-252e6a725c01",
+        "1408912a-3d7c-4a2b-8925-f1b5347224ff",
+        "5e83958c-1195-4fc1-a132-bdf25c54ccc1",
+        "4856335a-c1e8-4f67-8dbd-326c5f9ddf06",
+        "26dc5e00-7ba0-434f-8fe4-27af6c202706",
+        "df810449-55b5-499c-b99e-adcd19773183",
+        "9e5e9e6f-ef89-4ce9-b787-3ee7480e31f7",
+        "2bab57e3-3da7-4985-a9b0-1b23a3e39c5c",
+        "e2c39f88-cf9f-4b2c-a97b-48909a62e875",
+        "05786d16-19c5-4851-949c-d81b6764cd1b",
+        "0f1207a7-053c-4cdb-912c-23f31186aae5",
+        "da1fa488-a547-488b-9094-b9a633801183",
+        "a4f8eb77-0d60-44f7-acf4-fd5ea60d5d00",
+        "a9d47e00-7130-4a90-aaee-bd7ccc5c512a",
+        "f364ea59-3ae3-459b-859c-4725c8177434",
+        "d0667d50-3202-44b2-9d56-4995cf87a5b4",
+        "c779c7db-8735-450b-ae6e-7224fb8d0273",
+        "bd8a1c6e-ffe7-4a2f-b244-6dbb469a392c",
+        "e058c025-d42f-4ee6-b77f-78db0f243163"
+      ],
+      "note": "161 POI khớp token-boundary (cap 50)",
+      "id": "catplace_108"
+    },
+    {
+      "kind": "category_place",
+      "query": "chợ huế",
+      "expected_ids": [
+        "3c7b8aad-d8a9-4990-9463-4aeec7d6646b",
+        "b9736b40-efa6-4f37-b76d-04f7153a947b",
+        "46f00eee-cf21-49d1-b778-ef3e4151567c",
+        "54d5e0e1-2887-49ed-a1a5-bf0486237ed7",
+        "1487c8e7-7d94-4e6a-884c-77b78f9edd4f",
+        "5650734d-3c22-4d08-93b7-7952b90fb879",
+        "48e0c2f3-302c-4524-9d6f-5072429ffeeb",
+        "f764fbeb-458b-4cff-9942-e07cf2bc0d4f",
+        "756a8442-5526-4ed8-b516-f48e102b80bd"
+      ],
+      "note": "9 POI khớp token-boundary (cap 50)",
+      "id": "catplace_109"
+    },
+    {
+      "kind": "category_place",
+      "query": "bệnh viện cần thơ",
+      "expected_ids": [
+        "7aa30ac3-8af9-482e-b2c7-e2e27257b53f",
+        "6c466c41-aca7-4df9-b243-a50ca75cb7b6",
+        "34cf0fca-c3ed-4e7b-af75-1a1a18f117ea",
+        "bc05f4a6-506e-409c-957a-d0000483f8ed",
+        "4439cf5e-1cd0-4830-bc44-e458d7bc6f31",
+        "b793a638-1429-44bb-888b-2e7c0ba42dc9",
+        "c141bd69-a680-49c6-a093-8e6f14b03ab5",
+        "f8461d3c-026a-4bf0-9b9f-cd274c631980",
+        "a344ae63-6740-42fd-909f-d2358525e7b9",
+        "5f696245-b8fc-45e5-990f-eb993b13225f",
+        "66b8e913-fd33-4086-90b3-f350dec95fba",
+        "9b49a56a-2108-4928-9cfe-05bacecb9140",
+        "f355172a-3964-475e-a801-46fdb6295fb6",
+        "4da0f7e0-5ade-42b2-8823-6d524ba32dab",
+        "96f4e927-6ade-44bb-87b2-4c64b68d60e0",
+        "8bb42cec-1e91-49c1-af84-1ec2add03de7",
+        "60445bb3-6e55-4467-b04c-1e23a64dcbb3",
+        "c6fa4f4d-b2d9-4963-9db6-f8f56705b624",
+        "040d6bb2-28a7-4f18-9a2c-9593c8043fdc",
+        "a93a06c3-2280-4a4a-b7a4-94a4399f0b68",
+        "9f05d97c-aa92-45d0-9bc2-b96eb47a6f33",
+        "c19407a6-1225-4de5-b55f-d1a843c6960b",
+        "4d638420-2364-47af-9c45-dcf05898e966",
+        "70c56086-f53d-4094-a9fc-8014eea15649",
+        "945cfe6b-3a77-4268-a6a9-e72c592a9632",
+        "6b0634dc-7b60-446b-828b-0fed748d24b0",
+        "87c79781-2423-413d-9ce8-981e7500ff37"
+      ],
+      "note": "27 POI khớp token-boundary (cap 50)",
+      "id": "catplace_110"
+    },
+    {
+      "kind": "category_place",
+      "query": "phở nam định",
+      "expected_ids": [
+        "f1802413-9aad-4d2c-96eb-152880a1b82b",
+        "0155c22b-dd1e-4490-bb61-f7d3a64a1824",
+        "fb40a699-e065-4ffb-b9b6-8979873c692c",
+        "c9ef56df-2374-4de1-820c-866bbaf98a5f",
+        "e80f6351-32e4-4d12-8ae1-d6d652e64d4d",
+        "64d01874-9260-41fb-bc46-13490434a8ac",
+        "4bddcff4-808e-40c6-8de9-3844d9ef2ebc",
+        "94a99f80-1967-4e36-af01-4d6d78c88fba",
+        "fba5631f-caa6-4b0e-bbbe-0501f3dc388a",
+        "f8b6d476-3dbb-448c-8d85-ef5885e8d218"
+      ],
+      "note": "102 POI khớp token-boundary (cap 50)",
+      "id": "catplace_111"
+    },
+    {
+      "kind": "category_place",
+      "query": "bệnh viện hải phòng",
+      "expected_ids": [
+        "99921862-fdad-4bd0-b3ee-ea82bd76003f",
+        "1d3f339a-3f66-4e68-9578-6954afcc563b",
+        "5f7afc43-47b2-4027-96ed-dcbd485b0bf9",
+        "e9b655af-5032-41ee-a898-c7db1f22dc9c",
+        "9342b5b0-c984-4a89-b6dd-f8befd0b0c57",
+        "f91e228d-90cc-4152-bc00-553648df81be",
+        "c7f852da-0f1d-4dd0-9e35-8da380298e80",
+        "8517ff26-1bde-480e-82bf-311e21e7013f",
+        "3ea85744-af1b-41a2-9b5a-1818840da25c",
+        "5a3075ce-eacb-42df-8c79-13548d6d5a11",
+        "d4d4de4a-2053-437c-b929-4c760b132344"
+      ],
+      "note": "13 POI khớp token-boundary (cap 50)",
+      "id": "catplace_112"
+    },
+    {
+      "kind": "category_place",
+      "query": "cơm nha trang",
+      "expected_ids": [
+        "9d00d184-cc3d-402c-a6ab-c62951e4fd76",
+        "5c681578-17c8-4c19-86bd-17d47000de69",
+        "a53fb910-e1fe-4dc4-a329-340e8f95fc04",
+        "3fa08a79-f51c-4eb9-aad3-e0c3008ab2f4",
+        "08e1370d-bf09-45fc-a6f2-b9b27c9d5ff5"
+      ],
+      "note": "5 POI khớp token-boundary (cap 50)",
+      "id": "catplace_113"
+    },
+    {
+      "kind": "category_place",
+      "query": "siêu thị hà nội",
+      "expected_ids": [
+        "bf823809-9035-4dfd-a628-24072fe036ad",
+        "bf4d3558-b985-48bc-9c71-2b647b419ed2",
+        "841d2227-b51a-4df7-8439-835d752ea154",
+        "d6a6030d-f63b-4bda-98eb-b37f05887b30",
+        "e4f7b0ca-4b5a-491a-a399-7225dcbbb45b",
+        "edc473d5-1436-4579-8912-451dcbeb8269",
+        "444be9e6-a56c-4927-b3d8-ce50bcb16aad",
+        "62feb154-6d30-4cd7-9adf-9b4e9341d2da",
+        "dd78d542-69be-4054-b90e-881416498eff",
+        "7f584eb5-9300-46a2-96c5-7f73cb0cf7ac",
+        "bc945d72-ad1c-4feb-980c-e85dad3ddec6",
+        "772bea6e-8e4b-4034-95ff-2cc0ed5870fc",
+        "f2fceb29-94fa-4e43-bbf1-3e820afe115b",
+        "0a62718a-9fe6-4b35-b887-6a2f64fb6539",
+        "580c23f8-61b2-4cd8-8642-d262fe2e4799"
+      ],
+      "note": "15 POI khớp token-boundary (cap 50)",
+      "id": "catplace_114"
+    },
+    {
+      "kind": "category_place",
+      "query": "quán ăn hải phòng",
+      "expected_ids": [
+        "1fe7eb2c-92c9-4c62-9b76-aaf892c7d9f3",
+        "6ac6303d-48fb-497b-9c11-3b3e3c51cdd7",
+        "0503f8b9-9625-4601-92c3-0e9a99be9a60",
+        "dbc7125a-078a-47f4-9f87-eb80fc446749",
+        "8cf17834-8cbb-461d-8034-c621d44306db",
+        "29e62e4a-8774-4741-a7d7-cb1fbf04fcfd",
+        "b92b35be-d1d0-4c70-b219-75e3aed255be",
+        "f26ceb3c-06d8-437e-bd42-b20821c69bb0",
+        "bd6fda2f-24d3-45ae-9308-04f77b053599",
+        "4af80100-b46e-487c-abf2-fb4d5d311829",
+        "8fff002d-aa0e-4c22-8cf6-f93e7c779e00",
+        "dd5d5415-f2a1-476c-a3f5-4a49c90f61e3",
+        "53e69bee-f871-4b36-9fce-66422f16501c",
+        "0c9a0591-d228-451e-b66b-ad1fddf2c18f",
+        "bc981052-0ef9-434f-991b-cde3dbdb7117",
+        "d1bfa41b-3501-4738-8da8-8b22ccab9cb1",
+        "d50c87b9-e32d-4379-af3d-d669acc93efa",
+        "ce6b28c3-f9cd-4a7d-93a2-60658e63b7c9",
+        "065f9c90-5760-4564-9d8c-68616cb10762",
+        "5b0ffefc-5849-45f5-bc4c-db611b867f1b",
+        "0e97d8e7-8a27-48ec-9255-e0a3e435bbc0",
+        "c93bd104-f814-4688-9312-c8dd2a78d31a",
+        "ac1e69b8-b8e4-40d7-ab39-6f35c7933f3c",
+        "4b32c81a-f003-4fdb-8699-869a1b30ae19",
+        "45ef0b80-84a5-4efa-8082-834d4b9a7d90"
+      ],
+      "note": "ground-truth fix 2026-10-11: quán ăn trong bbox Hải Phòng (25 POI, cap 50). Engine AND-token chưa trả (round C).",
+      "id": "catplace_115"
+    },
+    {
+      "kind": "category_place",
+      "query": "nhà hàng huế",
+      "expected_ids": [
+        "c77e9aba-1067-4cfd-9297-f700521966f4",
+        "f6995901-0496-47b5-bd9e-0393ae3838e7",
+        "9f02e736-8e8e-46aa-b49b-1fe72cd6b1cc",
+        "7771bfa4-be00-4eb1-8df6-cd1a256a5aa1",
+        "26aa5e28-af7f-4c94-9a85-a747cbe26f1e",
+        "52911f4c-07ed-453a-8a32-9f21d6d3c0ac",
+        "e0b94497-3587-4edf-aafe-872f04fbba3c",
+        "6c439651-cc1e-4d3a-b6b1-51caab42ac37",
+        "e9ea01a3-92d4-47d0-ae54-8ef68126676b",
+        "35b794e6-37ab-4ec7-88e3-a57786a8cce7",
+        "e20aa576-52e4-4c01-9b80-8fead9662f2a",
+        "ac28fb32-b17a-44d2-80d9-a5a9cb5d1a1a",
+        "19db8c40-7490-4a86-b72b-53e873bc7327",
+        "3c0690cf-29cb-44f7-96b3-2d2bf6b434bb",
+        "32dbcc32-b2ad-4df7-ab3a-af7451a36ca7",
+        "df7b8e80-4268-4018-b2f3-912b65044961"
+      ],
+      "note": "16 POI khớp token-boundary (cap 50)",
+      "id": "catplace_116"
+    },
+    {
+      "kind": "category_place",
+      "query": "cơm hải phòng",
+      "expected_ids": [
+        "fa063b33-1823-4fb6-9309-ac9c3937bc30",
+        "4eed0f6e-9796-4f18-933c-dbdd9ae2b74b"
+      ],
+      "note": "2 POI khớp token-boundary (cap 50)",
+      "id": "catplace_117"
+    },
+    {
+      "kind": "category_place",
+      "query": "phở việt trì",
+      "expected_ids": [
+        "16be2456-5bbb-4b24-afd4-b04718dd4486",
+        "a7839215-f91d-47ea-bd37-66b7ef64812b",
+        "f1802413-9aad-4d2c-96eb-152880a1b82b",
+        "df1c2930-a2f1-486f-8eb1-d7946e43d72b",
+        "3a281250-b64a-4980-9417-c960fd297506",
+        "52c4722d-64bd-488c-8c8d-b4f0fe2139aa",
+        "ba146de9-5d96-4b96-8751-3ed4dba8c7bd",
+        "1dda18ce-0755-47eb-898d-501b477e8bf7",
+        "520dbdfd-713e-4a33-962f-1b619faa6208",
+        "4f7413a7-94bc-48cb-b661-798aea7b361f"
+      ],
+      "note": "ground-truth fix 2026-10-11: quán phở quanh Việt Trì (10 POI, cap 50). Engine AND-token chưa trả (round C).",
+      "id": "catplace_118"
+    },
+    {
+      "kind": "category_place",
+      "query": "cơm vũng tàu",
+      "expected_ids": [
+        "56a02de2-ae32-4e35-91e2-f2e127461eb1"
+      ],
+      "note": "1 POI khớp token-boundary (cap 50)",
+      "id": "catplace_119"
+    },
+    {
+      "kind": "category_place",
+      "query": "đại học uông bí",
+      "expected_ids": [
+        "dbfb7f26-c756-4bfc-bc70-040b579a626b"
+      ],
+      "note": "1 POI khớp token-boundary (cap 50)",
+      "id": "catplace_120"
+    },
+    {
+      "kind": "category_place",
+      "query": "bưu điện hà nội",
+      "expected_ids": [
+        "ba6124fc-1c1c-495c-be1c-902477c53437",
+        "e9df83c0-ad5e-401c-9df1-7f661e52c2b8",
+        "b8409048-fd2b-4778-bcd8-394b951cb654",
+        "119c46b1-db3c-451e-8db6-9cfda0753750",
+        "676dd00b-90c9-47aa-9a4a-59bee9b53c34",
+        "606f9728-0bf9-481e-bad9-a1261a2e5f41",
+        "2b48ccdc-7e5b-45e7-a1cd-1f5c24539a2e",
+        "072d2eac-2386-4137-a30e-77c00dfb146a",
+        "5eabdff3-c8aa-4a12-853b-60cb3294e8f3",
+        "c388c217-79ba-4ccf-a91b-86ee390f31cc",
+        "e415bcd5-6395-4555-8699-698cd39518f6",
+        "83565334-8b55-46d5-a95c-9985f53bd88c",
+        "11acba24-0f9b-4f09-bbbc-91a48c12af99",
+        "0ad312b9-bc9d-42dd-8d57-ed95b8bf2617",
+        "136109ba-6ceb-44c8-be39-33a94e394b0b",
+        "b6fa6b96-6727-4027-839b-7f9911afc6a7",
+        "493deb2b-feff-4e39-88bf-3e34e9cca84a",
+        "09a150ad-93fc-4d2e-8583-289df2fa5ae8",
+        "e3e902a2-fd27-4dce-999e-b592508ce49c",
+        "5485466f-f83f-48b6-b570-70bb1a0b7585",
+        "4df9e180-0600-41f2-b5b8-18240c0329ef",
+        "7eac0716-7dc1-4eef-8976-a906204c2427",
+        "e890cbe0-9f3d-4fb6-9e7d-0234f991e76e",
+        "92cd6479-134f-489d-abf5-0ec6e863e97a",
+        "9357b594-0412-4dce-9db6-77a40dd42b4a",
+        "563727e0-ee38-4ad6-b69f-9dd18ad7352b",
+        "b3852671-8e7f-4438-81c1-466c2598bddb",
+        "2daa4d1a-76e5-41d5-b049-78949d8b16f3",
+        "f108be4b-8a5d-404a-a137-8b888f59937f",
+        "4fc2c252-a3a9-4d08-b431-869da8fb4f04",
+        "2625ae55-694b-475c-9bf8-b1ab0d833f9d",
+        "b6511ea2-c388-41d7-8783-092bded474b1"
+      ],
+      "note": "32 POI khớp token-boundary (cap 50)",
+      "id": "catplace_121"
+    },
+    {
+      "kind": "category_place",
+      "query": "đại học hồ chí minh",
+      "expected_ids": [
+        "14b85619-2110-43dd-a8a7-0f5b07b0fdfa",
+        "54bf9116-7b53-499c-8d6a-895663390819",
+        "e4dc12ac-92a4-41dd-ae2c-97929642e84d",
+        "1677b454-8589-41e5-b063-07f8179d8b7a",
+        "b0507651-e2c6-484f-bc34-771c36722fe3",
+        "66b3d833-438c-40dc-b453-1814ba54bc9b",
+        "d8feb3c6-228f-4ed6-bd92-d75c530a3bcb",
+        "64742ed1-ed81-4a97-93d9-0a13aa2c28a5",
+        "1b176091-13da-4ff9-81ff-8af6d7c0363f",
+        "dfdc0627-c26c-4cb1-85a4-4a69f51998a3",
+        "6fc79eb0-7c4f-4d2e-a9b7-b8db982a56ed",
+        "e8e8647d-0e8b-43bb-b723-4a0c41b70f54",
+        "9eb90cfd-d93e-4b6d-9033-c2978994381c",
+        "c3b89c00-a4b0-49ea-b2fc-e2c16d9d541c",
+        "a2e7b64d-6ee0-41c3-8c92-dbddec1335a7",
+        "d04050aa-6f8f-4f0e-b720-4dd48e3b4a3c",
+        "85c24043-9528-4c3c-b52e-919a87824cf7",
+        "6197242e-b1a1-463c-9b7f-1f20f2e963fb",
+        "40dec4d6-c41d-414e-92e8-79c734741f99",
+        "9baf37f4-3790-4fe6-90e0-f491d0a6490f",
+        "6da14635-4136-41f7-beca-434e93d7eabe",
+        "f9ab2374-7951-4bfb-8ccd-8e921d6554c5",
+        "c4da19c5-c88c-4d0d-bee5-2d9e8ff292d5",
+        "6ff0340b-e98d-4e41-bebf-65cd155c4091",
+        "86ebf11a-a59d-4722-83a6-50963cf29f28",
+        "244603b7-0010-4fc1-9bb6-aefa8e89673b",
+        "a2cbb026-b9fb-4c64-b1e5-4e7c01c6dd28",
+        "e59dc4f0-b395-4c0e-af9e-e6e33ac265c1",
+        "448b3173-5e72-49d9-b7e0-7854c411cc17",
+        "942bc18b-32bf-4a8e-96b1-845a083f18a6",
+        "e52dcaf8-67cc-464b-9d62-9cd8b1ccf30b",
+        "29f4d9e6-a1fd-433f-8e59-614b858fdb1c",
+        "0a9ffd1c-1f9b-4ef7-8780-d6dbe9d2e1c1",
+        "914f656c-6b89-48a3-a3ae-48f6f20d3871",
+        "15767220-674a-465f-b99a-614431e73187",
+        "184203c6-a24e-4893-9c2c-0c4dc01f0abf",
+        "0e7c69af-41e6-460e-99bb-4dd4d5e6310a",
+        "06173833-d59d-4978-bc9f-0deb7247219b",
+        "08a1fff7-3b9b-4592-bf37-252e6a725c01",
+        "1408912a-3d7c-4a2b-8925-f1b5347224ff",
+        "5e83958c-1195-4fc1-a132-bdf25c54ccc1",
+        "4856335a-c1e8-4f67-8dbd-326c5f9ddf06",
+        "26dc5e00-7ba0-434f-8fe4-27af6c202706",
+        "df810449-55b5-499c-b99e-adcd19773183",
+        "9e5e9e6f-ef89-4ce9-b787-3ee7480e31f7",
+        "2bab57e3-3da7-4985-a9b0-1b23a3e39c5c",
+        "e2c39f88-cf9f-4b2c-a97b-48909a62e875",
+        "3336901d-876b-455e-9e5e-aa878af0f436",
+        "05786d16-19c5-4851-949c-d81b6764cd1b",
+        "0f1207a7-053c-4cdb-912c-23f31186aae5"
+      ],
+      "note": "88 POI khớp token-boundary (cap 50)",
+      "id": "catplace_122"
+    },
+    {
+      "kind": "category_place",
+      "query": "nhà sách hà nội",
+      "expected_ids": [
+        "0139165d-233b-41de-9e54-31b8afbd885d",
+        "75cb48d5-22e2-4233-a366-8d1cfb8f4dce",
+        "541fa6cf-72a6-4e31-8d4b-0b591b510812",
+        "aeee01b9-3bfc-41a8-9d6c-e87a9d7d92ec",
+        "57e366e5-f9dd-4813-8f7b-5f752581d7d0",
+        "dc429ea8-6b1c-4367-9b41-35a93625fb0e",
+        "216f0ee4-284e-4be2-89fd-21522327897d",
+        "35dd29ad-7b44-4f82-8562-b05c92561d34",
+        "350d9cd9-0876-4857-a4f8-d533a8f9606b",
+        "314b0c03-9c55-4061-9cb5-40c9609c4b05",
+        "1e9311b6-7d17-4a99-8eb1-4a63cc79990d"
+      ],
+      "note": "12 POI khớp token-boundary (cap 50)",
+      "id": "catplace_123"
+    },
+    {
+      "kind": "category_place",
+      "query": "đại học hà nội",
+      "expected_ids": [
+        "0db6dcac-316c-4b9f-ae76-4129fb5835af",
+        "7e639c7e-d1fc-4188-a37f-60e9990ec7b7",
+        "8718f5a3-f76a-4971-a163-74ab0e5f7562",
+        "e0b94cd5-06e3-4796-83a8-39bfad38a642",
+        "f55afce2-4d52-4eb5-9dde-3fdd9942285b",
+        "7758d590-3392-42b2-b6a4-8055bffaa485",
+        "5501f461-f8ca-48e5-b23e-94f8cc0a08e1",
+        "72e9c53f-8207-447c-a918-70c907f357f2",
+        "5cc947d3-d0c1-4117-a7d9-a379c308e973",
+        "b0e792bf-5480-46fd-a8b5-f477600357db",
+        "a2d269de-e8fd-4bc8-8261-7ac0361d06dc",
+        "e6fef197-69cd-4706-bec9-e2ef17a364a6",
+        "341dbc13-d772-4711-ab7e-1267420fd457",
+        "3f805fa1-c023-4f14-bd0f-0eeee85c6dda",
+        "4061370d-e31e-4991-b4a1-06290b36ee08",
+        "c9549940-9e5d-4e29-bb2a-d011d19d2baa",
+        "7fec47f8-5c86-41aa-8fe1-79722c156ac6",
+        "c603ed7a-af43-4558-9b4f-76e5f15429c1",
+        "cafdb677-abbc-4ad9-b632-90ee1e6e1bad",
+        "c6ab2d91-6199-4a8c-bfef-5345373e8b3d",
+        "6c2089b5-bfe3-413e-9314-62cc9172a3e5",
+        "4b9e9a60-81d4-48cb-a861-3267188d1ffd",
+        "2f65af1c-6d6d-401b-8036-f62537569c0b",
+        "4400b0b1-4fc9-4ad7-9ef2-d272ef1ce837",
+        "b9d0be84-d501-4b0e-a97e-e8e0a2c75751",
+        "e9425cf7-617f-4aa6-bf70-aefb3a1ad1c1",
+        "1ef062e3-5f14-4bf8-9e8d-05d8997f892a",
+        "bc02fb55-8363-42f3-9182-b823bf7ef72a",
+        "33806778-d4bf-42e7-a6fe-b4c0ebdc9cc0",
+        "bc592235-7b71-4798-8428-956327dfa669",
+        "af322f2c-73bd-47b5-be55-a44211189b20",
+        "acf1c2be-4ab0-46aa-a6c6-b3be5e6ea387",
+        "311f13d3-6f09-4a16-9d6f-a2df81aa1fbd",
+        "e7143f6c-a78f-4867-85c3-1d10467798ab",
+        "0978645c-1fe3-4b7a-8a68-e259cd841eba",
+        "db5b8117-9c49-4388-a8ec-0fe079d611d2",
+        "30b6cb96-f9ea-416f-b024-c38b82b2ca66",
+        "db10222d-b20a-46e1-95a6-7609bedf4e56",
+        "be72a7d9-7d1a-4df4-b47c-2fc3fe0181a2",
+        "85767686-72c8-4325-9870-067de424117b",
+        "a184a140-a22a-4c99-9faf-e471c750d7ce",
+        "8c0876d1-f725-45d0-bcff-adfb824a6e8a",
+        "6ed16316-a2eb-40a5-adb1-7e9b63073f06",
+        "0246a00a-83c5-4d9e-afb4-9c98c5a416b7",
+        "1796f212-752e-4d2e-89a2-fdbbad7d5124",
+        "e437f33e-6e17-4747-b827-e96daca74131",
+        "87e51f6b-9306-4029-9a39-fe47cc2cb98e",
+        "f71b3edc-47c6-45e0-ba42-e22a022262c5",
+        "2532c755-6afa-4fdb-a8a0-c9e6aa46e034",
+        "c683c4ee-a5f2-46aa-ac55-f30817646af0"
+      ],
+      "note": "100 POI khớp token-boundary (cap 50)",
+      "id": "catplace_124"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "quán ăn Bình Dương",
+      "expected_ids": [
+        "b6fbfcd7-a50e-4467-8ee1-321612b39bc0",
+        "b847b9bc-3027-47f1-826e-d4883689b9f1",
+        "42e9599b-547e-4291-8c48-60869a02b3d0",
+        "1761150b-7bbf-4522-8f34-e28899eb815b"
+      ],
+      "note": "Bình Dương -> Hồ Chí Minh (12 POI khớp token-boundary, cap 50)",
+      "id": "admin_125"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "bệnh viện Hà Tây",
+      "expected_ids": [
+        "f55afce2-4d52-4eb5-9dde-3fdd9942285b",
+        "86632abd-848a-4d83-afc6-470328cf1612",
+        "efae3ea9-b084-4c10-b958-b882ebfca4ec",
+        "7fcaef5d-2d59-4748-a3de-c41086eee6ce",
+        "5cc947d3-d0c1-4117-a7d9-a379c308e973",
+        "77bd02af-4aeb-419c-81a5-125241d718d0",
+        "7031d55b-d702-4e1c-a166-b441bdaadff3",
+        "bc6ca1c6-a6dc-4db0-9634-8dafb5148fea",
+        "26fdaf35-fe4a-419a-b742-054351a77334",
+        "2f65af1c-6d6d-401b-8036-f62537569c0b",
+        "bc60c842-e031-4973-96e4-6193839c2b18",
+        "5b31366a-86d3-4756-b80a-9975ccca185e",
+        "9ec86012-c8df-458a-8abc-481656885a4e",
+        "fd69c35b-541f-4c04-aa65-7f8e5f13a290",
+        "dbb66fc2-9268-4766-813d-83602e699c3e",
+        "e42b25c8-ef53-49f3-91be-1a433385f9a3",
+        "5459b7fc-8b95-4f13-a53b-c4c2119cf881",
+        "1d12ec5a-a2a6-4ce7-af96-c1cf69d4c34e",
+        "fa17e6aa-aec3-4bb7-968d-442fb678058b",
+        "76d5448d-cfd7-4f08-8b3d-5ef349963e7f",
+        "100cfd78-a383-4bcf-823c-2dfed5543b22",
+        "933c8946-9086-417a-98b9-58a2ed8c3072",
+        "b2730dbb-598b-490b-9710-0450297bba02",
+        "10ab08dc-e064-4b70-8fd8-d9ab71323671",
+        "8953788b-e831-4dc1-9cb3-e42d8b723396",
+        "c20a52ac-10fd-4f8a-94a4-7818036b3c73",
+        "66c82cca-7843-42cd-8e0c-b790b7382edb",
+        "5a774c18-9a31-4ddf-966c-45870dd476e2",
+        "1ba2cf60-9643-4e6d-bf02-f45330fd48b8",
+        "2120fa15-11f0-4f80-91a2-6363ee17fba4",
+        "ced69e0d-703c-4c27-8206-5ec0371d58b7",
+        "d7959ba6-f1dc-459c-8813-7decdf91419e",
+        "b14db3c3-e5a0-451d-a9cf-4226fbc6a512",
+        "4628d43c-9414-4e41-a9e9-a8251be88388",
+        "7fadb4ff-6590-4ef3-af61-b2d0d3c8007d",
+        "40e4f188-e80e-44e4-8d6d-9a176da79e86",
+        "ca76fb6f-f272-4bf2-9fbd-b09e76a2ae38",
+        "70951604-ef1b-4c01-9926-941c504e58a7",
+        "c7c6224c-fbed-4ede-97c1-e1a39cf9270a",
+        "1a41e41c-2f13-4e8d-800f-3d2aa893d4b4",
+        "3449a9ba-cf91-487f-a6f0-6319270fae24",
+        "bd4e7082-ec40-4908-b63e-335bf2751929",
+        "c0013764-df41-40cd-95e8-91f61c6edfdb",
+        "cee3a333-c867-418c-8e8a-61239df5552f",
+        "0b633b12-d325-4f31-ab6a-b244007d2862",
+        "671a1a21-01ba-4c1a-977d-bde772173cd3",
+        "519d6002-ba57-4cd7-a114-d7bd77909b4f",
+        "6ce537f9-f6ca-403b-9740-6a6a01b45961",
+        "3ab354de-bb6f-40f6-abc4-a873bcc47678"
+      ],
+      "note": "Hà Tây -> Hà Nội (90 POI khớp token-boundary, cap 50)",
+      "id": "admin_126"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "chợ Sài Gòn",
+      "expected_ids": [
+        "0837e3ae-6e6a-4ebb-89ec-8a5720c71005",
+        "fdab0be5-5b3e-42a0-ba0d-a218ce37b367",
+        "681b11d7-c745-44ca-80f4-dd53809b113e",
+        "4d32ade1-5f6b-4ddf-be59-0cf7498104d9",
+        "a3fd1ad0-75d3-4fc6-994f-cf533fb14f6f",
+        "b3b5df4f-ad28-4ce7-a824-51bd96452c3a",
+        "aaca6531-2db4-4f69-b5b9-0ed665dd7a17",
+        "731737cf-1f1e-4d5b-aeab-07e894f25046",
+        "f91cd939-23dd-4f53-99f3-f1c3b88c7063",
+        "8f28bbe0-348c-4be7-9187-1db249637020",
+        "dab60589-954f-4746-b88d-3215abaaad23",
+        "894d22a9-3faa-4490-909f-92f614075a1e",
+        "58e255af-06e4-450f-960b-6e91f2a9acc0",
+        "94ecb7a7-ea3e-4b9c-8e93-c47fbf60a78e",
+        "839d6689-5701-4c7b-b431-1e1d72bd0fcf",
+        "24a764ee-2ff3-4bd5-94ea-39f5e4a5a862",
+        "ce43793b-b174-4cc0-9d7c-1937fac3a6e1",
+        "ece91715-4dcc-45b6-8f71-eacb050db822",
+        "3779639a-bf54-4116-bbcd-f8f74787deb0",
+        "9755c8e0-69ce-42a5-846a-20660a1d3a19",
+        "64debc3b-fb80-400c-9439-7cda3812a420"
+      ],
+      "note": "Sài Gòn -> Hồ Chí Minh (23 POI khớp token-boundary, cap 50)",
+      "id": "admin_127"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "khách sạn Bà Rịa - Vũng Tàu",
+      "expected_ids": [
+        "3bf80117-c97d-4b30-a643-77d1242b55bc",
+        "9a655aa8-342f-4e22-8dcb-12b4b4282df0",
+        "2a8ed18f-4f17-48fb-b66a-cd75fdf48277",
+        "6a53e030-eae7-4893-a078-e079dbcf9e85",
+        "ccb1cb6a-ac78-4d06-92e9-d478b198c137",
+        "f3a6eb8c-f87b-4a5b-b209-16d24958d583",
+        "86604530-175f-401f-a12d-4ab5ce619a95",
+        "d9d2ec96-7d2d-4620-a2eb-1b43ee78bbb2",
+        "19cc89f4-868d-47f6-9134-4f905187b11c",
+        "8936dec1-c34c-471d-8532-1ab197580ca6",
+        "a7f50de8-7418-428a-a5e7-5870ec32bb22",
+        "39cee886-4063-4ae2-9ded-c4f343e25ce6",
+        "8d85b665-e4fe-4f58-b011-6a3b0bcd13d1",
+        "f47cbaf6-31b7-4558-a2c6-a9bc75a0b291",
+        "d533deaf-a228-4095-aaca-1c007f438ee2",
+        "1fd0904b-02f2-489c-b09d-140f6ee24847",
+        "d8449e1f-e4fc-45e7-b0a6-6c646610a5e6",
+        "2999577c-1234-464f-bab5-03623fedf029",
+        "34468b3f-10ec-4132-a8a3-c99b4e5db1a1",
+        "eaba66cb-d3d6-454d-8352-e71a5af23119",
+        "1dc9b9ad-a52e-4ae4-960c-bf697d9c69eb",
+        "9b5400ba-8888-451f-9355-f3e6a7e6e4ae",
+        "d27175d0-9158-4ae5-b2a4-8e93dd2ced9a",
+        "5c532b7b-bb69-434e-b131-0044b6b5697a",
+        "b05557de-9f78-4a55-a8ab-0cf0a1e456be",
+        "f094fc68-471d-41ec-ad1d-a26474fe96e0",
+        "82175236-95c9-4ef8-a182-395b4734b007",
+        "c24c36fb-d6c9-43d3-a1aa-c60f5df2ea3d",
+        "7ef9674a-5a3d-4381-baf4-dd38bcbb6b30",
+        "6c447c40-604d-4c9b-bc06-35720f53fa25",
+        "3dab2960-d2a2-4470-ba4a-691a91cd83ac",
+        "59a116b7-0fb7-4997-96de-7c6d139f7deb",
+        "aff43d7b-7ed2-4219-a6c7-507310190cea",
+        "05078019-8643-4066-8eeb-df7b3cfc7124",
+        "6fe57328-a42b-4e49-87e9-a49b8fc58425",
+        "7d525d1d-bf03-4640-bdce-a656719141f7",
+        "3f50d880-e057-4977-b5ea-e822b588c799",
+        "6f8d6120-fc4b-4c65-b2cf-e5d098a69b87",
+        "c9e09f3a-ca64-46a6-99f3-68db04bbece1",
+        "0f03c0db-6384-4e65-b7aa-6594307a3b6f",
+        "8ed4eaff-f786-4a2a-9299-ee70c8c0e7b3",
+        "0a0ee7ec-5b5b-4879-ba2f-1c5ba991c119",
+        "c8c67e8e-2093-4159-997c-432a824faf9f",
+        "34403673-d36d-4775-89c2-cde205509e30",
+        "b83ff689-ee85-47d5-b48c-6741f116363b",
+        "795ed586-0b26-4142-8346-e901d89efd68",
+        "7115408f-8724-4ba6-ba27-45a7d41ee812",
+        "00967bf7-ed4b-4933-8d08-ef5d935fe325",
+        "bc596234-f4f7-4eef-871d-b3a017988b80",
+        "6e7967f1-9759-4ad9-8005-7451ea57c117"
+      ],
+      "note": "Bà Rịa - Vũng Tàu -> Hồ Chí Minh (63 POI khớp token-boundary, cap 50)",
+      "id": "admin_128"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "cà phê Bình Định",
+      "expected_ids": [
+        "1601d5ae-a3ca-48a6-9cbe-674229aa7544"
+      ],
+      "note": "Bình Định -> Gia Lai (1 POI khớp token-boundary, cap 50)",
+      "id": "admin_129"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "nhà hàng Hải Dương",
+      "expected_ids": [
+        "06fb5e5d-821a-4d1b-b6a9-1a4f8a7e2782",
+        "69fe8ae5-cd32-45c4-b48f-a18bda96bd56",
+        "029eec88-7a76-4505-8684-a5c4ccfc0653",
+        "11504809-db21-4056-9014-d2c7dd658a5d",
+        "f9d947e5-5239-403b-943a-e1679f91a188",
+        "376f2806-2c19-4aa2-8de8-ba7ffa9b8740",
+        "3b1c3ca4-8c7d-4f11-8f39-fd6dabbe63bd",
+        "0213d645-466a-41f8-aa63-aea3d24f05ed",
+        "a55642ac-ec8c-4b99-aa50-8edbb4e0f8e6"
+      ],
+      "note": "Hải Dương -> Hải Phòng (10 POI khớp token-boundary, cap 50)",
+      "id": "admin_130"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "trường học Kon Tum",
+      "expected_ids": [
+        "8ae62be6-76c1-4a2d-a230-8f1c84169ec8",
+        "c779c7db-8735-450b-ae6e-7224fb8d0273",
+        "ed4249f7-372c-4c7c-b6cd-16d642a26583",
+        "1a9b04d8-28dd-4b2c-b3a9-38d9f81a6d2c",
+        "325263cd-d1ab-45de-b60a-c4d61e9ebfde",
+        "7403e531-c3e7-4789-b337-510aa4020615",
+        "9e93f7b6-c6c3-44e2-adb8-ac0317fe35e0",
+        "33e59a0a-3703-40d9-9204-b64c621d3254",
+        "dc57025e-7649-4d81-9700-434457c18de9",
+        "9f8d62b6-1bd8-4e5d-80b2-39699b661e71",
+        "3fdcdb6a-eb5a-467b-b76b-0a26cd623f30",
+        "40b29b10-4042-4481-8d70-8387640ddb01",
+        "a2320568-6b6d-4719-94c3-e12fa18810fd"
+      ],
+      "note": "Kon Tum -> Quảng Ngãi (13 POI khớp token-boundary, cap 50)",
+      "id": "admin_131"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "ubnd Bắc Giang",
+      "expected_ids": [
+        "35a33fd3-c4d1-4581-b2b3-62c3ffe3bd2a",
+        "2f0b5afa-6980-4300-86cd-7becbcbb6436",
+        "cbfd44a6-2b83-4e0d-94d3-3ef5de802e09",
+        "8c04c1bb-cfd4-455d-8413-3c2b1bf80e2d",
+        "f581e0cb-178a-4489-99a7-7c72e8d30965",
+        "d9808579-9e62-4b20-ba6d-a4dddf8a0103",
+        "22081217-aa2c-49fd-b54d-b24d278f188d",
+        "b62fb88d-5fd6-4512-8e9f-34f2a4686f99",
+        "5f9652d1-0043-4246-a441-36e2aa4e92a2",
+        "f9661282-97ff-46dd-a614-dfdc12c85c7f",
+        "0e875080-5ce2-430e-ae94-91befd16892c",
+        "fa3a3ff3-3df3-40eb-b4b2-8cc50e41e308",
+        "82a32710-54b8-4f18-aef5-3d2160afe5ba",
+        "0b24ef0e-10af-4e79-b3a8-b5d959ad5548",
+        "93ae678c-2d51-4288-a868-f0c549cf941b",
+        "3ae37cac-200f-4b04-9e2b-25258f672c21",
+        "b437a555-ac18-485a-960e-8d60b78dbc42",
+        "e2ae40d8-12f7-4673-837c-7622aae8c537",
+        "dd14ed24-326b-43a1-8ed5-3119a7797ff1",
+        "90a19b4d-05bf-42cf-a258-ad259cdc91f1",
+        "e1c153ae-abf9-49eb-bc0d-b119c6e3cde7",
+        "22c93b3d-c65a-48b0-b36d-8237baccfdc0",
+        "133e057f-fd3b-4eec-8623-0d5518fae976",
+        "3e387263-6483-4ce4-b765-943a0ca25c7c",
+        "6f4085c5-7269-43a3-8fc6-9fce49e4666d",
+        "4d52e0be-f379-4588-a6d8-cbc038d33d9b",
+        "7b9dcdcc-8d96-46e2-adef-366147f94489",
+        "4a237e3e-cf30-49c6-8da8-e9586f8af948",
+        "42ee3503-a392-4b3f-8d76-14d61d7b2ba7",
+        "a40cb2e1-e01a-4827-bbfb-162dcfba6a96",
+        "b788327c-bf68-449f-b4e9-a9f57a9b77c3",
+        "57a5d297-4746-4b14-a1a6-80fbef6debb6",
+        "9778bd16-60f5-4036-b184-6feb520323f6",
+        "7999639d-1d3d-4ab0-a745-8c8b8811d68b",
+        "9ac7701c-9eb3-46bb-a027-61ec13fc288e",
+        "9e7be7b5-bbf4-49d6-a3b5-b340de4a3eb2",
+        "2e51a52e-237d-4830-87dc-95c54fbc3089",
+        "d93ef4ae-dd8d-484f-9151-60d61cb11c8d",
+        "64065744-8181-482f-9cf5-e1648e2fa94a",
+        "7a1c887e-a940-42d6-aa80-079abc0e1526",
+        "85bfa543-c55a-4588-9222-876f7871efb0",
+        "677667a1-b735-470d-b4cd-be3ad2580dcf",
+        "7f59a201-8dc5-4287-a808-38c2973780e6",
+        "64808861-ba4a-49ea-8791-18399021a331",
+        "084b8071-5b60-4824-9652-6e3a238a4839",
+        "ac138b07-a020-4e3d-bc22-edecdb07f8d1",
+        "15d63a00-2882-44e9-81b7-fbd48e9d3ca0",
+        "ac591a9f-9a7a-4d0b-bc97-1a3151f77c53",
+        "6fc2c02f-86c0-4450-b758-7074d7714b2c",
+        "4b3e58d7-748d-4cc6-9c7e-5f837c14839e"
+      ],
+      "note": "Bắc Giang -> Bắc Ninh (114 POI khớp token-boundary, cap 50)",
+      "id": "admin_132"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "bến xe Tiền Giang",
+      "expected_ids": [
+        "6422bf70-0bee-48ce-99ba-ea379ea7de8f"
+      ],
+      "note": "Tiền Giang -> Đồng Tháp (1 POI khớp token-boundary, cap 50)",
+      "id": "admin_133"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "cơm Phú Yên",
+      "expected_ids": [],
+      "note": "Phú Yên -> Đắk Lắk (coverage gap)",
+      "id": "admin_134",
+      "coverage_gap": true,
+      "coverage_note": "không có POI khớp 'cơm Phú Yên' (cả biến thể tên mới) trong snapshot"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "phở Nam Định",
+      "expected_ids": [
+        "f1802413-9aad-4d2c-96eb-152880a1b82b",
+        "0155c22b-dd1e-4490-bb61-f7d3a64a1824",
+        "fb40a699-e065-4ffb-b9b6-8979873c692c",
+        "c9ef56df-2374-4de1-820c-866bbaf98a5f",
+        "e80f6351-32e4-4d12-8ae1-d6d652e64d4d",
+        "64d01874-9260-41fb-bc46-13490434a8ac",
+        "4bddcff4-808e-40c6-8de9-3844d9ef2ebc",
+        "94a99f80-1967-4e36-af01-4d6d78c88fba",
+        "fba5631f-caa6-4b0e-bbbe-0501f3dc388a",
+        "f8b6d476-3dbb-448c-8d85-ef5885e8d218"
+      ],
+      "note": "Nam Định -> Ninh Bình (102 POI khớp token-boundary, cap 50)",
+      "id": "admin_135"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "siêu thị Vĩnh Phúc",
+      "expected_ids": [
+        "f530d6be-b28f-4c2d-b39a-f82dbc139e64"
+      ],
+      "note": "Vĩnh Phúc -> Phú Thọ (1 POI khớp token-boundary, cap 50)",
+      "id": "admin_136"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "quán ăn Bình Thuận",
+      "expected_ids": [],
+      "note": "Bình Thuận -> Lâm Đồng (coverage gap)",
+      "id": "admin_137",
+      "coverage_gap": true,
+      "coverage_note": "không có POI khớp 'quán ăn Bình Thuận' (cả biến thể tên mới) trong snapshot"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "khách sạn Đắk Nông",
+      "expected_ids": [],
+      "coverage_gap": true,
+      "coverage_note": "không có POI khớp 'khách sạn Đắk Nông' (cả biến thể tên mới) trong snapshot",
+      "note": "Đắk Nông -> Lâm Đồng (coverage gap)",
+      "id": "admin_138"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "bệnh viện Hậu Giang",
+      "expected_ids": [
+        "7aa30ac3-8af9-482e-b2c7-e2e27257b53f",
+        "6c466c41-aca7-4df9-b243-a50ca75cb7b6",
+        "34cf0fca-c3ed-4e7b-af75-1a1a18f117ea",
+        "bc05f4a6-506e-409c-957a-d0000483f8ed",
+        "4439cf5e-1cd0-4830-bc44-e458d7bc6f31",
+        "b793a638-1429-44bb-888b-2e7c0ba42dc9",
+        "c141bd69-a680-49c6-a093-8e6f14b03ab5",
+        "f8461d3c-026a-4bf0-9b9f-cd274c631980",
+        "a344ae63-6740-42fd-909f-d2358525e7b9",
+        "5f696245-b8fc-45e5-990f-eb993b13225f",
+        "66b8e913-fd33-4086-90b3-f350dec95fba",
+        "9b49a56a-2108-4928-9cfe-05bacecb9140",
+        "f355172a-3964-475e-a801-46fdb6295fb6",
+        "4da0f7e0-5ade-42b2-8823-6d524ba32dab",
+        "96f4e927-6ade-44bb-87b2-4c64b68d60e0",
+        "8bb42cec-1e91-49c1-af84-1ec2add03de7",
+        "60445bb3-6e55-4467-b04c-1e23a64dcbb3",
+        "c6fa4f4d-b2d9-4963-9db6-f8f56705b624",
+        "040d6bb2-28a7-4f18-9a2c-9593c8043fdc",
+        "d02b4c1d-a7ad-4ee3-9fcc-1dce46f6a1ef",
+        "a93a06c3-2280-4a4a-b7a4-94a4399f0b68",
+        "9f05d97c-aa92-45d0-9bc2-b96eb47a6f33",
+        "c19407a6-1225-4de5-b55f-d1a843c6960b",
+        "4d638420-2364-47af-9c45-dcf05898e966",
+        "70c56086-f53d-4094-a9fc-8014eea15649",
+        "e95e1464-f68c-44a2-bdca-752cffbe6161",
+        "f3da613b-8d7e-48f2-82c5-acad2de19b92",
+        "945cfe6b-3a77-4268-a6a9-e72c592a9632",
+        "6545b88e-eadc-4e2b-a3d4-f712ef85ebf2",
+        "6b0634dc-7b60-446b-828b-0fed748d24b0",
+        "87c79781-2423-413d-9ce8-981e7500ff37"
+      ],
+      "note": "Hậu Giang -> Cần Thơ (31 POI khớp token-boundary, cap 50)",
+      "id": "admin_139"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "chợ Bến Tre",
+      "expected_ids": [
+        "d5e04f20-60d4-4760-9c4b-bb34667eff8d",
+        "cda4e86c-01ac-464a-8e2c-82b2a731acbb",
+        "53727eb5-cc9c-40d7-a175-19e4a13204ed",
+        "228e86ec-3f9e-4111-be85-5948087c2db6",
+        "75c59a6b-0ac1-4bc8-8d8d-ac299ce59063",
+        "3d9ebb95-e0ae-40ea-a3a7-2c3556657560",
+        "bcbdb60b-b81d-46b7-a4c0-558708585eb8",
+        "16554b09-2505-4b03-aacf-1a6617c19596",
+        "dc9e20f7-39fb-4336-9da5-4ebc5518a971"
+      ],
+      "note": "Bến Tre -> Vĩnh Long (9 POI khớp token-boundary, cap 50)",
+      "id": "admin_140"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "quán ăn Quảng Nam",
+      "expected_ids": [
+        "8a60da80-5567-471a-a58a-2a6536e59561"
+      ],
+      "note": "Quảng Nam -> Đà Nẵng (2 POI khớp token-boundary, cap 50)",
+      "id": "admin_141"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "cà phê Thái Bình",
+      "expected_ids": [
+        "1a72feb8-8f67-4a27-9f25-f7a60c216e28",
+        "64be2fd8-4357-4e55-8d4c-b23f663e0ebc"
+      ],
+      "note": "Thái Bình -> Hưng Yên (2 POI khớp token-boundary, cap 50)",
+      "id": "admin_142"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "nhà hàng Thừa Thiên Huế",
+      "expected_ids": [
+        "c77e9aba-1067-4cfd-9297-f700521966f4",
+        "f6995901-0496-47b5-bd9e-0393ae3838e7",
+        "9f02e736-8e8e-46aa-b49b-1fe72cd6b1cc",
+        "7771bfa4-be00-4eb1-8df6-cd1a256a5aa1",
+        "26aa5e28-af7f-4c94-9a85-a747cbe26f1e",
+        "52911f4c-07ed-453a-8a32-9f21d6d3c0ac",
+        "e0b94497-3587-4edf-aafe-872f04fbba3c",
+        "6c439651-cc1e-4d3a-b6b1-51caab42ac37",
+        "e9ea01a3-92d4-47d0-ae54-8ef68126676b",
+        "35b794e6-37ab-4ec7-88e3-a57786a8cce7",
+        "e20aa576-52e4-4c01-9b80-8fead9662f2a",
+        "ac28fb32-b17a-44d2-80d9-a5a9cb5d1a1a",
+        "19db8c40-7490-4a86-b72b-53e873bc7327",
+        "3c0690cf-29cb-44f7-96b3-2d2bf6b434bb",
+        "32dbcc32-b2ad-4df7-ab3a-af7451a36ca7",
+        "df7b8e80-4268-4018-b2f3-912b65044961"
+      ],
+      "note": "Thừa Thiên Huế -> Huế (16 POI khớp token-boundary, cap 50)",
+      "id": "admin_143"
+    },
+    {
+      "kind": "admin_legacy",
+      "query": "quán ăn Bắc Kạn",
+      "expected_ids": [],
+      "note": "Bắc Kạn -> Thái Nguyên (1 POI khớp token-boundary, cap 50)",
+      "id": "admin_144",
+      "coverage_gap": "DB chưa có kết quả phù hợp cho \"quán ăn Bắc Kạn\" (đã kiểm tra theo tọa độ)."
+    },
+    {
+      "kind": "no_match",
+      "query": "asdfghjkl",
+      "expected_ids": [],
+      "note": "truy vấn vô nghĩa / không tồn tại",
+      "id": "nomatch_145"
+    },
+    {
+      "kind": "no_match",
+      "query": "zzzqqq",
+      "expected_ids": [],
+      "note": "truy vấn vô nghĩa / không tồn tại",
+      "id": "nomatch_146"
+    },
+    {
+      "kind": "no_match",
+      "query": "nhà máy điện hạt nhân ninh bình",
+      "expected_ids": [],
+      "note": "truy vấn vô nghĩa / không tồn tại",
+      "id": "nomatch_147"
+    },
+    {
+      "kind": "no_match",
+      "query": "sân bay quốc tế sa mạc sahara",
+      "expected_ids": [],
+      "note": "truy vấn vô nghĩa / không tồn tại",
+      "id": "nomatch_148"
+    },
+    {
+      "kind": "no_match",
+      "query": "casino hoang gia 99999",
+      "expected_ids": [],
+      "note": "truy vấn vô nghĩa / không tồn tại",
+      "id": "nomatch_149"
+    },
+    {
+      "kind": "no_match",
+      "query": "đường lên đỉnh olympus việt nam",
+      "expected_ids": [],
+      "note": "truy vấn vô nghĩa / không tồn tại",
+      "id": "nomatch_150"
     }
-  ]
+  ],
+  "version": "round-b-150"
 }

@@ -7,3 +7,5 @@ data/*.osm.pbf
 data/*.partial
 storage/
 .env
+.serena/
+.devin/
