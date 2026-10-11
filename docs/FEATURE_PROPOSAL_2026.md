@@ -11,9 +11,9 @@
 | Lớp vệ tinh MapTiler | ✅ E2E verified với key thật (zoom 6/17/20 → provider 5/16/19, tile 512px, 0 lỗi; PR #5 sửa endpoint 404) |
 | Đồng bộ POI realtime (SSE) | ✅ PR #4 — revision-only, 32 stream/proc, client refresh viewport |
 | Pipeline dữ liệu OSM | ✅ PR #3 — fetch (provenance SHA-256) → staging → sync an toàn → verify → export ODbL |
-| Dữ liệu POI | ⚠️ Pilot 5.000 POI (ODbL); **toàn quốc chưa nạp full** |
+| Dữ liệu POI | ✅ **98.617 POI toàn quốc** (ODbL; snapshot `pbf:full:retire=0` source_date 2026-10-09 — node 64.367 · way 33.808 · relation 442; sync 90.617 inserted + 8.000 existing, 0 lỗi) |
 | Server | Python stdlib + SQLite WAL + FTS5 (`remove_diacritics 2`) |
-| Tìm kiếm | ⚠️ FTS5 prefix-token, **sort `updated_at DESC`** — chưa BM25/ranking |
+| Tìm kiếm | ✅ FTS5 + **BM25 + phrase-first + alias tiếng Việt** (vòng A) — benchmark khóa 31 truy vấn: **Hit@10 100%, MRR@10 0,975, p95 7,8 ms** trên 98.617 POI |
 | Polygon hành chính 34 tỉnh | ❌ Chưa có (sync ghi `province=""`) |
 | Auth / kiểm duyệt / HTTPS | ❌ Chưa có |
 | CI/CD | ✅ CI matrix 6 job + Docker + CodeQL + SonarCloud xanh |
