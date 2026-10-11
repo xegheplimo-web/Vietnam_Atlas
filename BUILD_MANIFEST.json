@@ -68,7 +68,7 @@
     "server/app.py": "6fc8e939be139316453ade9ff86d9e497f355df6c507f377051d5ebcbfdb7c5c",
     "server/geo.py": "9ffccb5416522ab9a8b7961c35922c53cee70308895d02f01b972a463426be05",
     "server/live.py": "b77b0e1f328ce02d5a6c41814aeb1cf0b6b1b7e3a3f798aa6e45573b0d8a40a4",
-    "server/store.py": "88ca4f8c1ddf44a927fe143c0069012d67245c33c815cf88050a1f39d4557f81",
+    "server/store.py": "884458bfe195714e8876e573bab1d96957d9e6116797adc0bd550a5385bea811",
     "tests/test_atlas_data_refresh.py": "35731c498e4e5469eaeb6f7afa944089d1f6391912ebccc49275e856c76bda03",
     "tests/test_geo.py": "76f533b4daab8ebc4e47541cfb249110f76ea8c9abe118730c568f6002a753c6",
     "tests/test_server.py": "192a619ac0cd8020943f1bf80a913d0cfd892784da61c3d35316a6b69781b3b8",

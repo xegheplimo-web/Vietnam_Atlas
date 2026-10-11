@@ -309,7 +309,7 @@ def save_place(con, payload, place_id=None):
     old = get_place(con, place_id)
     now = utcnow()
     if old:
-        columns = list(FIELDS) + ["search_text", "name_norm", "province_code", "updated_at"]
+        columns = [*FIELDS, "search_text", "name_norm", "province_code", "updated_at"]
         vals = [p[k] for k in FIELDS] + [p["search_text"], p["name_norm"], p["province_code"], now, place_id]
         con.execute("UPDATE places SET " + ",".join(f"{k}=?" for k in columns) + " WHERE id=?", vals)
         action = "update"
