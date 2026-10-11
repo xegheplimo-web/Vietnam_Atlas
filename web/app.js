@@ -35,7 +35,7 @@ async function configureSatelliteLayer(){
     });
     button.disabled=false;
     button.title='Ảnh vệ tinh từ nguồn '+sat.source+' (không phải ảnh trực tiếp thời gian thực)';
-  }catch(_error){button.title='Không tải được cấu hình ảnh vệ tinh'}
+  }catch(_error){/* Ảnh vệ tinh là tùy chọn: không tải được cấu hình thì giữ nút tắt, không cần xử lý thêm. */button.title='Không tải được cấu hình ảnh vệ tinh'}
 }
 const pointIcon = L.divIcon({className:'',html:'<div style="width:17px;height:17px;border:3px solid white;border-radius:50%;background:#10a58f;box-shadow:0 2px 9px #0b46555e"></div>',iconSize:[17,17],iconAnchor:[8,8]});
 let places=[],markers=new Map(),adding=false,toastTimer,loadSeq=0,searchTimer,roadOverlay=null;
@@ -145,7 +145,7 @@ document.querySelectorAll('.layer').forEach(b=>b.addEventListener('click',()=>{
   const selected=layers[b.dataset.layer];
   if(!selected)return toast("Lớp nền chưa được cấu hình.");
   Object.values(layers).forEach(layer=>map.removeLayer(layer));selected.addTo(map);
-  $('maptilerLogo').hidden=!(b.dataset.layer==="satellite"&&satelliteSource==="maptiler");
+  const showMaptilerLogo=b.dataset.layer==="satellite"&&satelliteSource==="maptiler";$('maptilerLogo').hidden=!showMaptilerLogo;
   document.querySelectorAll('.layer').forEach(other=>other.classList.toggle('active',other===b));
 }));
 $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(refresh,300)});
