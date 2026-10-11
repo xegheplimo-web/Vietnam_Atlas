@@ -26,10 +26,12 @@ class LiveChanges:
     def __init__(self, db_path, capacity=32):
         self.db_path = db_path
         self.condition = Condition()
+        self.generation = 0
         self.slots = BoundedSemaphore(capacity)
 
     def notify(self):
         with self.condition:
+            self.generation += 1
             self.condition.notify_all()
 
     def revision(self):
@@ -51,6 +53,8 @@ class LiveChanges:
             self.slots.release()
 
     def _stream(self, handler):
+        with self.condition:
+            observed = self.generation
         latest = self.revision()
         raw_cursor = handler.headers.get("Last-Event-ID", "")
         try:
@@ -81,7 +85,9 @@ class LiveChanges:
             # In-process HTTP writes wake this immediately; external SQLite
             # writers are discovered by the 1-second periodic checkpoint.
             with self.condition:
-                self.condition.wait(timeout=1.0)
+                if self.generation == observed:
+                    self.condition.wait(timeout=1.0)
+                observed = self.generation
 
             latest = self.revision()
             if latest != cursor:
