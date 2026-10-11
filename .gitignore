@@ -4,5 +4,6 @@ __pycache__/
 backups/
 data/*.sqlite3*
 data/*.osm.pbf
+data/*.partial
 storage/
 .env

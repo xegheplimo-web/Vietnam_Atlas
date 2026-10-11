@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TEST FIXTURE ONLY: all names and objects invented. NOT real Vietnam business listings. -->
+<osm version="0.6" generator="VietnamAtlas-fixture">
+  <node id="1001" lat="21.0325" lon="105.8510" version="1">
+    <tag k="name" v="Quán cà phê THỬ NGHIỆM"/>
+    <tag k="amenity" v="cafe"/>
+    <tag k="addr:city" v="Hà Nội"/>
+  </node>
+  <node id="1002" lat="21.0326" lon="105.8520" version="1">
+    <tag k="name" v="Cửa hàng THỬ NGHIỆM"/>
+    <tag k="shop" v="convenience"/>
+    <tag k="phone" v="000000000"/>
+  </node>
+  <node id="1003" lat="21.0327" lon="105.8530" version="1"/>
+  <node id="1101" lat="21.0330" lon="105.8540" version="1"/>
+  <node id="1102" lat="21.0340" lon="105.8540" version="1"/>
+  <node id="1103" lat="21.0340" lon="105.8550" version="1"/>
+  <node id="1104" lat="21.0330" lon="105.8550" version="1"/>
+  <node id="1201" lat="21.0350" lon="105.8560" version="1"/>
+  <node id="1202" lat="21.0360" lon="105.8560" version="1"/>
+  <node id="1203" lat="21.0360" lon="105.8570" version="1"/>
+  <node id="1204" lat="21.0350" lon="105.8570" version="1"/>
+  <way id="2001" version="1">
+    <nd ref="1101"/><nd ref="1102"/><nd ref="1103"/><nd ref="1104"/><nd ref="1101"/>
+    <tag k="name" v="Văn phòng THỬ NGHIỆM"/>
+    <tag k="office" v="company"/>
+  </way>
+  <way id="2002" version="1">
+    <nd ref="1201"/><nd ref="1202"/><nd ref="1203"/><nd ref="1204"/><nd ref="1201"/>
+  </way>
+  <relation id="3001" version="1">
+    <member type="way" ref="2002" role="outer"/>
+    <tag k="type" v="multipolygon"/>
+    <tag k="name" v="Nhà hàng THỬ NGHIỆM"/>
+    <tag k="amenity" v="restaurant"/>
+  </relation>
+</osm>

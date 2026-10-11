@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Download the current Vietnam OpenStreetMap PBF extract from Geofabrik."""
+"""Download the current Vietnam OpenStreetMap PBF extract from Geofabrik.
+
+SUPERSEDED (2026-10-11): prefer tools/fetch_vn_geofabrik.py — it records
+SHA-256/Last-Modified provenance, caches unchanged downloads, and retries.
+"""
 
 import sys
 from pathlib import Path
