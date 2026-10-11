@@ -25,8 +25,9 @@ def verify(db: Path, min_active=1, require_full=False):
             OR lat IS NULL OR lon IS NULL""").fetchone()[0]
         snapshots = con.execute("SELECT count(*) FROM ingestion_snapshots").fetchone()[0]
         breakdown = {row[0]: row[1] for row in con.execute("SELECT osm_type, count(*) FROM osm_places WHERE is_active=1 GROUP BY osm_type")}
-        # Full-import evidence: a snapshot recorded with a full scope (no --limit) proves the whole
-        # source was processed; a pilot snapshot (limit=...) cannot certify national coverage.
+        # Full-import evidence: the LATEST snapshot must have full scope (no --limit). A pilot
+        # cannot certify national coverage, and a later pilot invalidates a historical full
+        # import — otherwise a bounded run after a full one would pass --require-full.
         latest_cur = con.execute(
             "SELECT id, filename, file_sha256, mode, source_date, imported_at, inserted, updated, unchanged, skipped, retired "
             "FROM ingestion_snapshots ORDER BY imported_at DESC, rowid DESC LIMIT 1"
@@ -34,6 +35,7 @@ def verify(db: Path, min_active=1, require_full=False):
         latest_row = latest_cur.fetchone()
         latest = dict(zip([d[0] for d in latest_cur.description], latest_row, strict=False)) if latest_row else None
         full_snapshots = con.execute("SELECT count(*) FROM ingestion_snapshots WHERE mode LIKE '%:full:%'").fetchone()[0]
+        latest_is_full = bool(latest and ":full:" in (latest.get("mode") or ""))
         result = {
             "database": str(db),
             "integrity": integrity,
@@ -44,6 +46,7 @@ def verify(db: Path, min_active=1, require_full=False):
             "snapshots": snapshots,
             "full_snapshots": full_snapshots,
             "latest_snapshot": latest,
+            "latest_snapshot_full": latest_is_full,
             "types": breakdown,
             "minimum_required": min_active,
             "require_full": require_full,
@@ -56,7 +59,7 @@ def verify(db: Path, min_active=1, require_full=False):
             and duplicate == 0
             and wrong_license == 0
             and invalid_coordinates == 0
-            and (not require_full or full_snapshots >= 1)
+            and (not require_full or latest_is_full)
         )
         return result
     finally:
@@ -67,7 +70,11 @@ def main():
     p = argparse.ArgumentParser(description="Validate fully imported OSM SQLite staging DB")
     p.add_argument("--db", type=Path, default=Path("data/osm_vietnam.sqlite3"))
     p.add_argument("--min-active", type=int, default=1, help="expected min real records; choose based on verified source")
-    p.add_argument("--require-full", action="store_true", help="fail unless at least one full-scope snapshot (import without --limit) exists")
+    p.add_argument(
+        "--require-full",
+        action="store_true",
+        help="fail unless the LATEST snapshot is full-scope (a later pilot invalidates a historical full import)",
+    )
     a = p.parse_args()
     try:
         obj = verify(a.db, a.min_active, a.require_full)

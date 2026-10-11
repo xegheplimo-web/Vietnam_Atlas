@@ -64,7 +64,7 @@ def sync(
     from server.store import init_db, save_place  # only available inside full Vietnam_Atlas repository
 
     if apply and atlas_db.is_file():
-        preview = sync(osm_db, atlas_db, apply=False, update_existing=update_existing, limit=limit)
+        preview = sync(osm_db, atlas_db, apply=False, update_existing=update_existing, limit=limit, coverage=coverage)
         if preview["would_insert"] == 0 and preview["would_update"] == 0 and preview["would_retire"] == 0:
             preview["mode"] = "APPLY_NO_CHANGES"
             return preview  # avoids repeated multi-GB backups on unchanged daily snapshots
@@ -105,6 +105,11 @@ def sync(
             dest = sqlite3.connect(f"file:{atlas_db.resolve().as_posix()}?mode=ro", uri=True)
         if dest is not None:
             dest.row_factory = sqlite3.Row
+        if apply:
+            # Acquire the write lock BEFORE preloading: the cached statuses must not race
+            # with the server verifying/editing rows mid-sync, or the sync could overwrite
+            # a freshly verified row or retire a just-verified place (stale cache).
+            dest.execute("BEGIN IMMEDIATE")
         # Preload existing OSM rows once. The unique index on (source, source_id) is partial
         # (WHERE source_id <> ''), which the planner refuses for a bound lookup, so per-row
         # SELECTs degrade to a full scan each time: O(n*m) on a full national sync.
@@ -115,8 +120,6 @@ def sync(
         rows = src.execute(
             "SELECT * FROM osm_places WHERE is_active=1 ORDER BY osm_type,osm_id" + (" LIMIT ?" if limit else ""), ([limit] if limit else [])
         )
-        if apply:
-            dest.execute("BEGIN IMMEDIATE")
         for row in rows:
             sid = f"{row['osm_type']}/{row['osm_id']}"
             previous = existing.get(sid)

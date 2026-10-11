@@ -241,8 +241,15 @@ class RefreshTests(unittest.TestCase):
         full = verifier.verify(self.osm_db, require_full=True)
         self.assertEqual(full["full_snapshots"], 1)
         self.assertTrue(full["pass"])
+        self.assertTrue(full["latest_snapshot_full"])
         self.assertEqual(full["latest_snapshot"]["mode"], "xml:full:retire=0")
         self.assertEqual(full["latest_snapshot"]["unchanged"], 2)
+        # A later bounded pilot invalidates the certification: the latest import must be full.
+        osm.create_snapshot(self.xml, self.osm_db, max_poi=2, force=True)
+        stale = verifier.verify(self.osm_db, require_full=True)
+        self.assertEqual(stale["full_snapshots"], 1)  # history keeps the old full import
+        self.assertFalse(stale["latest_snapshot_full"])
+        self.assertFalse(stale["pass"])
 
     def test_sync_coverage_report_shape(self):
         osm.create_snapshot(self.xml, self.osm_db)
@@ -253,6 +260,10 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(sum(c["count"] for c in cov["grid_1deg_top_cells"]), 4)
         self.assertEqual(sum(c["count"] for c in cov["top_categories"]), 4)
         self.assertNotIn("coverage", sync.sync(self.osm_db, self.atlas_db))  # opt-in flag only
+        # Repeat apply on an unchanged atlas: the no-change path must still carry the report.
+        again = sync.sync(self.osm_db, self.atlas_db, apply=True, coverage=True)
+        self.assertEqual(again["mode"], "APPLY_NO_CHANGES")
+        self.assertEqual(again["coverage"]["cells_with_data"], 1)
 
 
 if __name__ == "__main__":
