@@ -28,6 +28,41 @@ def normalize(text):
     return "".join(ch for ch in unicodedata.normalize("NFD", s) if unicodedata.category(ch) != "Mn")
 
 
+# Seed aliases commonly typed by Vietnamese users (normalized, no diacritics).
+# Keep entries short and unambiguous; expansions are space-separated token phrases.
+ALIAS_SEED = (
+    ("bv", "benh vien"),
+    ("ks", "khach san"),
+    ("dh", "dai hoc"),
+    ("tp", "thanh pho"),
+    ("tx", "thi xa"),
+    ("tt", "thi tran"),
+    ("dv", "dich vu"),
+    ("ubnd", "uy ban nhan dan"),
+)
+
+
+def search_alias_map(con):
+    """Return {alias: expansion} used to widen FTS queries; empty when the table is absent."""
+    try:
+        return {row["alias"]: row["expansion"] for row in con.execute("SELECT alias, expansion FROM search_aliases")}
+    except sqlite3.OperationalError:
+        return {}
+
+
+def build_match_query(tokens, aliases):
+    """FTS5 MATCH expression: tokens are prefix-matched; alias tokens also OR their expansion phrase."""
+    parts = []
+    for token in tokens:
+        expansion = aliases.get(token)
+        if expansion:
+            parts.append('("' + token + '"* OR "' + expansion + '"*)')
+        else:
+            parts.append('"' + token + '"*')
+    # Explicit AND: FTS5 rejects an implicit conjunction right after a parenthesised group.
+    return " AND ".join(parts)
+
+
 def connect(dbpath):
     con = sqlite3.connect(str(dbpath), timeout=20)
     con.row_factory = sqlite3.Row
@@ -75,6 +110,9 @@ def init_db(dbpath):
         CREATE INDEX IF NOT EXISTS idx_change_place ON changes(place_id, seq DESC);
         CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         INSERT OR IGNORE INTO metadata(key,value) VALUES('schema_version','1');
+        CREATE TABLE IF NOT EXISTS search_aliases (
+          alias TEXT PRIMARY KEY, expansion TEXT NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS memory_records (
           id TEXT PRIMARY KEY, place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
           kind TEXT NOT NULL, content TEXT NOT NULL, source TEXT NOT NULL,
@@ -90,6 +128,7 @@ def init_db(dbpath):
         );
         CREATE INDEX IF NOT EXISTS idx_media_place ON place_media(place_id);
         """)
+        con.executemany("INSERT OR IGNORE INTO search_aliases(alias, expansion) VALUES(?,?)", ALIAS_SEED)
         # Search indexes are optional for SQLite builds without FTS5.
         try:
             con.executescript("""
@@ -244,6 +283,7 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
     where = []
     args = []
     join = ""
+    ranked = False
     if province:
         where.append("places.province = ?")
         args.append(province)
@@ -253,7 +293,8 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
         if tokens and fts:
             join = " JOIN places_fts ON places.rowid=places_fts.rowid"
             where.append("places_fts MATCH ?")
-            args.append(" ".join('"' + t + '"*' for t in tokens))
+            args.append(build_match_query(tokens, search_alias_map(con)))
+            ranked = True
         else:
             for token in tokens:
                 where.append("places.search_text LIKE ?")
@@ -271,6 +312,24 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
     base = " FROM places" + join
     predicate = (" WHERE " + " AND ".join(where)) if where else ""
     count = con.execute("SELECT COUNT(*)" + base + predicate, args).fetchone()[0]
+    if ranked:
+        # Relevance order: BM25 first; an exact normalized-name match is boosted to the front
+        # (stable sort keeps BM25 order within each group). Extra rows cover offset + boost window.
+        rows = con.execute(
+            "SELECT places.*, bm25(places_fts) AS search_rank"
+            + base
+            + predicate
+            + " ORDER BY search_rank, places.updated_at DESC, places.id LIMIT ?",
+            [*args, limit + offset],
+        ).fetchall()
+        query_norm = normalize(search).strip()
+        rows = sorted(rows, key=lambda row: 0 if normalize(row["name"]) == query_norm else 1)
+        out = []
+        for row in rows[offset : offset + limit]:
+            item = dict(row)
+            item.pop("search_rank", None)
+            out.append(item)
+        return out, count
     rows = con.execute(
         "SELECT places.*" + base + predicate + " ORDER BY places.updated_at DESC, places.id LIMIT ? OFFSET ?", [*args, limit, offset]
     ).fetchall()

@@ -345,6 +345,84 @@ class AtlasTest(unittest.TestCase):
         finally:
             live.slots.release()
 
+    def test_13_search_relevance_and_vietnamese_aliases(self):
+        # Exact normalized-name match must beat a newer row that only shares tokens (BM25 + exact boost).
+        code, older = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon", "lat": 21.03, "lon": 105.85, "category": "restaurant", "source": "test_search", "source_id": "rank-old"},
+        )
+        self.assertEqual(code, 201)
+        code, newer = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon 2", "lat": 21.04, "lon": 105.86, "category": "restaurant", "source": "test_search", "source_id": "rank-new"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=qu%C3%A1n%20%C4%83n%20ngon")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertEqual(ids[0], older["item"]["id"])  # exact name first, despite being older
+        self.assertIn(newer["item"]["id"], ids)
+
+        # Vietnamese aliases: bv → bệnh viện.
+        code, hosp = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Bệnh viện Đa khoa Tâm Anh",
+                "lat": 21.0,
+                "lon": 105.8,
+                "category": "hospital",
+                "source": "test_search",
+                "source_id": "alias-hosp",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=bv%20tam%20anh")
+        self.assertEqual(next(x["id"] for x in result["items"]), hosp["item"]["id"])
+
+        # The alias OR keeps the literal token working too (ubnd stays ubnd).
+        code, gov = self.request(
+            "/api/places",
+            "POST",
+            {"name": "UBND xã Test Alias", "lat": 21.05, "lon": 105.87, "category": "townhall", "source": "test_search", "source_id": "alias-gov"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=ubnd%20xa%20test")
+        self.assertEqual(next(x["id"] for x in result["items"]), gov["item"]["id"])
+
+        # Unrelated query returns nothing (no false positives).
+        code, result = self.request("/api/places?search=zzzqqq%20khong%20co")
+        self.assertEqual(result["total"], 0)
+        self.assertEqual(result["items"], [])
+
+        for item in (older, newer, hosp, gov):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_14_benchmark_harness_scores_fixed_queries(self):
+        import importlib.util
+
+        root = Path(__file__).resolve().parents[1]
+        spec = importlib.util.spec_from_file_location("search_benchmark", root / "tools" / "search_benchmark.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        code, created = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Bến xe Miền Đông Mới", "lat": 10.85, "lon": 106.8, "category": "bus_station", "source": "test_bench", "source_id": "bench-01"},
+        )
+        self.assertEqual(code, 201)
+        pid = created["item"]["id"]
+        queries = [
+            {"id": "b1", "kind": "exact_name", "query": "Bến xe Miền Đông Mới", "expected_ids": [pid]},
+            {"id": "b2", "kind": "no_match", "query": "zzzqqq khong co gi", "expected_ids": []},
+        ]
+        result = module.run_benchmark(self.db, queries, limit=10, repeats=1)
+        self.assertEqual(result["summary"]["hit@10"], 1.0)
+        self.assertEqual(result["summary"]["no_match_false_positives"], 0)
+        self.request("/api/places/" + pid, "DELETE")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
