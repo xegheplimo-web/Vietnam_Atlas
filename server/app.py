@@ -65,6 +65,7 @@ def satellite_layer_config():
             "url": custom_url,
             "attribution": html.escape(attribution),
             "maxNativeZoom": 19,
+            "tileSize": 256,
             "source": "custom",
         }
 
@@ -75,6 +76,7 @@ def satellite_layer_config():
         "url": "https://api.maptiler.com/tiles/satellite-v4/{z}/{x}/{y}?key=" + quote(key, safe=""),
         "attribution": '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> | Satellite imagery providers',
         "maxNativeZoom": 19,
+        "tileSize": 512,
         "source": "maptiler",
     }
 
