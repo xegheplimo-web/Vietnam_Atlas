@@ -10,13 +10,31 @@
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
+  <aside class="sidebar" aria-label="Bảng điều khiển tìm kiếm">
     <div class="brand"><div class="brand-mark">VN</div><div><div class="eyebrow">ATLAS / MEMORY</div><h1>Vietnam Atlas</h1><p>Bản đồ & kho dữ liệu địa lý</p></div></div>
     <div class="status"><span class="pulse"></span><span id="serverStatus">Đang kết nối bộ nhớ…</span><span class="status-right">OSM</span></div>
     <label class="field-label" for="search">Tìm địa điểm trong kho dữ liệu</label>
-    <div class="search-wrap"><span>⌕</span><input id="search" placeholder="Tên, loại, địa chỉ…" autocomplete="off"></div>
+    <div class="search-wrap"><span>⌕</span><input id="search" placeholder="Tên, loại, địa chỉ…" autocomplete="off"><button id="nearMe" type="button" title="Tìm địa điểm gần vị trí của bạn">📍 Gần tôi</button></div>
     <label class="field-label" for="province">Đơn vị hành chính cấp tỉnh</label>
     <select id="province"><option value="">Toàn quốc</option></select>
+    <label class="field-label" for="categoryFilter">Loại địa điểm</label>
+    <select id="categoryFilter">
+      <option value="">Tất cả loại</option>
+      <option value="amenity:restaurant|amenity:cafe|amenity:fast_food|amenity:food_court">Ăn uống</option>
+      <option value="tourism:hotel|tourism:guest_house|tourism:hostel|tourism:motel|tourism:resort">Lưu trú</option>
+      <option value="amenity:school|amenity:kindergarten|amenity:college|amenity:university">Giáo dục</option>
+      <option value="amenity:hospital|amenity:clinic|amenity:pharmacy|amenity:doctors|amenity:dentist">Y tế</option>
+      <option value="amenity:bank|amenity:atm">Ngân hàng / ATM</option>
+      <option value="shop:supermarket|shop:convenience|shop:department_store|shop:mall|shop:clothes">Mua sắm</option>
+      <option value="amenity:marketplace">Chợ</option>
+      <option value="amenity:fuel">Cây xăng</option>
+      <option value="amenity:police|amenity:fire_station">Công an / Cứu hỏa</option>
+      <option value="office:government|amenity:townhall">Hành chính</option>
+      <option value="amenity:place_of_worship">Tôn giáo</option>
+      <option value="leisure:park|leisure:garden">Công viên</option>
+      <option value="tourism:attraction|tourism:museum|tourism:viewpoint">Du lịch</option>
+      <option value="amenity:bus_station|amenity:ferry_terminal|railway:station">Vận tải</option>
+    </select>
     <div class="section-head"><h2>Lớp bản đồ</h2><span class="muted">BASE LAYER</span></div>
     <div class="layer-buttons">
       <button class="layer active" data-layer="osm">Đường phố</button>
@@ -47,6 +65,35 @@
     </div>
     <div class="map-legend"><span><i class="legend-dot"></i> Điểm bộ nhớ</span><span><i class="legend-line"></i> Đường từ lớp nền</span></div>
     <div id="toast" class="toast" role="status"></div>
+    <aside id="placePanel" class="place-panel" aria-label="Hồ sơ địa điểm">
+      <div class="panel-head">
+        <div class="panel-head-text"><div class="eyebrow">PLACE MEMORY</div><h2 id="panelName">—</h2></div>
+        <button id="panelClose" class="x" type="button" aria-label="Đóng hồ sơ">×</button>
+      </div>
+      <div class="panel-body">
+        <div class="panel-badges"><span class="badge" id="panelCategory">—</span><span class="badge status" id="panelStatus" data-status="unverified">—</span></div>
+        <p class="panel-address" id="panelAddress"></p>
+        <dl class="panel-facts">
+          <div><dt>Tỉnh / thành</dt><dd id="panelProvince">—</dd></div>
+          <div><dt>Khoảng cách</dt><dd id="panelDistance">—</dd></div>
+          <div><dt>Điện thoại</dt><dd id="panelPhone">—</dd></div>
+          <div><dt>Website</dt><dd id="panelWebsite">—</dd></div>
+          <div><dt>Tọa độ</dt><dd id="panelCoords">—</dd></div>
+          <div><dt>Nguồn</dt><dd id="panelSource">—</dd></div>
+          <div><dt>Cập nhật lúc</dt><dd id="panelUpdated">—</dd></div>
+        </dl>
+        <div class="panel-actions">
+          <button id="panelDirections" class="btn primary" type="button">🧭 Chỉ đường</button>
+          <button id="panelCopyCoords" class="btn secondary" type="button">📋 Sao chép tọa độ</button>
+          <button id="panelCopyAddress" class="btn secondary" type="button">📋 Sao chép địa chỉ</button>
+          <button id="panelShare" class="btn secondary" type="button">🔗 Chia sẻ</button>
+          <button id="panelEdit" class="btn secondary" type="button">✏️ Sửa</button>
+        </div>
+        <details class="memory-panel"><summary>Lịch sử thay đổi</summary><div id="panelHistory" class="history-list">Chưa có lịch sử.</div></details>
+        <details class="memory-panel"><summary>Bộ nhớ chi tiết</summary><div id="panelMemories" class="history-list">Chưa có dữ liệu.</div></details>
+        <details class="memory-panel"><summary>Ảnh và tài liệu tham chiếu</summary><div id="panelMedia" class="history-list">Chưa có dữ liệu.</div></details>
+      </div>
+    </aside>
   </main>
 </div>
 <dialog id="editor">
