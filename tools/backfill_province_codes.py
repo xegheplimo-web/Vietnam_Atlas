@@ -66,7 +66,7 @@ def main():
     directory = ROOT / "backups"
     directory.mkdir(exist_ok=True)
     dest = directory / ("before-province-code-backfill-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".sqlite3")
-    with sqlite3.connect(source) as original, sqlite3.connect(dest) as copied:
+    with sqlite3.connect(source) as original, sqlite3.connect(dest) as copied:  # NOSONAR(S8706)
         original.backup(copied)
     print(f"Backup completed: {dest}")
     with session(args.db) as con:

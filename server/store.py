@@ -20,6 +20,7 @@ from . import geo
 
 FIELDS = ("name", "category", "address", "province", "phone", "website", "lat", "lon", "notes", "source", "source_id", "status")
 VALID_STATUSES = {"unverified", "verified", "inactive", "closed"}
+_LIKE_TEXT = "places.search_text LIKE ?"
 
 
 def utcnow():
@@ -289,7 +290,7 @@ def save_place(con, payload, place_id=None):
     old = get_place(con, place_id)
     now = utcnow()
     if old:
-        columns = [k for k in FIELDS] + ["search_text", "name_norm", "province_code", "updated_at"]
+        columns = list(FIELDS) + ["search_text", "name_norm", "province_code", "updated_at"]
         vals = [p[k] for k in FIELDS] + [p["search_text"], p["name_norm"], p["province_code"], now, place_id]
         con.execute("UPDATE places SET " + ",".join(f"{k}=?" for k in columns) + " WHERE id=?", vals)
         action = "update"
@@ -378,12 +379,34 @@ def _like_group(tokens, aliases):
     for token in tokens:
         expansion = aliases.get(token)
         if expansion:
-            parts.append("(places.search_text LIKE ? OR places.search_text LIKE ?)")
+            parts.append(f"({_LIKE_TEXT} OR {_LIKE_TEXT})")
             args.extend(("%" + token + "%", "%" + expansion + "%"))
         else:
-            parts.append("places.search_text LIKE ?")
+            parts.append(_LIKE_TEXT)
             args.append("%" + token + "%")
     return "(" + _AND.join(parts) + ")", args
+
+
+def _scope_terms(con, scope, text_tokens, raw_text_tokens):
+    """Build the geo-scope dict: province + text-match SQL/args + accent ranking signal."""
+    aliases = search_alias_map(con)
+    province, span, kind, _start = scope
+    groups = [span]
+    name_tokens = _phrase_tokens(province.name_norm)
+    if name_tokens != span:
+        groups.append(name_tokens)
+    likes = [_like_group(group, aliases) for group in groups]
+    textmatch_sql = "(" + " OR ".join(group_sql for group_sql, _group_args in likes) + ")"
+    textmatch_args = [arg for _group_sql, group_args in likes for arg in group_args]
+    # Accent-faithful name boost: diacritic-typed tokens prefer diacritic names
+    # ("phở" over "phố"). Only a ranking signal, never a candidate filter.
+    accent = [raw for norm, raw in zip(text_tokens, raw_text_tokens, strict=True) if norm != raw]
+    return {
+        "province": province,
+        "kind": kind,
+        "textmatch": (textmatch_sql, textmatch_args),
+        "accent": ("(" + _AND.join("lower(places.name) LIKE ?" for _ in accent) + ")", ["%" + a + "%" for a in accent]) if accent else None,
+    }
 
 
 def _geo_scope(con, search, tokens):
@@ -418,35 +441,19 @@ def _search_clause(con, search, where, args):
     raw_tokens = re.findall(r"[\w]+", str(search or "").lower())
     tokens = [normalize(t) for t in raw_tokens]  # per-token: stays position-aligned with raw_tokens
     scope = _geo_scope(con, search, tokens)
+    text_tokens = tokens[:8]
+    raw_text_tokens = raw_tokens[:8]
     if scope is not None:
         province, span, kind, start = scope
-        text_tokens = (tokens[:start] + tokens[start + len(span) :])[:8]
-        raw_text_tokens = (raw_tokens[:start] + raw_tokens[start + len(span) :])[:8]
-        if not text_tokens:  # query is only a province name → keep legacy behaviour
+        remaining = (tokens[:start] + tokens[start + len(span) :])[:8]
+        raw_remaining = (raw_tokens[:start] + raw_tokens[start + len(span) :])[:8]
+        if remaining:  # query is only a province name → keep legacy behaviour
+            text_tokens, raw_text_tokens = remaining, raw_remaining
+        else:
             scope = None
-    if scope is None:
-        text_tokens = tokens[:8]
-        raw_text_tokens = raw_tokens[:8]
     fts = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='places_fts'").fetchone()
     if scope is not None:
-        aliases = search_alias_map(con)
-        province, span, kind, _start = scope
-        groups = [span]
-        name_tokens = _phrase_tokens(province.name_norm)
-        if name_tokens != span:
-            groups.append(name_tokens)
-        likes = [_like_group(group, aliases) for group in groups]
-        textmatch_sql = "(" + " OR ".join(group_sql for group_sql, _group_args in likes) + ")"
-        textmatch_args = [arg for _group_sql, group_args in likes for arg in group_args]
-        # Accent-faithful name boost: diacritic-typed tokens prefer diacritic names
-        # ("phở" over "phố"). Only a ranking signal, never a candidate filter.
-        accent = [raw for norm, raw in zip(text_tokens, raw_text_tokens, strict=True) if norm != raw]
-        scope = {
-            "province": province,
-            "kind": kind,
-            "textmatch": (textmatch_sql, textmatch_args),
-            "accent": ("(" + _AND.join("lower(places.name) LIKE ?" for _ in accent) + ")", ["%" + a + "%" for a in accent]) if accent else None,
-        }
+        scope = _scope_terms(con, scope, text_tokens, raw_text_tokens)
     if text_tokens and fts:
         if scope is not None:
             # Union path: list_places builds a two-branch query — the legacy pool
@@ -472,13 +479,13 @@ def _search_clause(con, search, where, args):
     for segment in _token_segments(text_tokens, province_phrase_aliases()):
         if len(segment) == 2:
             old, new = segment
-            old_like = "(" + _AND.join("places.search_text LIKE ?" for _ in old) + ")"
-            new_like = "(" + _AND.join("places.search_text LIKE ?" for _ in new) + ")"
+            old_like = "(" + _AND.join(_LIKE_TEXT for _ in old) + ")"
+            new_like = "(" + _AND.join(_LIKE_TEXT for _ in new) + ")"
             where.append("(" + old_like + " OR " + new_like + ")")
             args.extend("%" + t + "%" for t in old)
             args.extend("%" + t + "%" for t in new)
         else:
-            where.append("places.search_text LIKE ?")
+            where.append(_LIKE_TEXT)
             args.append("%" + segment[0] + "%")
     return "", False, scope
 
@@ -590,6 +597,19 @@ def _geo_union_places(con, scope, where, args, distance_sql, head_args, search_n
     return out, count
 
 
+def _province_clause(con, province, where, args):
+    """Explicit province= filter: GSO code/name/alias → province_code, legacy text fallback."""
+    resolved = _province_param(con, province)
+    if resolved is not None:
+        # Geo code wins when assigned; the legacy text label is the fallback for
+        # POIs outside every polygon / not yet backfilled.
+        where.append("(places.province_code = ? OR (places.province_code IS NULL AND places.province = ?))")
+        args.extend((resolved.code, province))
+    else:
+        where.append("places.province = ?")
+        args.append(province)
+
+
 def list_places(con, search="", province="", bbox=None, limit=500, offset=0, category="", near=None):
     where = []
     args = []
@@ -597,15 +617,7 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0, cat
     ranked = False
     scope = None
     if province:
-        resolved = _province_param(con, province)
-        if resolved is not None:
-            # Geo code wins when assigned; the legacy text label is the fallback for
-            # POIs outside every polygon / not yet backfilled.
-            where.append("(places.province_code = ? OR (places.province_code IS NULL AND places.province = ?))")
-            args.extend((resolved.code, province))
-        else:
-            where.append("places.province = ?")
-            args.append(province)
+        _province_clause(con, province, where, args)
     if category:
         _category_clause(category, where, args)
     if search:
