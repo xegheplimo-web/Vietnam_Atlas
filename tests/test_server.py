@@ -263,7 +263,6 @@ class AtlasTest(unittest.TestCase):
             self.assertNotIn("&lt;a", credit)
             self.assertNotIn("<script>", credit)
 
-
     def test_10_live_sse_updates_after_committed_write(self):
         # Streaming clients should receive a committed revision without polling
         # for all places or reopening the map.
