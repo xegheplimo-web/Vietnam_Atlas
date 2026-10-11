@@ -20,6 +20,7 @@ Cập nhật: 2026-10-11. Trạng thái hiện tại: v2.0 full-starter, repo Pu
 4. Tối ưu tìm kiếm tiếng Việt không dấu, tile server/offline, quy trình cập nhật dữ liệu định kỳ.
 5. (Mở rộng — chỉ khi có use case thật) Dịch vụ GPU tùy chọn dựng 3D từ ảnh/video của cửa hàng/phố/công trình.
 6. **Cập nhật 2026-10-11:** lớp ảnh vệ tinh **opt-in** đã tích hợp qua PR #2 (`662a56c`) — MapTiler/XYZ riêng, mặc định tắt, chỉ dùng nguồn được cấp phép; kiến trúc AI/GPU (worker tách rời, chưa triển khai) ghi tại `docs/SATELLITE_AI_GPU_ARCHITECTURE.md`.
+7. **Cập nhật 2026-10-11:** đồng bộ POI live SSE đã tích hợp qua PR #4 (`7f25705`) — `GET /api/live` chỉ phát revision (không chứa dữ liệu địa điểm), giới hạn 32 stream/tiến trình, client chỉ refresh vùng đang xem; SLO mục tiêu, giới hạn HTTP/1.x và lộ trình mở Internet tại `docs/REALTIME_MAP.md`.
 
 ## Điều kiện xem xét lại Map-Anything
 

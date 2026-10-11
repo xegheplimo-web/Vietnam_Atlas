@@ -1,7 +1,7 @@
 {
   "product": "Vietnam Atlas Map & Memory",
   "version": "2.0-full-starter-2026-10-11",
-  "build_date_utc": "2026-10-11T02:20:44.137977+00:00",
+  "build_date_utc": "2026-10-11T02:25:43.929182+00:00",
   "code_test_result": "24 tests passed (10 HTTP/storage integration + 14 data-refresh toolkit)",
   "validated_admin": "34 new province names; 63 legacy province names mapped",
   "downloads_not_embedded": [
@@ -60,7 +60,7 @@
     "server/live.py": "37a66a8adc263070f22afc930774bf2432d1f001d0a03c5484d748ec39804431",
     "server/store.py": "adf96967b1c2c721cc2b11bbdf4549b0ccbba6b0522a9814eb048c2a01bbc35f",
     "tests/test_atlas_data_refresh.py": "49d90682458ea1b231cbcfd53e540f7ac7924d2505ee6227f4f32c719ac6815e",
-    "tests/test_server.py": "91793a3ca590c5e414f1dd1083d1fb6b8f6f086d1d16c438b8f72dbae92928e1",
+    "tests/test_server.py": "9c54534820b8d8c3e55241dcba403e644f3e74765452252fbdeb5f5028d084f1",
     "tools/backup_database.py": "59c1f39fb74adcd5fdc5540a4675cdc5c856dad145169bc97e4d489ddec904be",
     "tools/download_vietnam_osm.py": "7491b91b44ba848e0270850cb147bfcc4b2a95a135dca57090f10895684983c3",
     "tools/export_osm_csv_gz.py": "e108c8fa3896c85554f17f07a039ec228e2b9b169b3998c0b29494b92cf31c94",
@@ -74,7 +74,7 @@
     "tools/sync_osm_into_atlas.py": "c5d24f1106d149daa6035cc0612bae8e8b86ff8cc7446119e01ef4e5dde702bd",
     "tools/verify_osm_snapshot.py": "0d10e1634ba0b4faf1d2fee2e99b55d6302b285501ca6a3b7b257b0c5fc4890e",
     "tools/vn_osm_dataset.py": "6685d59e1d64430edb299a5f3bff9bdaa599999a02a2fa82a97bc3ce48782b49",
-    "web/app.js": "9d314a37b5ebf7766ce13e26862d53527f662813b63c54e0af7642dbfe2c40e7",
+    "web/app.js": "9e8aa14f2a6982200ab257e8946b9078f0e47c6ae492349b8798e0961aadd936",
     "web/index.html": "a9fcd058a909d48cf251754d0aad3b33132d0bf097cad904d4277ca58ec58f89",
     "web/style.css": "f6f1eb77532111d56ea3df04f78f67f50aba38b24a17c158befcea2aedb7c53d"
   },
