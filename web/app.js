@@ -45,10 +45,10 @@ let nearMe={active:false,lat:null,lon:null};
 let panelPlaceId=null;
 // Last nationwide query the map was focused for; panning/zooming must not re-fit.
 let lastFocusKey='';
-// Category prefix → Vietnamese label, derived from the #category options so the
+// Category prefix → Vietnamese label, derived from the #categoryFilter options so the
 // dropdown and the panel badge can never drift apart.
 const CATEGORY_LABELS={};
-for(const opt of document.querySelectorAll('#category option')){
+for(const opt of document.querySelectorAll('#categoryFilter option')){
   if(opt.value)for(const prefix of opt.value.split('|'))CATEGORY_LABELS[prefix]=opt.textContent;
 }
 const STATUS_LABELS={unverified:'Chưa xác minh',verified:'Đã xác minh',inactive:'Không còn hoạt động'};
@@ -60,7 +60,10 @@ function websiteHref(url){const u=String(url??'').trim();return /^https?:\/\//i.
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 function toast(message){const e=$('toast');e.textContent=message;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),3300)}
 async function api(path,options={}){
-  const res=await fetch(path,{...options,headers:{...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})}});
+  // Every call site passes a literal '/api/...' path (user values go through
+  // encodeURIComponent), so the target host can never be changed by input.
+  if(!String(path).startsWith('/api/'))throw new Error('Đường dẫn API không hợp lệ');
+  const res=await fetch(path,{...options,headers:{...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})}});// NOSONAR: path nội bộ, không nhận URL ngoài
   let body;try{body=await res.json()}catch{body={error:'Máy chủ không trả về JSON'}}
   if(!res.ok)throw new Error(body.error||`Lỗi HTTP ${res.status}`);
   return body;
@@ -71,7 +74,40 @@ function currentBBox(){const b=map.getBounds();return [b.getWest(),b.getSouth(),
 // bbox so the whole country is searched (server contract: limit ≤1000). The old
 // server ignores the extra params, so this stays safe pre-merge.
 function nationwideMode(){
-  return Boolean($('search').value.trim()||$('category').value||(nearMe.active&&nearMe.lat!=null));
+  return Boolean($('search').value.trim()||$('categoryFilter').value||(nearMe.active&&nearMe.lat!=null));
+}
+function placesQuery(){
+  const search=$('search').value.trim();
+  const category=$('categoryFilter').value;
+  const nationwide=nationwideMode();
+  const qs=new URLSearchParams({limit:nationwide?'100':'500'});
+  if(!nationwide)qs.set('bbox',currentBBox());
+  if(search)qs.set('search',search);
+  if(category)qs.set('category',category);
+  if(nearMe.active&&nearMe.lat!=null)qs.set('near',nearMe.lat.toFixed(6)+','+nearMe.lon.toFixed(6));
+  if($('province').value)qs.set('province',$('province').value);
+  return {qs,search,category,nationwide};
+}
+function placesCountText(data,query){
+  const shown=places.length.toLocaleString('vi-VN');
+  const found=data.total.toLocaleString('vi-VN');
+  if(query.nationwide){
+    const label=nearMe.active?'địa điểm gần bạn':'kết quả toàn quốc';
+    const extra=data.total>places.length?` (tìm được ${found})`:'';
+    return `${shown} ${label}${extra}`;
+  }
+  const extra=data.total>500?' (giới hạn 500/lần)':'';
+  return `Đang hiển thị ${shown} / ${found} địa điểm trong vùng bản đồ${extra}`;
+}
+function focusNationwide(query){
+  // Focus the map on nationwide result sets only when the query itself changed —
+  // later pan/zoom refreshes reuse the same query and must not yank the viewport.
+  if(!query.nationwide){lastFocusKey='';return}
+  const key=[query.search,query.category,nearMe.active?'near':''].join('|');
+  if(key===lastFocusKey)return;
+  lastFocusKey=key;
+  if(places.length>=2)map.fitBounds(L.latLngBounds(places.map(p=>[p.lat,p.lon])),{padding:[45,45]});
+  else if(places.length===1)map.setView([places[0].lat,places[0].lon],15);
 }
 async function refresh(){
   const seq=++loadSeq;
@@ -79,36 +115,15 @@ async function refresh(){
   const controller=new AbortController();
   refreshAbort=controller;
   try{
-    const search=$('search').value.trim();
-    const category=$('category').value;
-    const nationwide=nationwideMode();
-    const qs=new URLSearchParams({limit:nationwide?'100':'500'});
-    if(!nationwide)qs.set('bbox',currentBBox());
-    if(search)qs.set('search',search);
-    if(category)qs.set('category',category);
-    if(nearMe.active&&nearMe.lat!=null)qs.set('near',nearMe.lat.toFixed(6)+','+nearMe.lon.toFixed(6));
-    if($('province').value)qs.set('province',$('province').value);
-    const data=await api('/api/places?'+qs,{signal:controller.signal});
+    const query=placesQuery();
+    const data=await api('/api/places?'+query.qs,{signal:controller.signal});
     if(seq!==loadSeq)return;
     places=data.items;
     if(nearMe.active)places.sort((a,b)=>(a.distance_km??Infinity)-(b.distance_km??Infinity));
     renderMarkers();renderPlaces();
-    if(nationwide){
-      const label=nearMe.active?'địa điểm gần bạn':'kết quả toàn quốc';
-      $('visibleCount').textContent=`${places.length.toLocaleString('vi-VN')} ${label}${data.total>places.length?` (tìm được ${data.total.toLocaleString('vi-VN')})`:''}`;
-    }else{
-      $('visibleCount').textContent=`Đang hiển thị ${places.length.toLocaleString('vi-VN')} / ${data.total.toLocaleString('vi-VN')} địa điểm trong vùng bản đồ${data.total>500?' (giới hạn 500/lần)':''}`;
-    }
+    $('visibleCount').textContent=placesCountText(data,query);
     $('serverStatus').textContent='Kho bộ nhớ đã kết nối';
-    // Focus the map on nationwide result sets only when the query itself changed —
-    // later pan/zoom refreshes reuse the same query and must not yank the viewport.
-    const focusKey=[search,category,nearMe.active?'near':''].join('|');
-    if(nationwide&&focusKey!==lastFocusKey){
-      lastFocusKey=focusKey;
-      if(places.length>=2)map.fitBounds(L.latLngBounds(places.map(p=>[p.lat,p.lon])),{padding:[45,45]});
-      else if(places.length===1)map.setView([places[0].lat,places[0].lon],15);
-    }
-    if(!nationwide)lastFocusKey='';
+    focusNationwide(query);
   }catch(e){
     if(seq===loadSeq&&e.name!=='AbortError'){$('serverStatus').textContent='Không kết nối được máy chủ';$('visibleCount').textContent=e.message;toast('Lỗi tải dữ liệu: '+e.message)}
   }
@@ -174,7 +189,7 @@ function editor(latlng,p=null){
   $('formProvince').value=p?.province||$('province').value||'';
   $('lat').value=p?.lat??latlng.lat.toFixed(6);$('lon').value=p?.lon??latlng.lng.toFixed(6);
   $('status').value=p?.status||'unverified';$('source').value=p?.source||'user';
-  $('historyPanel').open=false;loadHistory(p?.id);loadFacts(p?.id);$('editor').showModal();
+  $('historyPanel').open=false;loadHistory(p?.id).catch(()=>{});loadFacts(p?.id).catch(()=>{});$('editor').showModal();
 }
 async function editById(id){
   try{const p=await api('/api/places/'+encodeURIComponent(id));editor({lat:p.lat,lng:p.lon},p)}catch(e){toast(e.message)}
@@ -189,16 +204,18 @@ function openPanel(p){
   const addr=$('panelAddress');addr.textContent=p.address||'';addr.style.display=p.address?'':'none';
   $('panelProvince').textContent=p.province||'—';
   $('panelDistance').textContent=p.distance_km!=null?`Cách ${Number(p.distance_km).toFixed(1)} km`:'—';
-  $('panelPhone').innerHTML=p.phone?`<a href="${escapeHtml(telHref(p.phone))}">${escapeHtml(p.phone)}</a>`:'—';
+  const phoneEl=$('panelPhone');phoneEl.textContent='';
+  if(p.phone){const a=document.createElement('a');a.href=telHref(p.phone);a.textContent=String(p.phone);phoneEl.appendChild(a)}else{phoneEl.textContent='—'}
+  const siteEl=$('panelWebsite');siteEl.textContent='';
   const href=websiteHref(p.website);
-  $('panelWebsite').innerHTML=href?`<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(p.website)}</a>`:'—';
+  if(href){const a=document.createElement('a');a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=String(p.website);siteEl.appendChild(a)}else{siteEl.textContent='—'}
   $('panelCoords').textContent=`${Number(p.lat).toFixed(5)}, ${Number(p.lon).toFixed(5)}`;
   $('panelSource').textContent=[p.source,p.source_id?`#${p.source_id}`:''].filter(Boolean).join(' · ')||'—';
   $('panelUpdated').textContent=p.updated_at||'—';
   $('placePanel').classList.add('open');
   const url=new URL(location.href);url.searchParams.set('place',String(p.id));
   history.replaceState(null,'',url);
-  loadPanelDetails(p.id);
+  loadPanelDetails(p.id).catch(()=>{});
 }
 function closePanel(){
   panelPlaceId=null;
@@ -212,22 +229,25 @@ async function loadPanelDetails(id){
     const d=await api('/api/places/'+encodeURIComponent(id)+'/history');
     h.innerHTML=d.items.length?d.items.map(r=>`<article><strong>${escapeHtml(r.action)}</strong> · ${escapeHtml(r.changed_at)}<br>Phiên bản #${r.seq}</article>`).join(''):'Chưa có lịch sử.';
   }catch(e){h.textContent=e.message}
-  for(const [kind,el,empty] of [['memories','panelMemories','Chưa có bộ nhớ chi tiết.'],['media','panelMedia','Chưa có ảnh/tài liệu.']]){
-    const holder=$(el);holder.textContent='Đang tải…';
-    try{
-      const d=await api('/api/places/'+encodeURIComponent(id)+'/'+kind);
-      if(!d.items.length){holder.textContent=empty;continue}
-      if(kind==='memories'){
-        holder.innerHTML=d.items.map(m=>`<article><strong>${escapeHtml(m.kind)}</strong> · ${escapeHtml(m.created_at)} · ${escapeHtml(m.source)}<br>${escapeHtml(m.content)}</article>`).join('');
-      }else{
-        holder.innerHTML=d.items.map(m=>{
-          const href=websiteHref(m.url);
-          const cap=escapeHtml(m.caption||'Xem ảnh / tài liệu');
-          return `<article>${href?`<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${cap}</a>`:cap}<br>${escapeHtml(m.source)} · ${escapeHtml(m.rights_basis)}</article>`;
-        }).join('');
-      }
-    }catch(e){holder.textContent=e.message}
-  }
+  const kinds=[['memories','panelMemories','Chưa có bộ nhớ chi tiết.'],['media','panelMedia','Chưa có ảnh/tài liệu.']];
+  await Promise.all(kinds.map(([kind,el,empty])=>loadPanelKind(id,kind,$(el),empty)));
+}
+async function loadPanelKind(id,kind,holder,empty){
+  holder.textContent='Đang tải…';
+  try{
+    const d=await api('/api/places/'+encodeURIComponent(id)+'/'+kind);
+    if(!d.items.length){holder.textContent=empty;return}
+    if(kind==='memories'){
+      holder.innerHTML=d.items.map(m=>`<article><strong>${escapeHtml(m.kind)}</strong> · ${escapeHtml(m.created_at)} · ${escapeHtml(m.source)}<br>${escapeHtml(m.content)}</article>`).join('');
+    }else{
+      holder.innerHTML=d.items.map(m=>{
+        const href=websiteHref(m.url);
+        const cap=escapeHtml(m.caption||'Xem ảnh / tài liệu');
+        const label=href?`<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${cap}</a>`:cap;
+        return `<article>${label}<br>${escapeHtml(m.source)} · ${escapeHtml(m.rights_basis)}</article>`;
+      }).join('');
+    }
+  }catch(e){holder.textContent=e.message}
 }
 $('panelClose').addEventListener('click',closePanel);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panelPlaceId)closePanel()});
@@ -256,7 +276,7 @@ $('panelShare').addEventListener('click',async()=>{
   }
   toast(await copyText(url)?'Đã sao chép liên kết chia sẻ.':'Không sao chép được liên kết.');
 });
-$('panelEdit').addEventListener('click',()=>{if(panelPlaceId)editById(panelPlaceId)});
+$('panelEdit').addEventListener('click',()=>{if(panelPlaceId)editById(panelPlaceId).catch(()=>{})});
 $('placeForm').addEventListener('submit',async e=>{
   if(e.submitter?.value==='cancel')return;
   e.preventDefault();
@@ -269,7 +289,7 @@ $('placeForm').addEventListener('submit',async e=>{
     await api(pid?'/api/places/'+encodeURIComponent(pid):'/api/places',{method:pid?'PUT':'POST',body:JSON.stringify(payload)});
     $('editor').close();map.setView([payload.lat,payload.lon],Math.max(map.getZoom(),13));
     await Promise.all([refresh(),refreshStats()]);
-    if(panelPlaceId&&panelPlaceId===pid){try{const fresh=await api('/api/places/'+encodeURIComponent(pid));openPanel(fresh)}catch(_){}}
+    if(panelPlaceId&&panelPlaceId===pid){try{const fresh=await api('/api/places/'+encodeURIComponent(pid));openPanel(fresh)}catch(_error){/* bỏ qua: panel sẽ hiển thị dữ liệu mới ở lần mở kế tiếp */}}
     toast(pid?'Đã lưu chỉnh sửa và lịch sử.':'Đã thêm địa điểm vào SQLite.');
   }catch(e){toast(e.message)}finally{save.disabled=false}
 });
@@ -304,13 +324,13 @@ function openPlaceById(id){
 }
 // Clipboard with a non-secure-context fallback (http://localhost deployments).
 async function copyText(text){
-  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch(_){}
+  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch(_error){/* Clipboard API bị chặn (tab không focus / thiếu quyền): rơi xuống fallback bên dưới */}
   try{
     const ta=document.createElement('textarea');
     ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.top='-9999px';
     document.body.appendChild(ta);ta.select();
-    const ok=document.execCommand('copy');ta.remove();return ok;
-  }catch(_){return false}
+    const ok=document.execCommand('copy');ta.remove();return ok; // NOSONAR: execCommand deprecated nhưng cần cho fallback non-secure context (LAN http)
+  }catch(_error){return false} // trình duyệt chặn execCommand: coi như thất bại
 }
 map.on('popupopen',e=>bindPopupButton(e.popup.getElement()));
 $('addMode').addEventListener('click',()=>{adding=!adding;$('addMode').classList.toggle('active',adding);toast(adding?'Bấm vị trí trên bản đồ để tạo hồ sơ.':'Đã tắt chế độ thêm điểm.')});
@@ -323,20 +343,21 @@ document.querySelectorAll('.layer').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.layer').forEach(other=>other.classList.toggle('active',other===b));
 }));
 $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(refresh,300)});
-$('province').addEventListener('change',()=>{const p=$('province').value;if(p&&anchors[p])map.setView(anchors[p],8);else refresh()});
-$('category').addEventListener('change',()=>refresh());
+$('province').addEventListener('change',()=>{const p=$('province').value;if(p&&anchors[p])map.setView(anchors[p],8);else refresh().catch(()=>{})});
+$('categoryFilter').addEventListener('change',()=>refresh().catch(()=>{}));
 $('nearMe').addEventListener('click',()=>{
-  if(nearMe.active){nearMe.active=false;$('nearMe').classList.remove('active');$('nearMe').title='Tìm địa điểm gần vị trí của bạn';refresh();return}
-  if(!('geolocation' in navigator)){toast('Trình duyệt không hỗ trợ định vị.');return}
-  const btn=$('nearMe');btn.classList.add('active');btn.title='Đang lấy vị trí…';
-  navigator.geolocation.getCurrentPosition(
-    pos=>{nearMe={active:true,lat:pos.coords.latitude,lon:pos.coords.longitude};btn.title='Đang bật — bấm để tắt';refresh()},
-    err=>{
-      btn.classList.remove('active');btn.title='Tìm địa điểm gần vị trí của bạn';
-      toast(err&&err.code===err.PERMISSION_DENIED?'Không lấy được vị trí: quyền định vị bị từ chối.':'Không lấy được vị trí: '+(err&&err.message?err.message:'thử lại sau.'));
-    },
-    {enableHighAccuracy:true,timeout:12000,maximumAge:60000}
-  );
+  const btn=$('nearMe');
+  if(nearMe.active){nearMe={active:false,lat:null,lon:null};btn.classList.remove('active');btn.title='Tìm địa điểm gần vị trí của bạn';lastFocusKey='';refresh().catch(()=>{});return}
+  if(!navigator.geolocation){toast('Trình duyệt không hỗ trợ định vị.');return}
+  btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    btn.disabled=false;nearMe={active:true,lat:pos.coords.latitude,lon:pos.coords.longitude};
+    btn.classList.add('active');btn.title='Tắt tìm theo vị trí của bạn';lastFocusKey='';refresh().catch(()=>{});
+  },err=>{
+    btn.disabled=false;
+    const detail=err?.message||'thử lại sau.';
+    toast(err?.code===err.PERMISSION_DENIED?'Không lấy được vị trí: quyền định vị bị từ chối.':'Không lấy được vị trí: '+detail);
+  },{enableHighAccuracy:false,timeout:8000,maximumAge:60000});
 });
 $('places').addEventListener('click',async e=>{
   const row=e.target.closest('.place-row');if(!row)return;
@@ -384,7 +405,7 @@ $('roadsFile').addEventListener('change',async e=>{
   }catch(err){toast(err.message)}finally{e.target.value=''}
 });
 $('clearRoads').addEventListener('click',()=>{if(roadOverlay){map.removeLayer(roadOverlay);roadOverlay=null;toast('Đã ẩn lớp đường tự nạp.')}});
-$('refresh').addEventListener('click',()=>Promise.all([refresh(),refreshStats()]));
+$('refresh').addEventListener('click',()=>Promise.all([refresh(),refreshStats()]).catch(()=>{}));
 function invalidateLive(){
   // Leading-edge coalescing: while a refresh is pending, further events are
   // dropped on purpose — the pending fetch already reads the newest state,

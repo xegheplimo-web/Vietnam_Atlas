@@ -10,15 +10,15 @@
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
+  <aside class="sidebar" aria-label="Bảng điều khiển tìm kiếm">
     <div class="brand"><div class="brand-mark">VN</div><div><div class="eyebrow">ATLAS / MEMORY</div><h1>Vietnam Atlas</h1><p>Bản đồ & kho dữ liệu địa lý</p></div></div>
     <div class="status"><span class="pulse"></span><span id="serverStatus">Đang kết nối bộ nhớ…</span><span class="status-right">OSM</span></div>
     <label class="field-label" for="search">Tìm địa điểm trong kho dữ liệu</label>
     <div class="search-wrap"><span>⌕</span><input id="search" placeholder="Tên, loại, địa chỉ…" autocomplete="off"><button id="nearMe" type="button" title="Tìm địa điểm gần vị trí của bạn">📍 Gần tôi</button></div>
     <label class="field-label" for="province">Đơn vị hành chính cấp tỉnh</label>
     <select id="province"><option value="">Toàn quốc</option></select>
-    <label class="field-label" for="category">Loại địa điểm</label>
-    <select id="category">
+    <label class="field-label" for="categoryFilter">Loại địa điểm</label>
+    <select id="categoryFilter">
       <option value="">Tất cả loại</option>
       <option value="amenity:restaurant|amenity:cafe|amenity:fast_food|amenity:food_court">Ăn uống</option>
       <option value="tourism:hotel|tourism:guest_house|tourism:hostel|tourism:motel|tourism:resort">Lưu trú</option>
