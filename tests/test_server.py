@@ -423,6 +423,52 @@ class AtlasTest(unittest.TestCase):
         self.assertEqual(result["summary"]["no_match_false_positives"], 0)
         self.request("/api/places/" + pid, "DELETE")
 
+    def test_16_reordered_matches_survive_exact_boost(self):
+        # PR#6 review: a phrase-first candidate set used to hide reordered matches.
+        # The exact match must rank first while reordered-token matches stay findable.
+        code, a = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon T16", "lat": 21.02, "lon": 105.83, "category": "restaurant", "source": "test_search", "source_id": "reorder-a"},
+        )
+        self.assertEqual(code, 201)
+        code, b = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ngon Ăn T16", "lat": 21.021, "lon": 105.831, "category": "restaurant", "source": "test_search", "source_id": "reorder-b"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=quan%20an%20ngon%20t16&limit=50")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertEqual(ids[0], a["item"]["id"])
+        self.assertIn(b["item"]["id"], ids)
+        for item in (a, b):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_17_bbox_search_keeps_reordered_in_map(self):
+        # PR#6 review: an off-map phrase match used to empty an otherwise valid in-map search
+        # (the phrase probe ignored the viewport filter).
+        code, far = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon T17", "lat": 21.03, "lon": 105.85, "category": "restaurant", "source": "test_search", "source_id": "bbox-far"},
+        )
+        self.assertEqual(code, 201)
+        code, near = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ngon Ăn T17", "lat": 16.05, "lon": 108.20, "category": "restaurant", "source": "test_search", "source_id": "bbox-near"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=quan%20an%20ngon%20t17&bbox=108.15,16.0,108.25,16.1")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertIn(near["item"]["id"], ids)
+        self.assertNotIn(far["item"]["id"], ids)
+        for item in (far, near):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
     def test_15_long_exact_name_survives_doc_length_bias(self):
         # A long exact name must outrank many short names sharing the same leading tokens:
         # BM25 doc-length bias used to bury it beyond the fetch window (phrase-first match pins it).

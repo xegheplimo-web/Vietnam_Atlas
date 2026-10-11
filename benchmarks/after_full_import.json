@@ -12,8 +12,8 @@
     },
     "no_match_queries": 4,
     "no_match_false_positives": 0,
-    "latency_ms_p50": 0.84,
-    "latency_ms_p95": 7.79
+    "latency_ms_p50": 4.32,
+    "latency_ms_p95": 17.06
   },
   "per_query": [
     {
@@ -277,7 +277,7 @@
       "rank": 1,
       "rr": 1.0,
       "false_positive": null,
-      "top1": "88a133de-2a35-4f02-90a8-50d16d59dc31",
+      "top1": "d72e9bde-7976-4b32-b420-0791702c03e6",
       "note": "cụm từ khóa 'benh vien' trong tên (1024 POI khớp — hit nếu top10 chứa bất kỳ)"
     },
     {
