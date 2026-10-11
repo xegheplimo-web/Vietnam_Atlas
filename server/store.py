@@ -292,8 +292,21 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
         fts = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='places_fts'").fetchone()
         if tokens and fts:
             join = " JOIN places_fts ON places.rowid=places_fts.rowid"
+            # Phrase-first: a contiguous phrase match on the raw token order pins name-shaped
+            # queries regardless of BM25 doc-length bias (a long exact name can otherwise rank
+            # below many short token-sharing names). Fall back to AND-of-prefixes + aliases
+            # when no contiguous match exists (aliases, partial input, reordered words).
+            match_expr = build_match_query(tokens, search_alias_map(con))
+            if len(tokens) >= 2:
+                phrase = '"' + " ".join(tokens) + '"'
+                probe = con.execute(
+                    "SELECT 1" + " FROM places" + join + " WHERE " + " AND ".join([*where, "places_fts MATCH ?"]) + " LIMIT 1",
+                    [*args, phrase],
+                ).fetchone()
+                if probe:
+                    match_expr = phrase
             where.append("places_fts MATCH ?")
-            args.append(build_match_query(tokens, search_alias_map(con)))
+            args.append(match_expr)
             ranked = True
         else:
             for token in tokens:

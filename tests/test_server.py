@@ -423,6 +423,45 @@ class AtlasTest(unittest.TestCase):
         self.assertEqual(result["summary"]["no_match_false_positives"], 0)
         self.request("/api/places/" + pid, "DELETE")
 
+    def test_15_long_exact_name_survives_doc_length_bias(self):
+        # A long exact name must outrank many short names sharing the same leading tokens:
+        # BM25 doc-length bias used to bury it beyond the fetch window (phrase-first match pins it).
+        created = []
+        for i in range(12):
+            code, item = self.request(
+                "/api/places",
+                "POST",
+                {
+                    "name": f"Trường Tiểu học và Trung học cơ sở Test {i}",
+                    "lat": 21.02,
+                    "lon": 105.83,
+                    "category": "school",
+                    "source": "test_search",
+                    "source_id": f"bias-{i}",
+                },
+            )
+            self.assertEqual(code, 201)
+            created.append(item)
+        code, exact = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Trường Trung Học Cơ Sở Và Trung Học Phổ Thông Test Long",
+                "lat": 21.03,
+                "lon": 105.84,
+                "category": "school",
+                "source": "test_search",
+                "source_id": "bias-exact",
+            },
+        )
+        self.assertEqual(code, 201)
+        created.append(exact)
+        code, result = self.request("/api/places?search=truong%20trung%20hoc%20co%20so%20va%20trung%20hoc%20pho%20thong%20test%20long")
+        self.assertEqual(code, 200)
+        self.assertEqual(next(x["id"] for x in result["items"]), exact["item"]["id"])
+        for item in created:
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
