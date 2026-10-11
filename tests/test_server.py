@@ -2,10 +2,12 @@
 
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import tempfile
 import threading
+import unicodedata
 import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -832,6 +834,132 @@ class AtlasTest(unittest.TestCase):
                 items, total = list_places(con, search="hà tây t27")
             self.assertEqual(total, 1)
             self.assertEqual(items[0]["source_id"], "t27-fallback")
+
+    def test_28_geo_scope_search(self):
+        # Province name in the query geo-scopes results: in-polygon POIs win via
+        # province_code, while literal text matches (outside polygon / unassigned)
+        # stay reachable through the OR fallback.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                save_place(con, {"name": "Phở Geo T28", "lat": 10.776, "lon": 106.700, "source": "t28", "source_id": "t28-hcm1"})
+                save_place(con, {"name": "Phở Geo T28 Hai", "lat": 10.81, "lon": 106.67, "source": "t28", "source_id": "t28-hcm2"})
+                save_place(con, {"name": "Phở Geo T28 HN", "lat": 21.03, "lon": 105.85, "source": "t28", "source_id": "t28-hn"})
+                # Sea point (outside every polygon) that names the province literally.
+                save_place(
+                    con,
+                    {"name": "Phở Biển T28", "address": "Hồ Chí Minh", "lat": 16.0, "lon": 110.0, "source": "t28", "source_id": "t28-sea"},
+                )
+                save_place(con, {"name": "Quán Ăn T28", "lat": 22.147, "lon": 105.834, "source": "t28", "source_id": "t28-bk"})
+            with session(db) as con:
+                items, _total = list_places(con, search="phở hồ chí minh")
+                ids = {x["source_id"] for x in items}
+                in_hcm = [x for x in items if x["province_code"] == "79"]
+                self.assertGreaterEqual(len(in_hcm), 2)
+                self.assertIn("t28-hcm1", ids)
+                self.assertIn("t28-hcm2", ids)
+                # No text mention of HCM → the Hà Nội POI is out of scope.
+                self.assertNotIn("t28-hn", ids)
+                # Outside-polygon POI still found via the province-text fallback.
+                self.assertIn("t28-sea", ids)
+                # Old province name scopes to the merged province (Bắc Kạn → Thái Nguyên).
+                items, _total = list_places(con, search="quán ăn bắc kạn")
+                self.assertGreaterEqual(len(items), 1)
+                self.assertEqual(items[0]["province_code"], "19")
+                self.assertEqual(items[0]["source_id"], "t28-bk")
+                # No province in query → old behaviour: both provinces' POIs return.
+                items, _total = list_places(con, search="phở geo t28")
+                self.assertEqual({x["province_code"] for x in items}, {"79", "01"})
+
+    def test_29_save_place_assigns_province_code(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                current, _ = save_place(con, {"name": "T29 HCM", "lat": 10.776, "lon": 106.700, "source": "t29", "source_id": "t29-in"})
+                self.assertEqual(current["province_code"], "79")
+                current, _ = save_place(con, {"name": "T29 Sea", "lat": 16.0, "lon": 110.0, "source": "t29", "source_id": "t29-out"})
+                self.assertIsNone(current["province_code"])
+
+    def test_30_generic_city_phrase_does_not_scope(self):
+        # "thành phố" đứng riêng không được scope theo HCM — query giữ hành vi text cũ.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                save_place(con, {"name": "Bệnh viện Thành Phố T30", "lat": 21.03, "lon": 105.85, "source": "t30", "source_id": "t30-hn"})
+                save_place(con, {"name": "Bệnh viện Khác T30", "lat": 10.776, "lon": 106.700, "source": "t30", "source_id": "t30-hcm"})
+            with session(db) as con:
+                items, _total = list_places(con, search="bệnh viện thành phố")
+                ids = {x["source_id"] for x in items}
+                self.assertIn("t30-hn", ids)
+                # Nếu bị scope HCM (bug cũ), POI HCM "Bệnh viện Khác" sẽ lọt vào.
+                self.assertNotIn("t30-hcm", ids)
+
+    def test_31_nfd_query_still_scopes(self):
+        # Query ở dạng NFD (dấu tách rời) phải tokenize đúng như NFC.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                save_place(con, {"name": "Phở NFD T31", "lat": 21.03, "lon": 105.85, "source": "t31", "source_id": "t31-hn"})
+                save_place(con, {"name": "Phở NFD T31 HCM", "lat": 10.776, "lon": 106.700, "source": "t31", "source_id": "t31-hcm"})
+            with session(db) as con:
+                items, _total = list_places(con, search=unicodedata.normalize("NFD", "phở hà nội"))
+                ids = {x["source_id"] for x in items}
+                self.assertIn("t31-hn", ids)
+                self.assertNotIn("t31-hcm", ids)
+
+    def test_32_province_param_matches_null_code_labels(self):
+        # Rows ngoài polygon (code NULL) khớp mọi spelling được chấp nhận của tỉnh.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                save_place(con, {"name": "Quán Biển T32", "province": "Sài Gòn", "lat": 16.0, "lon": 110.0, "source": "t32", "source_id": "t32-sea"})
+                save_place(con, {"name": "Quán Nội T32", "lat": 10.776, "lon": 106.700, "source": "t32", "source_id": "t32-hcm"})
+            with session(db) as con:
+                for value in ("79", "hồ chí minh", "sài gòn"):
+                    with self.subTest(value=value):
+                        items, _total = list_places(con, province=value, limit=50)
+                        ids = {x["source_id"] for x in items}
+                        self.assertIn("t32-hcm", ids)
+                        self.assertIn("t32-sea", ids)
+
+    def test_33_uppercase_accented_names_keep_boost(self):
+        # SQLite lower() chỉ hạ ASCII — unicode_lower phải boost cả tên in hoa có dấu.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                self.assertEqual(con.execute("SELECT unicode_lower('PHỞ')").fetchone()[0], "phở")
+                save_place(con, {"name": "PHỞ NÂU T33", "lat": 21.03, "lon": 105.85, "source": "t33", "source_id": "t33-up"})
+                save_place(con, {"name": "Phở Bò T33", "lat": 21.04, "lon": 105.86, "source": "t33", "source_id": "t33-low"})
+            with session(db) as con:
+                items, _total = list_places(con, search="phở hà nội")
+                ids = [x["source_id"] for x in items]
+                self.assertIn("t33-up", ids)
+                self.assertIn("t33-low", ids)
+
+    def test_34_init_db_backfills_province_code_on_upgrade(self):
+        # DB cũ (chưa có cột province_code) → init_db migrate + backfill ngay trong upgrade path.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "legacy.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                save_place(con, {"name": "Legacy HN T34", "lat": 21.03, "lon": 105.85, "source": "t34", "source_id": "t34-hn"})
+            con = sqlite3.connect(str(db))
+            try:
+                con.execute("DROP INDEX idx_places_province_code")
+                con.execute("ALTER TABLE places DROP COLUMN province_code")
+                con.commit()
+            finally:
+                con.close()
+            init_db(db)
+            with session(db) as con:
+                row = con.execute("SELECT province_code FROM places WHERE source_id = 't34-hn'").fetchone()
+                self.assertEqual(row["province_code"], "01")
 
 
 if __name__ == "__main__":
