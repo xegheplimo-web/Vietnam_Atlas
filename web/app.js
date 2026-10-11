@@ -156,7 +156,7 @@ $('addMedia').addEventListener('click',async()=>{
 });
 map.on('click',e=>{if(adding){editor(e.latlng);adding=false;$('addMode').classList.remove('active')}});
 map.on('moveend',()=>{clearTimeout(moveTimer);moveTimer=setTimeout(refresh,90)});
-map.on('popupopen',()=>{document.querySelector('.leaflet-popup-content button[data-popup-edit]')?.addEventListener('click',e=>editById(e.currentTarget.dataset.popupEdit))});
+map.getContainer().addEventListener('click',e=>{const b=e.target.closest('button[data-popup-edit]');if(b)editById(b.dataset.popupEdit)});
 $('addMode').addEventListener('click',()=>{adding=!adding;$('addMode').classList.toggle('active',adding);toast(adding?'Bấm vị trí trên bản đồ để tạo hồ sơ.':'Đã tắt chế độ thêm điểm.')});
 $('home').addEventListener('click',()=>map.setView([16.2,107.8],5.5));
 document.querySelectorAll('.layer').forEach(b=>b.addEventListener('click',()=>{
