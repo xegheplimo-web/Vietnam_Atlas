@@ -18,6 +18,7 @@
 - **Leaflet**: BSD 2-Clause, thư viện tải từ CDN https://leafletjs.com/
 - **CARTO** và **OpenTopoMap**: nền bản đồ tùy chọn; tuân thủ quy định bản đồ/tile và yêu cầu attribution tương ứng.
 - **Nghị quyết 202/2025/QH15** về tỉnh/thành mới: https://baochinhphu.vn/nghi-quyet-cua-quoc-hoi-ve-sap-xep-don-vi-hanh-chinh-cap-tinh-102250612191145158.htm
+- **Ranh giới hành chính 34 tỉnh** (`data/provinces/provinces_34.geojson`): hình học từ "Vietnam Administrative Units Reference Map" — sapnhap.bando.com.vn (NXB Tài nguyên, Môi trường và Bản đồ Việt Nam — Bộ NN&MT); tổng hợp qua repo `thanglequoc/vietnamese-provinces-database` (code + dataset compilation: MIT, © 2021 Thang Le Quoc). Dữ liệu bản đồ nhà nước công bố công khai nhưng **chưa có giấy phép mở riêng** — tham chiếu điều khoản nhà cung cấp trước khi dùng cho mục đích thương mại; giữ nguyên attribution khi tái phân phối (xem `data/provinces/PROVENANCE.json`). Tên/mã đơn vị hành chính theo GSO (Nghị quyết 388/NQ-UBTVQH16).
 
 ## Google Maps
 

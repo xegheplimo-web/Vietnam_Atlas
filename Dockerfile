@@ -5,6 +5,7 @@ COPY server ./server
 COPY web ./web
 COPY data/provinces_34.json ./data/provinces_34.json
 COPY data/province_mergers_2025.json ./data/province_mergers_2025.json
+COPY data/provinces ./data/provinces
 RUN mkdir -p /app/storage && useradd -u 10001 -m atlas && chown -R atlas:atlas /app/storage
 USER atlas
 EXPOSE 8765
