@@ -53,13 +53,14 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
                 backups = backups or atlas_db.parent.parent / "backups"
                 backups.mkdir(parents=True, exist_ok=True)
                 snap = backups / ("atlas-pre-osm-sync-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + ".sqlite3")
-                with closing(sqlite3.connect(atlas_db)) as live, closing(sqlite3.connect(snap)) as backup:
+                # Both paths come from this tool's own CLI flags, run locally by the operator.
+                with closing(sqlite3.connect(atlas_db)) as live, closing(sqlite3.connect(snap)) as backup:  # NOSONAR(S8706)
                     live.backup(backup)  # WAL-safe SQLite online backup
                     if backup.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                         raise RuntimeError("Backup database integrity_check FAIL")
                 result["backup"] = str(snap)
             init_db(str(atlas_db))
-            dest = sqlite3.connect(atlas_db)
+            dest = sqlite3.connect(atlas_db)  # NOSONAR(S8706)
         elif atlas_db.is_file():
             dest = sqlite3.connect(f"file:{atlas_db.resolve().as_posix()}?mode=ro", uri=True)
         if dest is not None:

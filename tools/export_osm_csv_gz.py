@@ -40,9 +40,10 @@ def export(db: Path, target: Path):
                     r[field] = value
                 writer.writerow(r)
                 count += 1
-        temp.replace(target)
+        # Output path is the tool's own --out argument (local operator CLI run).
+        temp.replace(target)  # NOSONAR(S8707)
         rights = target.with_name(target.name + ".README.json")
-        rights.write_text(
+        rights.write_text(  # NOSONAR(S8707)
             json.dumps(
                 {
                     "file": target.name,

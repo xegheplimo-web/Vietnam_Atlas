@@ -13,7 +13,6 @@ import json
 import os
 import sys
 import time
-import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,7 +23,8 @@ UA = "VietnamAtlas-OSM-Data-Refresh/1.0 (open-data pipeline; source Geofabrik)"
 
 def digest(path: Path):
     s = hashlib.sha256()
-    with path.open("rb") as inp:
+    # Local operator CLI: path comes from this tool's --out flag (see main()), never from network input.
+    with path.open("rb") as inp:  # NOSONAR(S8707)
         for buf in iter(lambda: inp.read(4 * 1024 * 1024), b""):
             s.update(buf)
     return s.hexdigest()
@@ -88,10 +88,11 @@ def download(dst: Path, force=False, attempts=3):
                 "status": "downloaded",
             }
             # Atomic swap only after full download and provenance written.
-            os.replace(partial, dst)
+            # CLI-owned destination (--out); swap happens only after checksum and size validation.
+            os.replace(partial, dst)  # NOSONAR(S8707)
             manifest.write_text(json.dumps(provenance, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             return provenance
-        except (OSError, ValueError, RuntimeError, urllib.error.URLError) as exc:
+        except (OSError, ValueError, RuntimeError) as exc:
             partial.unlink(missing_ok=True)
             if attempt == attempts:
                 raise RuntimeError(f"Tải Geofabrik thất bại sau {attempts} lượt: {exc}") from exc

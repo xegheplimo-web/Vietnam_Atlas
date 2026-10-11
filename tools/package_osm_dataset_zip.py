@@ -34,7 +34,8 @@ The project's PolyForm Noncommercial software licence does not override ODbL.
 
 def hash_file(path):
     h = hashlib.sha256()
-    with Path(path).open("rb") as f:
+    # Path is the tool's own --db/--provenance/--include-pbf argument (local operator CLI run).
+    with Path(path).open("rb") as f:  # NOSONAR(S8707)
         for chunk in iter(lambda: f.read(2 * 1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
@@ -79,7 +80,7 @@ def package(db: Path, out: Path, provenance: Path | None = None, include_pbf: Pa
             with zipfile.ZipFile(tmpzip) as z:
                 if z.testzip() is not None:
                     raise RuntimeError("ZIP integrity check failed")
-            tmpzip.replace(out)
+            tmpzip.replace(out)  # NOSONAR(S8707)
         except BaseException:
             tmpzip.unlink(missing_ok=True)
             raise

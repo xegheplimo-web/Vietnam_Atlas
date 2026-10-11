@@ -23,7 +23,8 @@ def normalize(s):
 
 
 def read_rows(path: Path):
-    with path.open(encoding="utf-8-sig", newline="") as f:
+    # --csv-file path is chosen by the local operator running this tool, not untrusted input.
+    with path.open(encoding="utf-8-sig", newline="") as f:  # NOSONAR(S8707)
         reader = csv.DictReader(f)
         if not reader.fieldnames or not {"enterprise_id", "legal_name", "registered_address"}.issubset(set(reader.fieldnames)):
             raise ValueError("CSV cần enterprise_id,legal_name,registered_address; có thể thêm tax_code,status,observed_at")
@@ -34,7 +35,7 @@ def read_rows(path: Path):
 def init_registry(db):
     db = Path(db)
     db.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(db)
+    con = sqlite3.connect(db)  # NOSONAR(S8706)
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("PRAGMA busy_timeout=45000")
     con.execute("""CREATE TABLE IF NOT EXISTS legal_entities (

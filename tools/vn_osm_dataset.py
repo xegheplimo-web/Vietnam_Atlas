@@ -23,6 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 LICENSE = "ODbL-1.0"
 ORIGIN = "https://www.openstreetmap.org/copyright"
 CATEGORIES = ("shop", "amenity", "office", "craft", "tourism", "healthcare", "leisure")
+NAME_VI = "name:vi"  # alternate Vietnamese name tag, used when "name" is absent
+SQL_ACTIVE_COUNT = "SELECT count(*) FROM osm_places WHERE is_active=1"
 
 
 def now_utc():
@@ -70,7 +72,7 @@ def locator(coords: list[tuple[float, float]]) -> tuple[float, float] | None:
 def record(kind: str, ident: int | str, tags: dict, location: tuple[float, float] | None):
     if location is None or not coordinates_valid(*location):
         return None
-    name = str(tags.get("name") or tags.get("name:vi") or "").strip()
+    name = str(tags.get("name") or tags.get(NAME_VI) or "").strip()
     if not name:
         return None
     category = next((f"{k}:{tags[k]}" for k in CATEGORIES if tags.get(k)), None)
@@ -101,7 +103,8 @@ def record(kind: str, ident: int | str, tags: dict, location: tuple[float, float
 
 def open_database(db: Path):
     db.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(str(db), timeout=45)
+    # --db path comes from this tool's own CLI flag (local operator run), never from a remote caller.
+    con = sqlite3.connect(str(db), timeout=45)  # NOSONAR(S8706)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys=ON")
     con.execute("PRAGMA journal_mode=WAL")
@@ -164,7 +167,12 @@ class Collector:
                 return
             self.seen_keys.add(key)
         old = self.con.execute("SELECT payload_hash,is_active FROM osm_places WHERE osm_type=? AND osm_id=?", key).fetchone()
-        action = "inserted" if not old else ("unchanged" if old["payload_hash"] == d["payload_hash"] and old["is_active"] else "updated")
+        if not old:
+            action = "inserted"
+        elif old["payload_hash"] == d["payload_hash"] and old["is_active"]:
+            action = "unchanged"
+        else:
+            action = "updated"
         self.con.execute(
             """
           INSERT INTO osm_places(osm_type,osm_id,name,category,lat,lon,address,phone,website,tags_json,
@@ -235,7 +243,7 @@ def import_national_pbf(path: Path, collector: Collector):
         def node(self, node):
             try:
                 tags = dict(node.tags)
-                if node.location.valid() and ("name" in tags or "name:vi" in tags) and any(k in tags for k in CATEGORIES):
+                if node.location.valid() and ("name" in tags or NAME_VI in tags) and any(k in tags for k in CATEGORIES):
                     collector.add("node", node.id, tags, (node.location.lat, node.location.lon))
             except (ValueError, TypeError, RuntimeError):
                 collector.counts["invalid_geometry"] += 1
@@ -243,7 +251,7 @@ def import_national_pbf(path: Path, collector: Collector):
         def way(self, way):
             try:
                 tags = dict(way.tags)
-                if "name" not in tags and "name:vi" not in tags:
+                if "name" not in tags and NAME_VI not in tags:
                     return
                 if not any(k in tags for k in CATEGORIES):
                     return
@@ -260,7 +268,7 @@ def import_national_pbf(path: Path, collector: Collector):
                 if area.from_way():
                     return  # already handled as a way
                 tags = dict(area.tags)
-                if ("name" not in tags and "name:vi" not in tags) or not any(k in tags for k in CATEGORIES):
+                if ("name" not in tags and NAME_VI not in tags) or not any(k in tags for k in CATEGORIES):
                     return
                 all_rings = []
                 for outer in area.outer_rings():
@@ -289,7 +297,12 @@ def create_snapshot(source: Path, database: Path, max_poi=0, mark_missing=False,
     if not source.is_file():
         raise FileNotFoundError(source)
     ext = source.name.lower()
-    mode = "pbf" if ext.endswith((".osm.pbf", ".pbf")) else "xml" if ext.endswith((".osm", ".osm.xml")) else None
+    if ext.endswith((".osm.pbf", ".pbf")):
+        mode = "pbf"
+    elif ext.endswith((".osm", ".osm.xml")):
+        mode = "xml"
+    else:
+        mode = None
     if not mode:
         raise ValueError("Chỉ hỗ trợ .osm.pbf hoặc .osm (XML nhỏ)")
     if max_poi < 0:
@@ -314,8 +327,8 @@ def create_snapshot(source: Path, database: Path, max_poi=0, mark_missing=False,
             if mark_missing:
                 # Never mass-inactivate on a corrupt or incomplete source. Guard large DBs
                 # unless a human inspects the unexpected discrepancy first.
-                prior_active = con.execute("SELECT count(*) FROM osm_places WHERE is_active=1").fetchone()[0]
-                missing = con.execute("SELECT count(*) FROM osm_places WHERE is_active=1 AND last_snapshot<>?", (key,)).fetchone()[0]
+                prior_active = con.execute(SQL_ACTIVE_COUNT).fetchone()[0]
+                missing = con.execute(SQL_ACTIVE_COUNT + " AND last_snapshot<>?", (key,)).fetchone()[0]
                 if missing and prior_active >= 1000 and missing > prior_active * 0.10:
                     raise RuntimeError(
                         f"Từ chối tự đánh dấu {missing}/{prior_active} POI biến mất (>10%); kiểm tra PBF, file nguồn, parser và chạy audit trước."
@@ -353,7 +366,7 @@ def create_snapshot(source: Path, database: Path, max_poi=0, mark_missing=False,
             "skipped": collector.counts["skipped"],
             "invalid_geometry": collector.counts["invalid_geometry"],
             "retired": retired,
-            "active": con.execute("SELECT count(*) FROM osm_places WHERE is_active=1").fetchone()[0],
+            "active": con.execute(SQL_ACTIVE_COUNT).fetchone()[0],
             "database": str(database),
             "licence": LICENSE,
         }
@@ -366,7 +379,7 @@ def stats(db: Path):
     try:
         return {
             "database": str(db),
-            "active": con.execute("SELECT count(*) FROM osm_places WHERE is_active=1").fetchone()[0],
+            "active": con.execute(SQL_ACTIVE_COUNT).fetchone()[0],
             "inactive": con.execute("SELECT count(*) FROM osm_places WHERE is_active=0").fetchone()[0],
             "node": con.execute("SELECT count(*) FROM osm_places WHERE osm_type='node'").fetchone()[0],
             "way": con.execute("SELECT count(*) FROM osm_places WHERE osm_type='way'").fetchone()[0],
