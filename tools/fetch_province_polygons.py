@@ -317,7 +317,7 @@ def build_merged(sources: list[tuple[str, bytes]]) -> tuple[list[dict], dict]:
 
 
 def cmd_fetch(out_dir: Path, force: bool, log) -> int:
-    out_dir.mkdir(parents=True, exist_ok=True)  # NOSONAR(S8707): out_dir từ argparse, CLI cục bộ vận hành
+    out_dir.mkdir(parents=True, exist_ok=True)  # NOSONAR(S8707)
     sources = collect_sources(out_dir, force, log)
     features, meta = build_merged(sources)
     if len(features) != len(PROVINCE_FOLDERS):

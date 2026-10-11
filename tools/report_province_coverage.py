@@ -48,7 +48,7 @@ def main(argv=None) -> int:
     counts = {p.code: 0 for p in provinces}
     outside = 0
     total_rows = 0
-    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)  # NOSONAR(S8706): path DB từ argparse, CLI cục bộ vận hành
+    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)  # NOSONAR(S8706)
     try:
         for lat, lon in con.execute("SELECT lat, lon FROM places"):
             total_rows += 1
@@ -98,9 +98,7 @@ def main(argv=None) -> int:
             ],
             "outside_polygon": {"count": outside, "pct": pct_outside},
         }
-        Path(args.json_out).write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-        )  # NOSONAR(S8707): path xuất JSON từ argparse, CLI cục bộ vận hành
+        Path(args.json_out).write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")  # NOSONAR(S8707)
         print(f"\n# JSON: {args.json_out}")
     return 0
 
