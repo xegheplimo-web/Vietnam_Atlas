@@ -33,6 +33,7 @@
     "docs/ARCHITECTURE.md": "6e32d9a562e5373507416eed0d36b32b39aae2d7d4575c6cbdb7876298863359",
     "docs/LICENSING.md": "7c136b3f21003b3f7b4656c2a595eea4759a782da92b5336e1afee7130dd5d03",
     "docs/OFFLINE_ROADS.md": "cd642a2c805a3d5a591108dbd04c9943e83af44ff436db6844aae3dc47725cfd",
+    "docs/ROADMAP.md": "94869e461de86ab40349e277becd745326365fbd8f96effe0167eab32130f11b",
     "docs/schema_postgis_optional.sql": "fa8107777017e317099434531d6aed173404ca4c8477b6f024e13c3557bfee93",
     "docs/VERIFICATION.md": "aa16303e72b635a40d40ce8a964dc37ace43e4e3534cab6433f83238ea9611bb",
     "LICENSE": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
@@ -60,6 +61,6 @@
     "repository": "https://github.com/xegheplimo-web/Vietnam_Atlas",
     "ci": "GitHub Actions: test matrix (Ubuntu Python 3.10-3.14, Windows 3.12), ruff lint + format check, compileall, node --check, JSON validation, Docker build + /api/health smoke test, CodeQL",
     "verified_locally_before_publish": "8/8 integration tests (Python 3.14.7), ruff check clean, ruff format clean, compileall OK, node --check OK, JSON valid, docker build OK, container /api/health OK",
-    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section; license switched MIT->PolyForm Noncommercial 1.0.0 (PR #1, merged 2026-10-10T23:57:18Z), prior MIT grants remain valid for earlier revisions; see NOTICE, COMMERCIAL_USE.md, docs/LICENSING.md"
+    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section; license switched MIT->PolyForm Noncommercial 1.0.0 (PR #1, merged 2026-10-10T23:57:18Z), prior MIT grants remain valid for earlier revisions; see NOTICE, COMMERCIAL_USE.md, docs/LICENSING.md; docs/ROADMAP.md added (core-first order; Map-Anything 3D deferred 2026-10-11)"
   }
 }
