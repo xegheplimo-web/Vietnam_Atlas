@@ -13,7 +13,7 @@
 | Pipeline dữ liệu OSM | ✅ PR #3 — fetch (provenance SHA-256) → staging → sync an toàn → verify → export ODbL |
 | Dữ liệu POI | ✅ **98.617 POI toàn quốc** (ODbL; snapshot `pbf:full:retire=0` source_date 2026-10-09 — node 64.367 · way 33.808 · relation 442; sync 90.617 inserted + 8.000 existing, 0 lỗi) |
 | Server | Python stdlib + SQLite WAL + FTS5 (`remove_diacritics 2`) |
-| Tìm kiếm | ✅ FTS5 + **BM25 + phrase-first + alias tiếng Việt** (vòng A) — benchmark khóa 31 truy vấn: **Hit@10 100%, MRR@10 0,975, p95 7,8 ms** trên 98.617 POI |
+| Tìm kiếm | ✅ FTS5 + **BM25 + exact-name boost + alias tiếng Việt** (vòng A — PR #6 đang mở) — benchmark khóa 31 truy vấn: **Hit@10 100%, MRR@10 0,975** trên 98.617 POI |
 | Polygon hành chính 34 tỉnh | ❌ Chưa có (sync ghi `province=""`) |
 | Auth / kiểm duyệt / HTTPS | ❌ Chưa có |
 | CI/CD | ✅ CI matrix 6 job + Docker + CodeQL + SonarCloud xanh |
