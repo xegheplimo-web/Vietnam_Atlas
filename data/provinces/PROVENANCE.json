@@ -1,0 +1,195 @@
+{
+  "source_repo": "https://github.com/thanglequoc/vietnamese-provinces-database",
+  "source_url": "https://raw.githubusercontent.com/thanglequoc/vietnamese-provinces-database/master/dataset-generation-scripts/resources/gis/geojson_11Mar2026/",
+  "license": "MIT",
+  "license_note": "Copyright (c) 2021 Thang Le Quoc — polygon sinh từ dữ liệu Cục Thống kê (GSO) Việt Nam.",
+  "decree": "388/NQ-UBTVQH16",
+  "dataset_version": "v5.2.0",
+  "generated_at": "2026-09-20T13:13:17Z",
+  "fetched_at": "2026-10-11T16:55:37Z",
+  "merged_file": "provinces_34.geojson",
+  "merged_sha256": "e88eb36db7b6da6db968dbb21087206bb6c4ebc36bb6e3d4aae4c08d7ffc064e",
+  "merged_bytes": 2032833,
+  "files": [
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/1_thu_đo_ha_noi/province.geojson",
+      "sha256": "e1fd9dc88ec61cfef629e83a38eb22b2052ca104d4da771115a1f22c33eda5df",
+      "bytes": 100487
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/2_tinh_cao_bang/province.geojson",
+      "sha256": "ad3bdafee321cf9b9a101a2546a150a3c87261f58353a89d8014ccb6f31f9855",
+      "bytes": 137434
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/3_tinh_tuyen_quang/province.geojson",
+      "sha256": "287374a5c5cae3e45add96452a184ee5c98377d43f4159d8233ba34d2b903169",
+      "bytes": 134256
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/4_tinh_lao_cai/province.geojson",
+      "sha256": "8eb2885f2b2d046af3ec77fd80727b454da98d0fa9857ed31832c0e2b70d61dc",
+      "bytes": 124141
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/5_tinh_đien_bien/province.geojson",
+      "sha256": "75a4b11f0bdf940f24f843788abb9865016125b96ba9f57ed52ad9d6e7be1ff4",
+      "bytes": 111997
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/6_tinh_lai_chau/province.geojson",
+      "sha256": "08d9621befa98c23777aa20396a239b535f7e5b153022a84c1c3b4311f1ddf3f",
+      "bytes": 103074
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/7_tinh_son_la/province.geojson",
+      "sha256": "1d408eece78c9b2d9eaaba2cf65549856fb4c23022523a9164b4f2bd83fa52ca",
+      "bytes": 119361
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/8_tinh_thai_nguyen/province.geojson",
+      "sha256": "6037d86282078f02ca643d268324134e1044946de64b90f6f32a5fbfad7f33ec",
+      "bytes": 121813
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/9_tinh_lang_son/province.geojson",
+      "sha256": "6e77f8d5e61a9327aa643c8a667458609f6f2d357b1cd20fd809d498ab14efaf",
+      "bytes": 180143
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/10_tinh_quang_ninh/province.geojson",
+      "sha256": "42e54a05401a53e26da9f8873abf5c4b7422f98184cac2b05edf6b282a6af76a",
+      "bytes": 695727
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/11_tinh_phu_tho/province.geojson",
+      "sha256": "edbb3b8404a2ef3ba73a21d9ad3b143e7b9ef91935fa7a6e23f88ff00d5d028a",
+      "bytes": 154929
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/12_tinh_bac_ninh/province.geojson",
+      "sha256": "b17c54bede42f68cc73bed0fb9d59e01ac8e35d1c6723acd8f75dc77d74ea3ff",
+      "bytes": 112700
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/13_hai_phong/province.geojson",
+      "sha256": "d6bdd6943d7ff1ca21bd74bfe0a985ad369b55c742b146a8be336b1afb7a780a",
+      "bytes": 170863
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/14_tinh_hung_yen/province.geojson",
+      "sha256": "00f66c919813bbabb666aaab14bd55dceaf428236a3dd98feafa5bd669d74cd7",
+      "bytes": 71817
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/15_tinh_ninh_binh/province.geojson",
+      "sha256": "092cfeede4808533b6404791cc5ba1017012065507c9cef24caee33a2d3e6904",
+      "bytes": 71389
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/16_tinh_thanh_hoa/province.geojson",
+      "sha256": "b9c78d30d221fd358ca1f7dcd9d3ef76211fff45325e5b808a6d7a473d94efa4",
+      "bytes": 172777
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/17_tinh_nghe_an/province.geojson",
+      "sha256": "ce38ef0319afa72c8f2ddef3a5b7c19692f50f25cf3bd5762694a395818a41b1",
+      "bytes": 276065
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/18_tinh_ha_tinh/province.geojson",
+      "sha256": "2cba45bcda5c7d4d78569a3c80541c5d06a9461dfb24cba26ec7d16f27941732",
+      "bytes": 180680
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/19_tinh_quang_tri/province.geojson",
+      "sha256": "33132a09265f73136103756d744b5db7b87189b09e301ad794000a288e4d7aef",
+      "bytes": 315211
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/20_hue/province.geojson",
+      "sha256": "b4b460724c401a310af5b5ccb6eac315cb7c4f781ba1019e366884488821aeba",
+      "bytes": 196740
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/21_đa_nang/province.geojson",
+      "sha256": "98606a9fecae6423f3ecd64c5b7dbcde797c3b01903fd12659123ea80ae6bf6c",
+      "bytes": 276559
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/22_tinh_quang_ngai/province.geojson",
+      "sha256": "127767273491a340f15df27c7ff3d8e456fd29b8032231a2daf5239fd6bc93de",
+      "bytes": 419499
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/23_tinh_khanh_hoa/province.geojson",
+      "sha256": "a4496d73433fcb80cafbd2c418d6a75b67ed30db45790c1a57a54e0a67126af9",
+      "bytes": 570829
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/24_tinh_gia_lai/province.geojson",
+      "sha256": "a79ca1b0c53aeb67d2f0de7e2ab7d01fb0f04da0d230016dde2b08a89bce34f0",
+      "bytes": 368004
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/25_tinh_đak_lak/province.geojson",
+      "sha256": "b9e1c802fac349ff4ff5f12e35ea9cfee9a24e94c0780d9699fd9039e672db46",
+      "bytes": 456157
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/26_tinh_lam_đong/province.geojson",
+      "sha256": "92d7f9a55d875fdace0dddef8f1faf7755e4c65a9c4367f6e6b4a33ecac08b16",
+      "bytes": 283349
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/27_tinh_tay_ninh/province.geojson",
+      "sha256": "4e5ef5f4b1db38935ae32b59aac924829338745457077af66df68a4ac1aebb02",
+      "bytes": 222944
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/28_tinh_đong_nai/province.geojson",
+      "sha256": "3845b38477db6cda2bf47e38f4859d83095ffb93b68a085cbd48dd434186bfe1",
+      "bytes": 252337
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/29_ho_chi_minh/province.geojson",
+      "sha256": "4bc89258cbd679e7f6576121ae2203caab9da06c6d558c35c4296bcdd3603a53",
+      "bytes": 365413
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/30_tinh_vinh_long/province.geojson",
+      "sha256": "0eb8c8fba659b761cc170e539527751cffc916c62f1155292ae94dea90003219",
+      "bytes": 59343
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/31_tinh_đong_thap/province.geojson",
+      "sha256": "5b05d24ce9d5a098a9defe3b81f89f87ce6f2f62b0f24c65ea3de29df523fa4a",
+      "bytes": 139693
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/32_tinh_an_giang/province.geojson",
+      "sha256": "07ec5fea57d9e448d18364ba231702af364f76e8e591cab3547c4707964d1f7f",
+      "bytes": 429403
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/33_can_tho/province.geojson",
+      "sha256": "5cd9489fc6d47d1cb74f331950508421854b2ab1c0c5d4d0b6cf0ce23ceb3d06",
+      "bytes": 120146
+    },
+    {
+      "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/34_tinh_ca_mau/province.geojson",
+      "sha256": "122453e365c7c85f816c30de23df0c3540123540cd08c1d84a0a7fbd86ce1eef",
+      "bytes": 242394
+    },
+    {
+      "source_path": "json/full_json_generated_data_vn_units.json",
+      "sha256": "965c9a2ad85481e18ed2464fd87666eda311856b86a72a87f1130c27376b8d2f",
+      "bytes": 1579241
+    },
+    {
+      "source_path": "json/vn_provinces_metadata.json",
+      "sha256": "14f7815413702837918e9aa0961308b072e0d75b2bdf5b5865fc4a23cdd8eda4",
+      "bytes": 107
+    }
+  ]
+}
