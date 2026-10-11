@@ -244,16 +244,23 @@ def _best_match(query: tuple, candidates) -> tuple | None:
     return best
 
 
+_GENERIC_TOKENS = frozenset({"thanh", "pho", "tp", "tinh", "thi", "xa", "huyen", "quan", "city"})
+
+
 def _subspan_match(query: tuple, candidates) -> tuple | None:
     """Khớp cụm con: dãy con liên tiếp (≥2 token) của query nằm trong token của 1 ứng viên.
 
     Vd "vũng tàu" ⊆ "bà rịa vũng tàu". Không khớp 1 token đơn ("tàu", "phú").
+    Cụm con toàn từ generic ("thành phố" ⊆ "thành phố hồ chí minh") bị bỏ qua —
+    nghĩa là "city" trong mọi query, không định danh tỉnh nào.
     Deterministic: span dài nhất trước, rồi vị trí trái nhất, rồi thứ tự ứng viên.
     """
     max_len = min(len(query), max((len(toks) for toks, _ in candidates), default=0))
     for length in range(max_len, 1, -1):
         for start in range(len(query) - length + 1):
             span = query[start : start + length]
+            if all(t in _GENERIC_TOKENS for t in span):
+                continue
             for toks, value in candidates:
                 if _is_subsequence(span, toks):
                     return (span, value)

@@ -119,6 +119,15 @@ class SubspanResolveTest(unittest.TestCase):
         detail = geo.resolve_province_detail("nhà hàng thừa thiên huế")
         self.assertEqual(detail[1], ("thua", "thien", "hue"))
 
+    def test_generic_subspans_do_not_resolve(self):
+        # "thành phố" là cụm con của alias "Thành phố Hồ Chí Minh" nhưng nghĩa là "city".
+        for text in ("bệnh viện thành phố", "khách sạn thành phố", "thành phố", "ubnd thành phố"):
+            with self.subTest(text=text):
+                self.assertIsNone(geo.resolve_province(text))
+        # Cụm có token định danh vẫn resolve bình thường.
+        self.assertEqual(geo.resolve_province("bệnh viện thành phố hà nội").name, "Hà Nội")
+        self.assertEqual(geo.resolve_province("cơm vũng tàu").name, "Hồ Chí Minh")
+
 
 class LoadProvincesTest(unittest.TestCase):
     def test_34_provinces(self):

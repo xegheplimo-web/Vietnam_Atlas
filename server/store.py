@@ -137,6 +137,8 @@ def connect(dbpath):
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA busy_timeout=20000")
     con.execute("PRAGMA foreign_keys=ON")
+    # Unicode-aware lower cho accent boost (SQLite lower() chỉ hạ ASCII — "PHỞ" giữ nguyên).
+    con.create_function("unicode_lower", 1, lambda s: s.lower() if s is not None else None)
     return con
 
 
@@ -148,6 +150,21 @@ def session(dbpath):
             yield con
     finally:
         con.close()
+
+
+def _backfill_province_codes(con):
+    """One-time upgrade backfill: gán province_code cho rows hiện có qua point-in-polygon.
+
+    Chỉ chạy khi cột province_code vừa được thêm (migration, ~40s/100k rows) —
+    rows ngoài polygon giữ NULL (search fallback text), rows mới do save_place tự gán.
+    """
+    rows = con.execute("SELECT id, lat, lon FROM places WHERE lat IS NOT NULL AND lon IS NOT NULL").fetchall()
+    updates = []
+    for row in rows:
+        province = geo.province_at(row["lat"], row["lon"])
+        if province is not None:
+            updates.append((province.code, row["id"]))
+    con.executemany("UPDATE places SET province_code = ? WHERE id = ?", updates)
 
 
 def init_db(dbpath):
@@ -208,9 +225,11 @@ def init_db(dbpath):
             con.executemany("UPDATE places SET name_norm = ? WHERE id = ?", [(normalize(row["name"]), row["id"]) for row in missing])
         con.execute("CREATE INDEX IF NOT EXISTS idx_places_name_norm ON places(name_norm)")
         # Migration: province_code = mã GSO từ point-in-polygon tọa độ (geo-aware search).
-        # Backfill qua tools/backfill_province_codes.py — save_place tự gán cho bản ghi mới.
+        # Cột vừa thêm → backfill ngay (một lần) để DB nâng cấp có geo search đủ;
+        # rows ngoài polygon giữ NULL, save_place tự gán cho bản ghi mới.
         if "province_code" not in columns:
             con.execute("ALTER TABLE places ADD COLUMN province_code TEXT")
+            _backfill_province_codes(con)
         con.execute("CREATE INDEX IF NOT EXISTS idx_places_province_code ON places(province_code)")
         # Search indexes are optional for SQLite builds without FTS5.
         try:
@@ -405,7 +424,9 @@ def _scope_terms(con, scope, text_tokens, raw_text_tokens):
         "province": province,
         "kind": kind,
         "textmatch": (textmatch_sql, textmatch_args),
-        "accent": ("(" + _AND.join("lower(places.name) LIKE ?" for _ in accent) + ")", ["%" + a + "%" for a in accent]) if accent else None,
+        "accent": ("(" + _AND.join("unicode_lower(places.name) LIKE ?" for _ in accent) + ")", ["%" + a.lower() + "%" for a in accent])
+        if accent
+        else None,
     }
 
 
@@ -438,13 +459,14 @@ def _search_clause(con, search, where, args):
     all polygons / not yet backfilled). A query that is ONLY a province name keeps
     the old all-token text match.
     """
-    raw_tokens = re.findall(r"[\w]+", str(search or "").lower())
+    raw_text = unicodedata.normalize("NFC", str(search or "")).lower()
+    raw_tokens = re.findall(r"[\w]+", raw_text)  # NFC trước khi tokenize: NFD tách nguyên âm khỏi dấu thanh
     tokens = [normalize(t) for t in raw_tokens]  # per-token: stays position-aligned with raw_tokens
     scope = _geo_scope(con, search, tokens)
     text_tokens = tokens[:8]
     raw_text_tokens = raw_tokens[:8]
     if scope is not None:
-        province, span, kind, start = scope
+        _, span, _, start = scope
         remaining = (tokens[:start] + tokens[start + len(span) :])[:8]
         raw_remaining = (raw_tokens[:start] + raw_tokens[start + len(span) :])[:8]
         if remaining:  # query is only a province name → keep legacy behaviour
@@ -597,14 +619,32 @@ def _geo_union_places(con, scope, where, args, distance_sql, head_args, search_n
     return out, count
 
 
+def _province_labels(province):
+    """Accepted spellings for a province: canonical name/full_name + raw historical/new-to-old aliases."""
+    labels = {province.name, province.full_name}
+    try:
+        data = json.loads(_PROVINCE_MERGERS.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return sorted(labels)
+    for old, new in (data.get("historical_aliases") or {}).items():
+        if normalize(new) == province.name_norm:
+            labels.add(old)
+    for new, olds in (data.get("new_to_old") or {}).items():
+        if normalize(new) == province.name_norm:
+            labels.update(olds)
+    return sorted(label for label in labels if label)
+
+
 def _province_clause(con, province, where, args):
-    """Explicit province= filter: GSO code/name/alias → province_code, legacy text fallback."""
+    """Explicit province= filter: GSO code/name/alias → province_code, label fallback for null codes."""
     resolved = _province_param(con, province)
     if resolved is not None:
-        # Geo code wins when assigned; the legacy text label is the fallback for
-        # POIs outside every polygon / not yet backfilled.
-        where.append("(places.province_code = ? OR (places.province_code IS NULL AND places.province = ?))")
-        args.extend((resolved.code, province))
+        # Geo code wins when assigned; rows without a code (outside polygons / not yet
+        # backfilled) match on any accepted spelling of the same province.
+        labels = _province_labels(resolved)
+        where.append("(places.province_code = ? OR (places.province_code IS NULL AND places.province IN (" + ",".join("?" for _ in labels) + ")))")
+        args.append(resolved.code)
+        args.extend(labels)
     else:
         where.append("places.province = ?")
         args.append(province)

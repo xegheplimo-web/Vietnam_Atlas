@@ -22,6 +22,21 @@ from server import geo  # noqa: E402 (import sau sys.path.insert là chủ ý c�
 from server.store import init_db, session  # noqa: E402
 
 
+def _read_rows(db_path, only_null):
+    """Scan read-only (mode=ro) — dry-run không đổi schema/FTS state; trả (rows, has_code)."""
+    con = sqlite3.connect(Path(db_path).resolve().as_uri() + "?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    try:
+        columns = {row["name"] for row in con.execute("PRAGMA table_info(places)")}
+        has_code = "province_code" in columns
+        select = "SELECT id, lat, lon" + (", province_code" if has_code else ", NULL AS province_code") + " FROM places"
+        if only_null and has_code:
+            select += " WHERE province_code IS NULL"
+        return con.execute(select).fetchall(), has_code
+    finally:
+        con.close()
+
+
 def main():
     ap = argparse.ArgumentParser(description="Backfill places.province_code via point-in-polygon (GSO 34 provinces)")
     ap.add_argument("--db", default=str(ROOT / "data" / "atlas.sqlite3"))
@@ -30,10 +45,7 @@ def main():
     args = ap.parse_args()
     if not Path(args.db).exists():
         raise SystemExit("SQLite database not found: " + args.db)
-    init_db(args.db)  # ensures the province_code column exists (idempotent migration)
-    with session(args.db) as con:
-        select = "SELECT id, lat, lon, province_code FROM places" + (" WHERE province_code IS NULL" if args.only_null else "")
-        rows = con.execute(select).fetchall()
+    rows, has_code = _read_rows(args.db, args.only_null)
     plan = []
     outside = []
     unchanged = 0
@@ -43,20 +55,22 @@ def main():
         if code is None:
             outside.append(row["id"])
         if code != row["province_code"]:
-            plan.append((code, row["id"]))
+            plan.append((code, row["id"], row["lat"], row["lon"]))
         else:
             unchanged += 1
-    assigned = sum(1 for code, _ in plan if code is not None)
+    assigned = sum(1 for code, *_ in plan if code is not None)
     print(f"Total rows scanned: {len(rows)}")
     print(f"- already correct : {unchanged}")
     print(f"- to assign       : {assigned}")
     print(
         f"- outside polygons (province_code → NULL): {len(outside)}"
-        + ("" if args.only_null else f" ({sum(1 for code, _ in plan if code is None)} updates to NULL)")
+        + ("" if args.only_null else f" ({sum(1 for code, *_ in plan if code is None)} updates to NULL)")
     )
     if outside:
         print("Sample outside-polygon ids:", ", ".join(outside[:10]))
     if not args.apply:
+        if not has_code:
+            print("NOTE: cột province_code chưa tồn tại — chạy --apply để migrate + backfill.")
         print("Dry-run only. Pass --apply to back up DB and write province_code.")
         return
     if not plan:
@@ -69,9 +83,16 @@ def main():
     with sqlite3.connect(source) as original, sqlite3.connect(dest) as copied:  # NOSONAR(S8706)
         original.backup(copied)
     print(f"Backup completed: {dest}")
+    init_db(args.db)  # migration (nếu cần) chỉ sau backup
     with session(args.db) as con:
-        con.executemany("UPDATE places SET province_code = ? WHERE id = ?", plan)
-    print(f"Updated {len(plan)} rows ({assigned} assigned, {len(plan) - assigned} set NULL).")
+        before = con.total_changes
+        # Guard race: chỉ ghi khi tọa độ chưa đổi kể từ lúc scan (rows đổi → skip lượt này).
+        con.executemany("UPDATE places SET province_code = ? WHERE id = ? AND lat = ? AND lon = ?", plan)
+        written = con.total_changes - before
+    skipped = len(plan) - written
+    print(f"Updated {written}/{len(plan)} planned rows ({assigned} assigned, {len(plan) - assigned} set NULL).")
+    if skipped:
+        print(f"Skipped {skipped} rows whose coordinates changed during the run — re-run to include them.")
 
 
 if __name__ == "__main__":
