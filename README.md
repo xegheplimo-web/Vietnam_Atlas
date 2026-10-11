@@ -47,11 +47,36 @@ docker compose up --build -d
 
 Sau đó mở http://localhost:8765. Docker mặc định chỉ mở cổng trên máy cục bộ `127.0.0.1`. Dữ liệu SQLite được giữ trong Docker volume `atlas_storage` và **khác dữ liệu của bản chạy Python Windows**; không chạy cùng lúc hai bản trên cùng cổng.
 
+## 1b. Bật bản đồ vệ tinh rõ nhà (tuỳ chọn)
+
+Nút **Vệ tinh** đã được tích hợp nhưng mặc định tắt đến khi người dùng cấu hình nguồn ảnh hợp pháp. Có thể dùng [MapTiler Satellite](https://docs.maptiler.com/cloud/api/tiles/) theo gói sử dụng phù hợp (gói Free phi thương mại có giới hạn, cần API key), hoặc máy chủ XYZ của bạn có quyền phục vụ ảnh. Không có API key mặc định và không scrape Google/Esri.
+
+**Windows PowerShell** (phải chạy server từ cùng cửa sổ sau khi đặt biến):
+
+```powershell
+$env:ATLAS_MAPTILER_KEY = "YOUR_ORIGIN_RESTRICTED_BROWSER_KEY"
+py -m server.app
+```
+
+**Docker**: tạo file `.env` cạnh `compose.yaml` (đã nằm trong gitignore):
+
+```dotenv
+ATLAS_MAPTILER_KEY=YOUR_ORIGIN_RESTRICTED_BROWSER_KEY
+```
+
+Sau đó `docker compose up --build -d`. Truy cập http://localhost:8765 → chọn **Vệ tinh**. Key được gửi xuống trình duyệt và không được coi là secret: hãy giới hạn **Allowed HTTP Origins** trong dashboard MapTiler. Trình duyệt trực tiếp yêu cầu tile, không thực hiện bulk/offline cache.
+
+Nếu có máy chủ XYZ dùng ảnh sở hữu hoặc được phép xử lý, thay bằng `ATLAS_SATELLITE_TILES_URL` và `ATLAS_SATELLITE_ATTRIBUTION`. Endpoint `GET /api/map-config` trả về lớp ảnh đang được cấu hình.
+
+**AI + GPU RTX 3090 (định hướng, chưa triển khai worker):** catalog ảnh có license, import COG, tạo raster tile, segmentation công trình, change detection, siêu phân giải chỉ phục vụ xem trước; kết quả phải kiểm duyệt trước khi đưa vào kho địa điểm. Xem [kiến trúc và điều kiện triển khai](docs/SATELLITE_AI_GPU_ARCHITECTURE.md). **Không thể dùng GPU tái tạo chi tiết nhà thật từ ảnh Sentinel-2 10 m/pixel.**
+
 ## 2. Chức năng chạy được
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
 | Bản đồ toàn Việt Nam, đường phố | Hoạt động qua Internet | Tiles OSM, có nền sáng, địa hình |
+| Ảnh vệ tinh nhà/cửa hàng | Tuỳ chọn, cần nguồn ảnh được cấp phép | MapTiler origin-restricted browser key hoặc XYZ riêng; không có dữ liệu offline đóng gói |
+| AI/GPU xử lý ảnh vệ tinh | Chưa triển khai | Thiết kế pipeline tùy chọn, không suy diễn ảnh vệ tinh chi tiết từ dữ liệu 10 m |
 | Bộ nhớ địa điểm | Hoạt động | SQLite ở máy chủ; khác localStorage |
 | Bộ nhớ thông tin chi tiết | Hoạt động | Sự kiện, nội dung, nguồn, độ tin cậy, thời điểm |
 | Ảnh/tài liệu theo quyền | Hoạt động | Lưu liên kết HTTPS, nguồn và căn cứ quyền; không sao chép ảnh |
