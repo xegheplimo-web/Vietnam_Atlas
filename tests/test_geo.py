@@ -53,6 +53,13 @@ class ProvinceBboxTest(unittest.TestCase):
     def test_bbox_code_equals_name(self):
         self.assertEqual(geo.province_bbox("01"), geo.province_bbox("Hà Nội"))
 
+    def test_bbox_by_gso_code(self):
+        self.assertEqual(geo.province_bbox("79"), geo.province_bbox("Hồ Chí Minh"))
+        self.assertEqual(geo.province_bbox("04"), geo.province_bbox("Cao Bằng"))
+        province = geo.province_at(10.776, 106.700)
+        assert province is not None
+        self.assertEqual(province.code, "79")
+
     def test_bbox_short_code_pads(self):
         self.assertEqual(geo.province_bbox("1"), geo.province_bbox("01"))
 
@@ -91,7 +98,16 @@ class LoadProvincesTest(unittest.TestCase):
     def test_34_provinces(self):
         provinces = geo.load_provinces()
         self.assertEqual(len(provinces), 34)
-        self.assertEqual([p.code for p in provinces], [f"{i:02d}" for i in range(1, 35)])
+        self.assertEqual(len({p.code for p in provinces}), 34)
+
+    def test_gso_codes(self):
+        # code = mã đơn vị hành chính GSO (không phải matinh 01..34 của dataset GIS).
+        by_code = {p.code: p.name for p in geo.load_provinces()}
+        self.assertEqual(by_code["01"], "Hà Nội")
+        self.assertEqual(by_code["04"], "Cao Bằng")
+        self.assertEqual(by_code["79"], "Hồ Chí Minh")
+        self.assertEqual(by_code["38"], "Thanh Hóa")
+        self.assertEqual(by_code["56"], "Khánh Hòa")
 
     def test_bboxes_within_vietnam(self):
         for province in geo.all_provinces():
@@ -118,10 +134,20 @@ class AreaSanityTest(unittest.TestCase):
 
 
 class HoleTest(unittest.TestCase):
+    def test_point_inside_hole_is_outside_polygon(self):
+        # Synthetic: outer vuông 4x4, hole vuông 2x2 ở giữa — cover branch hole
+        # không phụ thuộc dataset (dataset hiện không có hole).
+        outer = geo._make_ring([(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)])
+        hole = geo._make_ring([(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)])
+        poly = geo.Polygon(outer=outer, holes=(hole,))
+        self.assertTrue(geo._polygon_contains(poly, 0.5, 0.5))
+        self.assertFalse(geo._polygon_contains(poly, 2.0, 2.0))
+        self.assertFalse(geo._polygon_contains(poly, 5.0, 5.0))
+
     def test_point_inside_hole_returns_none(self):
         found = self._find_hole_point()
         if found is None:
-            self.skipTest("dữ liệu polygon GSO không có hole — bỏ qua")
+            self.skipTest("dữ liệu polygon GSO không có hole — synthetic test phía trên đã cover branch")
         province, lon, lat = found
         self.assertIsNone(geo.province_at(lat, lon), f"{province.name}: điểm trong hole phải là None")
 
@@ -154,6 +180,41 @@ class HoleTest(unittest.TestCase):
             if geo._ring_contains(ring, lon, lat):
                 return lon, lat
         return None
+
+
+class BoundaryTest(unittest.TestCase):
+    def test_point_on_sloped_edge_is_outside(self):
+        # Diamond (0,1),(1,0),(2,1),(1,2): (0.5,0.5) nằm chính xác trên cạnh xiên
+        # (0,1)-(1,0) — ray casting thuần có thể lật inside qua cạnh khác; on-segment
+        # check phải trả False (biên = ngoài, strict).
+        ring = geo._make_ring([(0.0, 1.0), (1.0, 0.0), (2.0, 1.0), (1.0, 2.0)])
+        self.assertFalse(geo._ring_contains(ring, 0.5, 0.5))
+        self.assertFalse(geo._ring_contains(ring, 1.0, 0.0))  # đỉnh dưới
+        self.assertFalse(geo._ring_contains(ring, 0.0, 1.0))  # đỉnh trái
+        self.assertTrue(geo._ring_contains(ring, 1.0, 1.0))  # tâm
+        self.assertTrue(geo._ring_contains(ring, 1.5, 1.0))  # trong, không trên cạnh
+
+
+class MalformedDataTest(unittest.TestCase):
+    def test_malformed_docs_return_empty_list(self):
+        # Contract: file JSON hợp lệ nhưng cấu trúc lỗi → [] (không crash server).
+        import json as jsonlib
+        import tempfile
+
+        docs = [
+            {"features": [{"geometry": {"type": "MultiPolygon", "coordinates": []}}]},
+            {"features": [{"geometry": {"coordinates": [[]]}}]},
+            {"features": None},
+            [1, 2, 3],
+        ]
+        for doc in docs:
+            with tempfile.NamedTemporaryFile("w", suffix=".geojson", delete=False, encoding="utf-8") as fh:
+                jsonlib.dump(doc, fh)
+                path = fh.name
+            try:
+                self.assertEqual(geo.load_provinces(path), [], f"doc={doc!r}")
+            finally:
+                Path(path).unlink()
 
 
 class NormalizeSyncTest(unittest.TestCase):

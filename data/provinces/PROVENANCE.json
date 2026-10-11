@@ -1,15 +1,17 @@
 {
   "source_repo": "https://github.com/thanglequoc/vietnamese-provinces-database",
   "source_url": "https://raw.githubusercontent.com/thanglequoc/vietnamese-provinces-database/master/dataset-generation-scripts/resources/gis/geojson_11Mar2026/",
-  "license": "MIT",
-  "license_note": "Copyright (c) 2021 Thang Le Quoc — polygon sinh từ dữ liệu Cục Thống kê (GSO) Việt Nam.",
+  "license": "Mixed (xem license_note): code/compilation MIT; geometry theo điều khoản nhà cung cấp Bando.com.vn",
+  "license_note": "Repo + dataset compilation: MIT (Copyright (c) 2021 Thang Le Quoc). Hình học ranh giới: Vietnam Administrative Units Reference Map — sapnhap.bando.com.vn (NXB Tài nguyên, Môi trường và Bản đồ Việt Nam — Bộ NN&MT); dữ liệu công bố công khai, chưa có giấy phép mở riêng — tham chiếu điều khoản nhà cung cấp trước khi dùng thương mại. Tên/mã đơn vị hành chính: GSO (Cục Thống kê).",
+  "attribution": "Ranh giới hành chính 34 tỉnh: Vietnam Administrative Units Reference Map (sapnhap.bando.com.vn) — NXB TNMT&BĐ, Bộ NN&MT; tổng hợp qua thanglequoc/vietnamese-provinces-database (MIT).",
+  "geometry_source": "Vietnam Administrative Units Reference Map — sapnhap.bando.com.vn (NXB TNMT&BĐ, Bộ NN&MT)",
   "decree": "388/NQ-UBTVQH16",
   "dataset_version": "v5.2.0",
   "generated_at": "2026-09-20T13:13:17Z",
-  "fetched_at": "2026-10-11T16:55:37Z",
+  "fetched_at": "2026-10-11T17:39:42Z",
   "merged_file": "provinces_34.geojson",
-  "merged_sha256": "e88eb36db7b6da6db968dbb21087206bb6c4ebc36bb6e3d4aae4c08d7ffc064e",
-  "merged_bytes": 2032833,
+  "merged_sha256": "fb156b9e7960a7c315ed9f661897caac5d19a1848b17461ce5649db562723a8e",
+  "merged_bytes": 2032765,
   "files": [
     {
       "source_path": "dataset-generation-scripts/resources/gis/geojson_11Mar2026/1_thu_đo_ha_noi/province.geojson",

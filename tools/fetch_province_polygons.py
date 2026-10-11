@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """Tải polygon ranh giới hành chính 34 tỉnh/thành và merge thành một GeoJSON duy nhất.
 
-Nguồn: repo GitHub thanglequoc/vietnamese-provinces-database (license MIT —
-Copyright (c) 2021 Thang Le Quoc); polygon sinh từ dữ liệu Cục Thống kê (GSO)
-Việt Nam, dataset v5.2.0 (Nghị quyết 388/NQ-UBTVQH16).
+Nguồn: repo GitHub thanglequoc/vietnamese-provinces-database — code + dataset
+compilation theo license MIT (Copyright (c) 2021 Thang Le Quoc). Hình học ranh
+giới gốc: "Vietnam Administrative Units Reference Map" — sapnhap.bando.com.vn
+(NXB Tài nguyên, Môi trường và Bản đồ VN — Bộ NN&MT), công bố công khai, chưa
+có giấy phép mở riêng. Tên/mã đơn vị hành chính: GSO (Cục Thống kê), dataset
+v5.2.0 (Nghị quyết 388/NQ-UBTVQH16).
 
 Output (trong --out-dir, mặc định data/provinces):
   - provinces_34.geojson : FeatureCollection 34 features MultiPolygon, mỗi feature có
-    properties {code, name, name_en, full_name, gso_code, area_km2, source_folder}.
-    `code` = mã tỉnh chính thống 01..34 (trường `matinh` trong dataset nguồn — mã mới
-    theo NQ 388/NQ-UBTVQH16; LƯU Ý: matinh không theo thứ tự folder, vd folder
-    2_tinh_cao_bang mang matinh=7); `gso_code` = mã GSO cũ trong JSON nguồn
-    (vd "01","04",...,"96") để join dữ liệu GSO; `source_folder` giữ traceability.
-  - PROVENANCE.json     : nguồn, license, decree, sha256 + bytes từng file nguồn.
+    properties {code, matinh, name, name_en, full_name, area_km2, source_folder}.
+    `code` = mã đơn vị hành chính (GSO: "01" Hà Nội, "04" Cao Bằng, "79" Hồ Chí
+    Minh…) — dùng để join dữ liệu chính phủ; `matinh` = mã GIS 01..34 của dataset
+    nguồn (không theo thứ tự folder, vd folder 2_tinh_cao_bang mang matinh=7);
+    `source_folder` giữ traceability.
+  - PROVENANCE.json     : nguồn, license, attribution, decree, sha256 + bytes từng file nguồn.
   - .cache/             : cache bytes từng file nguồn, KHÔNG commit; dùng để bỏ qua
     lần tải sau khi sha256 khớp PROVENANCE.json (idempotent).
 
@@ -40,8 +43,27 @@ USER_AGENT = "VietnamAtlas/2.2 (agent@hermes.local)"
 REPO = "thanglequoc/vietnamese-provinces-database"
 BRANCH = "master"
 BASE_URL = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}"
-LICENSE = "MIT"
-LICENSE_NOTE = "Copyright (c) 2021 Thang Le Quoc — polygon sinh từ dữ liệu Cục Thống kê (GSO) Việt Nam."
+LICENSE = "Mixed (xem license_note): code/compilation MIT; geometry theo điều khoản nhà cung cấp Bando.com.vn"
+LICENSE_NOTE = (
+    "Repo + dataset compilation: MIT (Copyright (c) 2021 Thang Le Quoc). "
+    "Hình học ranh giới: Vietnam Administrative Units Reference Map — sapnhap.bando.com.vn "
+    "(NXB Tài nguyên, Môi trường và Bản đồ Việt Nam — Bộ NN&MT); dữ liệu công bố công khai, "
+    "chưa có giấy phép mở riêng — tham chiếu điều khoản nhà cung cấp trước khi dùng thương mại. "
+    "Tên/mã đơn vị hành chính: GSO (Cục Thống kê)."
+)
+ATTRIBUTION = (
+    "Ranh giới hành chính 34 tỉnh: Vietnam Administrative Units Reference Map (sapnhap.bando.com.vn) — "
+    "NXB TNMT&BĐ, Bộ NN&MT; tổng hợp qua thanglequoc/vietnamese-provinces-database (MIT)."
+)
+# 2 tên nguồn viết "Hoá/Hoà" — canonicalize về spelling của data/provinces_34.json (đã đối chiếu toàn bộ 34 tên).
+CANONICAL_NAMES = {"Thanh Hoá": "Thanh Hóa", "Khánh Hoà": "Khánh Hòa"}
+
+
+def canonical_name(text: str) -> str:
+    for old, new in CANONICAL_NAMES.items():
+        text = text.replace(old, new)
+    return text
+
 
 GEOJSON_DIR = "dataset-generation-scripts/resources/gis/geojson_11Mar2026"
 UNITS_JSON = "json/full_json_generated_data_vn_units.json"
@@ -282,7 +304,7 @@ def build_merged(sources: list[tuple[str, bytes]]) -> tuple[list[dict], dict]:
         polygons, matinh = parse_province_geojson(data, folder)
         parsed.append((folder, match_unit(folder, units), polygons, matinh))
 
-    # matinh là mã tỉnh chính thống 01..34 của dataset (không theo thứ tự folder) —
+    # matinh là mã GIS 01..34 của dataset nguồn (không theo thứ tự folder) —
     # bắt buộc là hoán vị 1..34 để chắc chắn đủ 34 file, không trùng/thiếu.
     matinh_values = sorted(int(m) for _, _, _, m in parsed)
     if matinh_values != list(range(1, len(PROVINCE_FOLDERS) + 1)):
@@ -290,7 +312,7 @@ def build_merged(sources: list[tuple[str, bytes]]) -> tuple[list[dict], dict]:
 
     features = []
     for folder, unit, polygons, matinh in parsed:
-        code = f"{int(matinh):02d}"
+        code = f"{int(unit['Code']):02d}"
         features.append(
             {
                 "type": "Feature",
@@ -298,10 +320,10 @@ def build_merged(sources: list[tuple[str, bytes]]) -> tuple[list[dict], dict]:
                 "geometry": {"type": "MultiPolygon", "coordinates": [[[list(p) for p in ring] for ring in poly] for poly in polygons]},
                 "properties": {
                     "code": code,
-                    "name": unit["Name"],
+                    "matinh": f"{int(matinh):02d}",
+                    "name": canonical_name(unit["Name"]),
                     "name_en": unit["NameEn"],
-                    "full_name": unit["FullName"],
-                    "gso_code": unit["Code"],
+                    "full_name": canonical_name(unit["FullName"]),
                     "area_km2": round(sum(polygon_area_km2(poly) for poly in polygons), 1),
                     "source_folder": folder,
                 },
@@ -333,6 +355,8 @@ def cmd_fetch(out_dir: Path, force: bool, log) -> int:
         "source_url": raw_url(GEOJSON_DIR) + "/",
         "license": LICENSE,
         "license_note": LICENSE_NOTE,
+        "attribution": ATTRIBUTION,
+        "geometry_source": "Vietnam Administrative Units Reference Map — sapnhap.bando.com.vn (NXB TNMT&BĐ, Bộ NN&MT)",
         "decree": meta["decree"],
         "dataset_version": meta["dataset_version"],
         "generated_at": meta["generated_at"],
@@ -349,30 +373,36 @@ def cmd_fetch(out_dir: Path, force: bool, log) -> int:
 
 
 def cmd_check(out_dir: Path, log) -> int:
-    """Verify sha256 file đã tải (cache) + file merge vs PROVENANCE.json. exit≠0 nếu lệch/thiếu."""
+    """Verify file merge vs PROVENANCE.json (bắt buộc) + sha256 cache nguồn nếu có mặt.
+
+    Fresh checkout không có .cache (gitignored): chỉ verify file merge + ghi chú —
+    vẫn exit 0 khi file merge khớp provenance. Máy có cache đầy đủ: verify sha256
+    toàn bộ file nguồn. exit≠0 khi file merge lệch/thiếu hoặc cache có mặt mà lệch.
+    """
     provenance = load_provenance(out_dir)
     if not provenance:
         log(f"FAIL: {out_dir / PROVENANCE_NAME} thiếu — chạy fetch trước")
         return 1
     problems = []
-    for entry in provenance.get("files", []):
-        cached = cache_path(out_dir, entry["source_path"], entry["sha256"])
-        if not cached.exists():
-            problems.append(f"thiếu cache: {entry['source_path']}")
-            continue
-        actual = sha256_hex(cached.read_bytes())
-        if actual != entry["sha256"]:
-            problems.append(f"lệch sha256: {entry['source_path']} (cache={actual[:12]}…, provenance={entry['sha256'][:12]}…)")
     merged_path = out_dir / provenance.get("merged_file", MERGED_NAME)
     if not merged_path.exists():
         problems.append(f"thiếu file merge: {merged_path.name}")
     elif sha256_hex(merged_path.read_bytes()) != provenance.get("merged_sha256"):
         problems.append("lệch sha256 file merge " + merged_path.name)
+    entries = provenance.get("files", [])
+    missing = [e for e in entries if not cache_path(out_dir, e["source_path"], e["sha256"]).exists()]
+    if missing:
+        log(f"NOTE: {len(missing)}/{len(entries)} file nguồn chưa có trong cache (bình thường trên fresh checkout) — chỉ verify file merge")
+    else:
+        for entry in entries:
+            actual = sha256_hex(cache_path(out_dir, entry["source_path"], entry["sha256"]).read_bytes())
+            if actual != entry["sha256"]:
+                problems.append(f"lệch sha256: {entry['source_path']} (cache={actual[:12]}…, provenance={entry['sha256'][:12]}…)")
     if problems:
         for problem in problems:
             log(f"FAIL: {problem}")
         return 1
-    log(f"OK: {len(provenance.get('files', []))} file nguồn + {MERGED_NAME} khớp sha256")
+    log(f"OK: {MERGED_NAME} khớp sha256 + {len(entries) - len(missing)}/{len(entries)} file nguồn verified")
     return 0
 
 

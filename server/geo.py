@@ -62,7 +62,7 @@ class Polygon:
 
 @dataclass(frozen=True)
 class Province:
-    code: str  # mã tỉnh chính thống "01".."34" (matinh trong dataset GSO)
+    code: str  # mã đơn vị hành chính (GSO): "01" Hà Nội, "79" Hồ Chí Minh
     name: str  # "Hà Nội"
     name_norm: str  # "ha noi"
     full_name: str  # "Thành phố Hà Nội"
@@ -78,7 +78,41 @@ def _make_ring(coords) -> Ring:
     return Ring(points=points, bbox=(min(lons), min(lats), max(lons), max(lats)))
 
 
+def _feature_to_province(feature) -> Province:
+    """Chuyển 1 GeoJSON feature → Province; raise ValueError nếu cấu trúc không hợp lệ."""
+    props = feature.get("properties") or {}
+    geometry = feature.get("geometry") or {}
+    polygons = []
+    for rings in geometry.get("coordinates") or []:
+        if not isinstance(rings, list) or not rings:
+            raise ValueError("polygon rỗng")
+        polygons.append(Polygon(outer=_make_ring(rings[0]), holes=tuple(_make_ring(r) for r in rings[1:])))
+    if not polygons:
+        raise ValueError("không có polygon")
+    bbox = (
+        min(p.outer.bbox[0] for p in polygons),
+        min(p.outer.bbox[1] for p in polygons),
+        max(p.outer.bbox[2] for p in polygons),
+        max(p.outer.bbox[3] for p in polygons),
+    )
+    name = str(props.get("name") or "")
+    return Province(
+        code=str(props.get("code") or ""),
+        name=name,
+        name_norm=normalize(name),
+        full_name=str(props.get("full_name") or ""),
+        bbox=bbox,
+        area_km2=float(props.get("area_km2") or 0.0),
+        polygons=tuple(polygons),
+    )
+
+
 def _load_provinces(path) -> list[Province]:
+    """Đọc file GeoJSON → list[Province]; file hỏng/thiếu → [] (không crash server).
+
+    Feature không hợp lệ (polygon rỗng, thiếu tọa độ…) bị bỏ qua kèm warning —
+    contract: dữ liệu lỗi không làm sập province_at()/load_provinces().
+    """
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -87,31 +121,15 @@ def _load_provinces(path) -> list[Province]:
     except (OSError, ValueError):
         logger.warning("geo: lỗi đọc %s — trả về danh sách tỉnh rỗng", path)
         return []
+    if not isinstance(data, dict):
+        logger.warning("geo: %s không phải FeatureCollection — trả về danh sách tỉnh rỗng", path)
+        return []
     provinces = []
-    for feature in data.get("features", []):
-        props = feature.get("properties") or {}
-        geometry = feature.get("geometry") or {}
-        polygons = []
-        for rings in geometry.get("coordinates", []):
-            polygons.append(Polygon(outer=_make_ring(rings[0]), holes=tuple(_make_ring(r) for r in rings[1:])))
-        bbox = (
-            min(p.outer.bbox[0] for p in polygons),
-            min(p.outer.bbox[1] for p in polygons),
-            max(p.outer.bbox[2] for p in polygons),
-            max(p.outer.bbox[3] for p in polygons),
-        )
-        name = str(props.get("name") or "")
-        provinces.append(
-            Province(
-                code=str(props.get("code") or ""),
-                name=name,
-                name_norm=normalize(name),
-                full_name=str(props.get("full_name") or ""),
-                bbox=bbox,
-                area_km2=float(props.get("area_km2") or 0.0),
-                polygons=tuple(polygons),
-            )
-        )
+    for index, feature in enumerate(data.get("features") or []):
+        try:
+            provinces.append(_feature_to_province(feature))
+        except (AttributeError, IndexError, KeyError, TypeError, ValueError) as exc:
+            logger.warning("geo: bỏ qua feature #%d không hợp lệ trong %s (%s)", index, path, exc)
     return provinces
 
 
@@ -131,8 +149,19 @@ def load_provinces(path=None) -> list[Province]:
     return list(_provinces())
 
 
+def _point_on_segment(lon: float, lat: float, x1: float, y1: float, x2: float, y2: float) -> bool:
+    """Điểm nằm chính xác trên đoạn (x1,y1)-(x2,y2): tích chéo == 0 và trong hộp bao."""
+    if (lon - x1) * (y2 - y1) - (lat - y1) * (x2 - x1) != 0:
+        return False
+    return min(x1, x2) <= lon <= max(x1, x2) and min(y1, y2) <= lat <= max(y1, y2)
+
+
 def _ring_contains(ring: Ring, lon: float, lat: float) -> bool:
-    """Ray-casting point-in-ring; điểm nằm trên biên tính là ngoài (strict)."""
+    """Ray-casting point-in-ring; điểm nằm trên biên tính là ngoài (strict).
+
+    Kiểm tra on-segment trước mỗi lần đếm crossing: nếu chỉ dựa vào so sánh `<`,
+    điểm trên cạnh xiên vẫn có thể lật trạng thái inside qua cạnh khác.
+    """
     west, south, east, north = ring.bbox
     if not (south < lat < north and west < lon < east):
         return False
@@ -142,6 +171,8 @@ def _ring_contains(ring: Ring, lon: float, lat: float) -> bool:
     for i in range(len(points)):
         xi, yi = points[i]
         xj, yj = points[j]
+        if _point_on_segment(lon, lat, xi, yi, xj, yj):
+            return False
         if (yi > lat) != (yj > lat):
             x_cross = xi + (lat - yi) * (xj - xi) / (yj - yi)
             if lon < x_cross:
