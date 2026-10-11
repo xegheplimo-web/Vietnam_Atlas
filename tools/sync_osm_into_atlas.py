@@ -21,7 +21,42 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 
-def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: bool = False, limit: int = 0, backups: Path | None = None):
+def coverage_report(src):
+    """Coverage summary of the staging dataset: type mix, top categories, 1-degree grid cells.
+
+    province is intentionally never inferred from a point (no centroid-to-province guessing),
+    so grid cells are the coarse coverage proxy until authoritative administrative polygons land.
+    """
+    by_type = {r[0]: r[1] for r in src.execute("SELECT osm_type, count(*) FROM osm_places WHERE is_active=1 GROUP BY osm_type")}
+    categories = [
+        {"category": r[0], "count": r[1]}
+        for r in src.execute("SELECT category, count(*) n FROM osm_places WHERE is_active=1 GROUP BY category ORDER BY n DESC LIMIT 15")
+    ]
+    grid = [
+        {"lat_cell": r[0], "lon_cell": r[1], "count": r[2]}
+        for r in src.execute(
+            "SELECT CAST(lat AS INT) la, CAST(lon AS INT) lo, count(*) n FROM osm_places WHERE is_active=1 GROUP BY la, lo ORDER BY n DESC LIMIT 30"
+        )
+    ]
+    cells = src.execute("SELECT count(*) FROM (SELECT DISTINCT CAST(lat AS INT), CAST(lon AS INT) FROM osm_places WHERE is_active=1)").fetchone()[0]
+    return {
+        "note": "province chưa được suy từ tâm điểm; lưới 1° là proxy độ phủ thô cho tới khi có polygon hành chính chính thống.",
+        "by_osm_type": by_type,
+        "top_categories": categories,
+        "grid_1deg_top_cells": grid,
+        "cells_with_data": cells,
+    }
+
+
+def sync(
+    osm_db: Path,
+    atlas_db: Path,
+    apply: bool = False,
+    update_existing: bool = False,
+    limit: int = 0,
+    backups: Path | None = None,
+    coverage: bool = False,
+):
     if not osm_db.is_file():
         raise FileNotFoundError(f"Chưa có dữ liệu OSM: {osm_db}. Hãy tải PBF và nhập snapshot trước.")
     if limit < 0:
@@ -70,6 +105,13 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
             dest = sqlite3.connect(f"file:{atlas_db.resolve().as_posix()}?mode=ro", uri=True)
         if dest is not None:
             dest.row_factory = sqlite3.Row
+        # Preload existing OSM rows once. The unique index on (source, source_id) is partial
+        # (WHERE source_id <> ''), which the planner refuses for a bound lookup, so per-row
+        # SELECTs degrade to a full scan each time: O(n*m) on a full national sync.
+        existing = {}
+        if dest is not None:
+            for prev in dest.execute("SELECT * FROM places WHERE source='OpenStreetMap'"):
+                existing[prev["source_id"]] = prev
         rows = src.execute(
             "SELECT * FROM osm_places WHERE is_active=1 ORDER BY osm_type,osm_id" + (" LIMIT ?" if limit else ""), ([limit] if limit else [])
         )
@@ -77,9 +119,7 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
             dest.execute("BEGIN IMMEDIATE")
         for row in rows:
             sid = f"{row['osm_type']}/{row['osm_id']}"
-            previous = None
-            if dest is not None:
-                previous = dest.execute("SELECT * FROM places WHERE source='OpenStreetMap' AND source_id=?", (sid,)).fetchone()
+            previous = existing.get(sid)
             if previous is None:
                 result["would_insert"] += 1
                 if apply:
@@ -127,9 +167,7 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
         else:
             for row in src.execute("SELECT osm_type,osm_id FROM osm_places WHERE is_active=0 ORDER BY osm_type,osm_id"):
                 sid = f"{row['osm_type']}/{row['osm_id']}"
-                previous = None
-                if dest is not None:
-                    previous = dest.execute("SELECT * FROM places WHERE source='OpenStreetMap' AND source_id=?", (sid,)).fetchone()
+                previous = existing.get(sid)
                 if previous is None:
                     continue
                 if previous["status"] != "unverified":
@@ -141,6 +179,8 @@ def sync(osm_db: Path, atlas_db: Path, apply: bool = False, update_existing: boo
                     payload["status"] = "inactive"
                     save_place(dest, payload, place_id=previous["id"])
                     result["retired"] += 1
+        if coverage:
+            result["coverage"] = coverage_report(src)
         if apply:
             dest.commit()
         return result
@@ -161,9 +201,10 @@ def main():
     p.add_argument("--apply", action="store_true", help="explicitly apply inserts after online backup")
     p.add_argument("--update-existing", action="store_true", help="update only unverified OSM rows; never verified/user records")
     p.add_argument("--limit", type=int, default=0, help="pilot: sync first N staging rows; disables retirement evaluation")
+    p.add_argument("--coverage-report", action="store_true", help="include staging coverage summary (type mix, top categories, 1° grid)")
     a = p.parse_args()
     try:
-        print(json.dumps(sync(a.osm_db, a.atlas_db, a.apply, a.update_existing, a.limit), indent=2, ensure_ascii=False))
+        print(json.dumps(sync(a.osm_db, a.atlas_db, a.apply, a.update_existing, a.limit, coverage=a.coverage_report), indent=2, ensure_ascii=False))
         return 0
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)
