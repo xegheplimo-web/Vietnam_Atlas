@@ -43,8 +43,10 @@ class LiveChanges:
             return handler.json(503, {"error": "Quá nhiều kết nối trực tiếp; vui lòng kết nối lại."})
         try:
             self._stream(handler)
-        except (BrokenPipeError, ConnectionResetError, TimeoutError):
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, TimeoutError):
             # The browser closed the connection during map navigation/unload.
+            # ConnectionAbortedError is the Windows flavor of an aborted peer
+            # connection (WinError 10053) and must not escape to the log.
             pass
         except sqlite3.Error:
             # A broken DB connection ends this SSE response; EventSource retries.

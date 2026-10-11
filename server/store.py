@@ -86,30 +86,45 @@ def province_phrase_aliases():
     return aliases
 
 
-def build_match_query(tokens, aliases, phrase_aliases=None):
-    """FTS5 MATCH expression: tokens are prefix-matched; alias tokens also OR their
-    expansion phrase. A legacy province phrase found on token boundaries becomes an
-    OR-group keeping BOTH spellings: (("sai" AND "gon") OR ("ho" AND "chi" AND "minh"))."""
-    phrase_aliases = phrase_aliases or {}
+def _expand_token(token, aliases):
+    """Prefix expression for one token, OR-ing its token-level expansion when present."""
+    expansion = aliases.get(token)
+    if expansion:
+        return '("' + token + '"* OR "' + expansion + '"*)'
+    return '"' + token + '"*'
+
+
+def _token_segments(tokens, phrase_aliases):
+    """Split tokens into (token,) segments, or (old_tokens, new_tokens) when a phrase alias spans them."""
     spans = sorted(phrase_aliases, key=len, reverse=True)  # longest phrase wins
-    parts = []
+    segments = []
     i = 0
     while i < len(tokens):
         old = next((span for span in spans if tuple(tokens[i : i + len(span)]) == span), None)
         if old:
-            new = phrase_aliases[old]
-            old_group = _AND.join('"' + t + '"*' for t in old)
+            segments.append((old, phrase_aliases[old]))
+            i += len(old)
+        else:
+            segments.append((tokens[i],))
+            i += 1
+    return segments
+
+
+def build_match_query(tokens, aliases, phrase_aliases=None):
+    """FTS5 MATCH expression: tokens are prefix-matched; alias tokens also OR their
+    expansion phrase. A legacy province phrase found on token boundaries becomes an
+    OR-group keeping BOTH spellings: (("sai" AND "gon") OR ("ho" AND "chi" AND "minh")).
+    Token-level expansions still apply inside the old-spelling branch, so a query like
+    'tp hcm' keeps matching records that spell out 'thanh pho hcm'."""
+    parts = []
+    for segment in _token_segments(tokens, phrase_aliases or {}):
+        if len(segment) == 2:
+            old, new = segment
+            old_group = _AND.join(_expand_token(t, aliases) for t in old)
             new_group = _AND.join('"' + t + '"*' for t in new)
             parts.append("((" + old_group + ") OR (" + new_group + "))")
-            i += len(old)
-            continue
-        token = tokens[i]
-        expansion = aliases.get(token)
-        if expansion:
-            parts.append('("' + token + '"* OR "' + expansion + '"*)')
         else:
-            parts.append('"' + token + '"*')
-        i += 1
+            parts.append(_expand_token(segment[0], aliases))
     # Explicit AND: FTS5 rejects an implicit conjunction right after a parenthesised group.
     return _AND.join(parts)
 
@@ -355,9 +370,17 @@ def _search_clause(con, search, where, args):
         where.append("places_fts MATCH ?")
         args.append(build_match_query(tokens, search_alias_map(con), province_phrase_aliases()))
         return join, True
-    for token in tokens:
-        where.append("places.search_text LIKE ?")
-        args.append("%" + token + "%")
+    for segment in _token_segments(tokens, province_phrase_aliases()):
+        if len(segment) == 2:
+            old, new = segment
+            old_like = "(" + _AND.join("places.search_text LIKE ?" for _ in old) + ")"
+            new_like = "(" + _AND.join("places.search_text LIKE ?" for _ in new) + ")"
+            where.append("(" + old_like + " OR " + new_like + ")")
+            args.extend("%" + t + "%" for t in old)
+            args.extend("%" + t + "%" for t in new)
+        else:
+            where.append("places.search_text LIKE ?")
+            args.append("%" + segment[0] + "%")
     return "", False
 
 
@@ -375,19 +398,31 @@ def _bbox_clause(bbox, where, args):
 
 
 def _category_clause(category, where, args):
-    """Extend where/args with an OR of OSM category-prefix predicates (e.g. 'amenity:cafe|shop:')."""
+    """Extend where/args with an OR of OSM category-prefix predicates (e.g. 'amenity:cafe|shop:').
+
+    LIKE metacharacters are escaped so a literal '_' (common in OSM categories)
+    is not treated as a single-character wildcard.
+    """
     prefixes = [p for p in category.split("|") if p][:20]
     if prefixes:
-        where.append("(" + " OR ".join("places.category LIKE ? || '%'" for _ in prefixes) + ")")
-        args.extend(prefixes)
+        where.append("(" + " OR ".join("places.category LIKE ? || '%' ESCAPE '\\'" for _ in prefixes) + ")")
+        args.extend(p.replace("\\", "\\\\").replace("_", "\\_") for p in prefixes)
 
 
-# Great-circle distance in km (haversine), rounded to 0.1 — needs SQLite math
-# functions (sin/cos/asin/sqrt/radians), available in CPython's bundled SQLite.
+# Great-circle distance in km (haversine), unrounded so ORDER BY stays precise — needs
+# SQLite math functions (sin/cos/asin/sqrt/radians), available in CPython's bundled
+# SQLite. Display rounding to 0.1 happens in Python (_display_distance).
 _DISTANCE_SQL = (
-    "ROUND(12742.0 * ASIN(MIN(1.0, SQRT(POWER(SIN(RADIANS(places.lat - ?) / 2.0), 2)"
-    " + COS(RADIANS(?)) * COS(RADIANS(places.lat)) * POWER(SIN(RADIANS(places.lon - ?) / 2.0), 2)))), 1)"
+    "12742.0 * ASIN(MIN(1.0, SQRT(POWER(SIN(RADIANS(places.lat - ?) / 2.0), 2)"
+    " + COS(RADIANS(?)) * COS(RADIANS(places.lat)) * POWER(SIN(RADIANS(places.lon - ?) / 2.0), 2))))"
 )
+
+
+def _display_distance(item):
+    """Round the computed distance for output while ORDER BY uses the raw value."""
+    if item.get("distance_km") is not None:
+        item["distance_km"] = round(item["distance_km"], 1)
+    return item
 
 
 def list_places(con, search="", province="", bbox=None, limit=500, offset=0, category="", near=None):
@@ -426,13 +461,13 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0, cat
             item = dict(row)
             item.pop("search_rank", None)
             item.pop("name_norm", None)
-            out.append(item)
+            out.append(_display_distance(item))
         return out, count
     order = " ORDER BY distance_km, places.id" if near else " ORDER BY places.updated_at DESC, places.id"
     rows = con.execute(
         "SELECT places.*" + distance_sql + base + predicate + order + " LIMIT ? OFFSET ?", [*head_args, *args, limit, offset]
     ).fetchall()
-    return [as_dict(r) for r in rows], count
+    return [_display_distance(as_dict(r)) for r in rows], count
 
 
 def stats(con):

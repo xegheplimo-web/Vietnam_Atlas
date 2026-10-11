@@ -15,7 +15,7 @@ from urllib.request import Request, urlopen
 
 from server.app import make_handler, satellite_layer_config
 from server.live import LiveChanges
-from server.store import init_db, normalize, session
+from server.store import init_db, list_places, normalize, save_place, session
 
 
 class AtlasTest(unittest.TestCase):
@@ -712,6 +712,126 @@ class AtlasTest(unittest.TestCase):
         self.assertEqual(row["recall@10"], 0.5)
         for item in (hit_p, miss_p):
             self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_24_category_like_underscore_literal(self):
+        # '_' in a category prefix must be literal, not a LIKE single-char wildcard.
+        code, parts = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Xưởng Phụ Tùng T24",
+                "lat": 21.04,
+                "lon": 105.84,
+                "category": "shop:car_parts",
+                "source": "test_search",
+                "source_id": "esc-parts",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, near_miss = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Gian Hàng Gần T24",
+                "lat": 21.041,
+                "lon": 105.841,
+                "category": "shop:carXparts",
+                "source": "test_search",
+                "source_id": "esc-miss",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=t24&category=shop:car_parts")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertIn(parts["item"]["id"], ids)
+        self.assertNotIn(near_miss["item"]["id"], ids)
+        for item in (parts, near_miss):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_25_near_ordering_uses_unrounded_distance(self):
+        # Both distances round to 0.0 km; the nearer place has the LARGER id, so a
+        # rounded ORDER BY would rank the farther place first.
+        code, far = self.request(
+            "/api/places",
+            "POST",
+            {
+                "id": "a-t25-far",
+                "name": "Điểm Xa T25",
+                "lat": 21.0004,
+                "lon": 105.0,
+                "category": "test:t25",
+                "source": "test_search",
+                "source_id": "t25-far",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, near = self.request(
+            "/api/places",
+            "POST",
+            {
+                "id": "b-t25-near",
+                "name": "Điểm Gần T25",
+                "lat": 21.00005,
+                "lon": 105.0,
+                "category": "test:t25",
+                "source": "test_search",
+                "source_id": "t25-near",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?near=21.0,105.0&category=test:t25")
+        self.assertEqual(code, 200)
+        items = result["items"]
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0]["distance_km"], 0.0)
+        self.assertEqual(items[1]["distance_km"], 0.0)
+        self.assertEqual(items[0]["id"], near["item"]["id"])  # ~6 m ranks before ~44 m
+        self.assertEqual(items[1]["id"], far["item"]["id"])
+        for item in (near, far):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_26_tp_hcm_alias_keeps_token_expansion(self):
+        # 'tp hcm' must match 'thành phố hcm' (tp -> thanh pho inside the old-spelling
+        # branch) as well as 'hồ chí minh' (phrase alias branch).
+        code, spelled = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Ủy Ban Thành Phố HCM T26", "lat": 10.78, "lon": 106.7, "source": "test_search", "source_id": "t26-spelled"},
+        )
+        self.assertEqual(code, 201)
+        code, renamed = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Trung Tâm Hồ Chí Minh T26", "lat": 10.79, "lon": 106.71, "source": "test_search", "source_id": "t26-renamed"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=tp%20hcm%20t26")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertIn(spelled["item"]["id"], ids)
+        self.assertIn(renamed["item"]["id"], ids)
+        for item in (spelled, renamed):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_27_province_alias_in_like_fallback(self):
+        # Without FTS5 the LIKE fallback must still expand legacy province phrases.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "nofts.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                save_place(
+                    con,
+                    {"name": "Ủy Ban T27", "address": "Hà Nội", "lat": 21.03, "lon": 105.85, "source": "test_search", "source_id": "t27-fallback"},
+                )
+                con.execute("DROP TRIGGER IF EXISTS places_fts_ai")
+                con.execute("DROP TRIGGER IF EXISTS places_fts_ad")
+                con.execute("DROP TRIGGER IF EXISTS places_fts_au")
+                con.execute("DROP TABLE places_fts")
+            with session(db) as con:
+                items, total = list_places(con, search="hà tây t27")
+            self.assertEqual(total, 1)
+            self.assertEqual(items[0]["source_id"], "t27-fallback")
 
 
 if __name__ == "__main__":
