@@ -1,7 +1,7 @@
 {
   "product": "Vietnam Atlas Map & Memory",
-  "version": "2.1-round-a-2026-10-11",
-  "build_date_utc": "2026-10-11T04:35:35.061142+00:00",
+  "version": "2.2-round-b-2026-10-11",
+  "build_date_utc": "2026-10-11T05:34:55.729069+00:00",
   "code_test_result": "33 tests passed (17 HTTP/storage integration incl. SSE reconnect + capacity + search relevance/aliases/bbox, 16 data-refresh toolkit incl. require-full + coverage)",
   "validated_admin": "34 new province names; 63 legacy province names mapped",
   "downloads_not_embedded": [
@@ -80,9 +80,9 @@
     "tools/sync_osm_into_atlas.py": "e1bb7c763b4444ca5f23ba122438bd65238e850fffa95372ce8e15bb5dd86691",
     "tools/verify_osm_snapshot.py": "e17e529709e588e128cc22a767646725517e30c311a75d88b7b379c504763e4b",
     "tools/vn_osm_dataset.py": "6685d59e1d64430edb299a5f3bff9bdaa599999a02a2fa82a97bc3ce48782b49",
-    "web/app.js": "9e8aa14f2a6982200ab257e8946b9078f0e47c6ae492349b8798e0961aadd936",
-    "web/index.html": "a9fcd058a909d48cf251754d0aad3b33132d0bf097cad904d4277ca58ec58f89",
-    "web/style.css": "f6f1eb77532111d56ea3df04f78f67f50aba38b24a17c158befcea2aedb7c53d"
+    "web/app.js": "e165bc8c4a1a17a0eb09039630fab2559e265f4929b4498f038788589f18bb36",
+    "web/index.html": "25d5cbd6d1b006cd65b087ea44b621a343b9e175e7c797e80310119e78c35773",
+    "web/style.css": "4c6947c131d30cd9ffbae6e117fb2199ebad69764be97aa1f5dc61888c86fcb8"
   },
   "repo_publication": {
     "repository": "https://github.com/xegheplimo-web/Vietnam_Atlas",
