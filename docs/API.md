@@ -25,12 +25,15 @@ JSON mẫu:
 - `PUT /api/places/{id}`: thay thế trường dữ liệu của đối tượng đó.
 - `DELETE /api/places/{id}`: xóa khỏi bảng hiện hành, ghi nhật ký thay đổi giữ `prior_json`.
 - `GET /api/places?search=...&province=...&bbox=west,south,east,north&limit=1..1000&offset=...`: tìm kiếm và phân trang. BBox có thể qua kinh tuyến 180. JSON trả `items,total,limit,offset`.
+  - `category=amenity:cafe|shop:`: lọc theo 1–20 prefix OSM phân tách `|` (chữ thường, `a-z0-9_:`); sai định dạng trả 400.
+  - `near=lat,lon`: mỗi item trả thêm `distance_km` (haversine, 1 chữ số thập phân). Không kèm `search` thì sắp xếp gần→xa; có `search` giữ thứ hạng relevance (BM25 + exact-name), `distance_km` chỉ là metadata. Tọa độ ngoài WGS84 trả 400.
+  - Tên tỉnh cũ (trước sáp nhập 2025, vd `sài gòn`, `bình dương`, `hà tây`) trong `search` tự mở rộng OR sang tên mới theo `data/province_mergers_2025.json`.
 - `GET /api/places/{id}/history`: nhật ký tối đa 200 sự kiện gần nhất.
 - `GET /api/places/{id}/memories`: danh sách sự kiện/thông tin đã ghi (tối đa 500).
 - `POST /api/places/{id}/memories`: thêm bản ghi `{ "kind":"fact", "content":"...", "source":"user", "confidence":0.8, "observed_at":"2026-10-11" }` (append-only).
 - `GET /api/places/{id}/media`: danh sách tham chiếu ảnh/tài liệu (tối đa 500).
 - `POST /api/places/{id}/media`: thêm `{ "url":"https://...", "rights_basis":"own photo", "source":"user", "caption":"..." }`. Chỉ lưu liên kết và metadata, không tải ảnh.
-- `GET /api/export.geojson?limit=20000`: snapshot đến 20.000 đối tượng; `total_matching` cho biết tổng trước cắt. Nếu nhiều dữ liệu, phân trang `/api/places` hoặc export trực tiếp từ database.
+- `GET /api/export.geojson?limit=20000`: snapshot đến 20.000 đối tượng; `total_matching` cho biết tổng trước cắt. Nhận cùng bộ lọc với `/api/places` (`search`, `province`, `bbox`, `category`, `near`); khi có `near`, properties mỗi feature kèm `distance_km`. Nếu nhiều dữ liệu, phân trang `/api/places` hoặc export trực tiếp từ database.
 - `GET /api/export.csv`: xuất tối đa 20.000 đối tượng hiện hành và BOM UTF-8 cho Excel.
 - `POST /api/import`: request body GeoJSON FeatureCollection (chỉ Point). Tối đa 10.000 features hoặc 16 MiB/call. Trả `created,updated,rejected,errors`. Features có `properties.id` hoặc `feature.id` sẽ được dùng như stable identity; nếu thiếu, dùng `(source,source_id)` khi có, nếu thiếu nữa sẽ sinh UUID mới, dễ trùng khi import lại.
 - `GET /api/provinces`: tên 34 đơn vị cấp tỉnh, thông báo `boundary_available:false`.

@@ -508,6 +508,211 @@ class AtlasTest(unittest.TestCase):
         for item in created:
             self.request("/api/places/" + item["item"]["id"], "DELETE")
 
+    def test_18_category_prefix_filter(self):
+        code, cafe = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Cà Phê T18", "lat": 21.02, "lon": 105.83, "category": "amenity:cafe", "source": "test_search", "source_id": "cat-cafe"},
+        )
+        self.assertEqual(code, 201)
+        code, rest = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Quán Ăn T18",
+                "lat": 21.021,
+                "lon": 105.831,
+                "category": "amenity:restaurant",
+                "source": "test_search",
+                "source_id": "cat-rest",
+            },
+        )
+        self.assertEqual(code, 201)
+        cafe_id, rest_id = cafe["item"]["id"], rest["item"]["id"]
+
+        code, result = self.request("/api/places?search=t18&category=amenity:cafe")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertIn(cafe_id, ids)
+        self.assertNotIn(rest_id, ids)
+
+        code, result = self.request("/api/places?search=t18&category=amenity:cafe%7Camenity:restaurant")
+        ids = [x["id"] for x in result["items"]]
+        self.assertIn(cafe_id, ids)
+        self.assertIn(rest_id, ids)
+
+        code, result = self.request("/api/places?search=t18&category=shop:")
+        self.assertNotIn(cafe_id, [x["id"] for x in result["items"]])
+        self.assertNotIn(rest_id, [x["id"] for x in result["items"]])
+
+        code, fc = self.request("/api/export.geojson?search=t18&category=amenity:restaurant")
+        self.assertEqual(code, 200)
+        fids = [f["id"] for f in fc["features"]]
+        self.assertIn(rest_id, fids)
+        self.assertNotIn(cafe_id, fids)
+        for item in (cafe, rest):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_19_category_and_near_param_validation(self):
+        for bad in ("DROP%20TABLE", "amenity:cafe%3Bdrop", "amenity:|", "|shop:x", "Amenity:cafe", "shop:x|"):
+            code, _result = self.request("/api/places?category=" + bad)
+            self.assertEqual(code, 400, bad)
+        code, _result = self.request("/api/places?category=" + "|".join("p" + str(i) for i in range(21)))
+        self.assertEqual(code, 400)
+        code, _result = self.request("/api/places?category=amenity:cafe&limit=1")
+        self.assertEqual(code, 200)
+        for bad in ("abc", "21.0", "91,0", "10,200", "21.0,105.0,extra"):
+            code, _result = self.request("/api/places?near=" + bad)
+            self.assertEqual(code, 400, bad)
+        code, _result = self.request("/api/places?near=21.0,105.0&limit=1")
+        self.assertEqual(code, 200)
+
+    def test_20_near_distance_and_ordering(self):
+        code, near_p = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Điểm Gần T20", "lat": 21.0, "lon": 105.0, "category": "test:near", "source": "test_search", "source_id": "near-a"},
+        )
+        self.assertEqual(code, 201)
+        code, far_p = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Điểm Xa T20", "lat": 21.2, "lon": 105.0, "category": "test:near", "source": "test_search", "source_id": "near-b"},
+        )
+        self.assertEqual(code, 201)
+        near_id, far_id = near_p["item"]["id"], far_p["item"]["id"]
+
+        code, result = self.request("/api/places?near=21.0,105.0&category=test:near")
+        self.assertEqual(code, 200)
+        by_id = {x["id"]: x for x in result["items"]}
+        self.assertIn(near_id, by_id)
+        self.assertIn(far_id, by_id)
+        self.assertEqual(by_id[near_id]["distance_km"], 0.0)
+        self.assertAlmostEqual(by_id[far_id]["distance_km"], 22.2, delta=0.5)
+        ids = [x["id"] for x in result["items"]]
+        self.assertLess(ids.index(near_id), ids.index(far_id))  # closer first without search
+
+        # With a search term, relevance (exact boost + BM25) still wins over distance.
+        code, exact_far = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Bia Hơi T20 Distance Check",
+                "lat": 10.0,
+                "lon": 106.0,
+                "category": "test:near",
+                "source": "test_search",
+                "source_id": "near-c",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, partial_near = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Bia Hơi T20 Distance Check Khác",
+                "lat": 21.0,
+                "lon": 105.0,
+                "category": "test:near",
+                "source": "test_search",
+                "source_id": "near-d",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=bia%20hoi%20t20%20distance%20check&near=21.0,105.0&category=test:near")
+        items = result["items"]
+        self.assertEqual(items[0]["id"], exact_far["item"]["id"])  # exact name beats closer distance
+        self.assertIn("distance_km", items[0])
+        self.assertGreater(items[0]["distance_km"], 100)
+        for item in (near_p, far_p, exact_far, partial_near):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_21_province_phrase_alias(self):
+        # Legacy name in the query must also match POIs recorded under the 2025 name.
+        code, hcm = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Trung Tâm Hành Chính T21",
+                "address": "Quận 1, Hồ Chí Minh",
+                "lat": 10.78,
+                "lon": 106.7,
+                "source": "test_search",
+                "source_id": "legacy-hcm",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, literal = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Sài Gòn T21", "lat": 10.75, "lon": 106.66, "source": "test_search", "source_id": "legacy-sg"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=s%C3%A0i%20g%C3%B2n%20t21")
+        ids = [x["id"] for x in result["items"]]
+        self.assertIn(hcm["item"]["id"], ids)  # matched via sài gòn -> hồ chí minh
+        self.assertIn(literal["item"]["id"], ids)  # literal spelling still matches
+
+        code, hn = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Ủy Ban Kiểm Tra T21", "address": "Hà Nội", "lat": 21.03, "lon": 105.85, "source": "test_search", "source_id": "legacy-hn"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=h%C3%A0%20t%C3%A2y%20t21")
+        self.assertIn(hn["item"]["id"], [x["id"] for x in result["items"]])  # hà tây -> hà nội
+        for item in (hcm, literal, hn):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_22_phrase_alias_needs_token_boundary(self):
+        # "saigon" (one token) must NOT trigger the "sai gon" phrase alias.
+        code, hcm = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Công Viên T22", "address": "Hồ Chí Minh", "lat": 10.77, "lon": 106.69, "source": "test_search", "source_id": "bound-hcm"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=saigon%20t22")
+        self.assertNotIn(hcm["item"]["id"], [x["id"] for x in result["items"]])
+        code, result = self.request("/api/places?search=sai%20gon%20t22")
+        self.assertIn(hcm["item"]["id"], [x["id"] for x in result["items"]])
+        self.request("/api/places/" + hcm["item"]["id"], "DELETE")
+
+    def test_23_recall_and_coverage_gap_harness(self):
+        import importlib.util
+
+        root = Path(__file__).resolve().parents[1]
+        spec = importlib.util.spec_from_file_location("search_benchmark", root / "tools" / "search_benchmark.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        code, hit_p = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Bến xe Recall Alpha", "lat": 10.85, "lon": 106.8, "source": "test_bench", "source_id": "recall-01"},
+        )
+        self.assertEqual(code, 201)
+        code, miss_p = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Nhà thờ Không Trùng", "lat": 10.86, "lon": 106.81, "source": "test_bench", "source_id": "recall-02"},
+        )
+        self.assertEqual(code, 201)
+        queries = [
+            {"id": "r1", "kind": "exact", "query": "Bến xe Recall Alpha", "expected_ids": [hit_p["item"]["id"], miss_p["item"]["id"]]},
+            {"id": "r2", "kind": "admin_legacy", "query": "quán ăn tỉnh không tồn tại", "expected_ids": [], "coverage_gap": True},
+            {"id": "r3", "kind": "no_match", "query": "zzzqqq khong co", "expected_ids": []},
+        ]
+        result = module.run_benchmark(self.db, queries, limit=10, repeats=1)
+        summary = result["summary"]
+        self.assertEqual(summary["queries_labelled"], 1)
+        self.assertEqual(summary["recall@10"], 0.5)  # 1 of 2 expected ids in top-10
+        self.assertEqual(summary["coverage_gap_queries"], 1)
+        self.assertEqual(summary["no_match_false_positives"], 0)
+        row = next(r for r in result["per_query"] if r["id"] == "r1")
+        self.assertEqual(row["recall@10"], 0.5)
+        for item in (hit_p, miss_p):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

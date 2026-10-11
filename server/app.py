@@ -182,6 +182,17 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                 if path == "/api/places" or path == "/api/export.geojson":
                     search = (params.get("search") or [""])[0]
                     province = (params.get("province") or [""])[0]
+                    category = (params.get("category") or [""])[0]
+                    if category:
+                        prefixes = category.split("|")
+                        if not re.fullmatch(r"[a-z0-9_:|]{1,500}", category) or not 1 <= len(prefixes) <= 20 or any(not p for p in prefixes):
+                            raise ValueError("Category phải là 1-20 prefix OSM phân tách bởi '|' (vd amenity:cafe|shop:)")
+                    near = None
+                    if "near" in params:
+                        nvals = [float(v) for v in params["near"][0].split(",")]
+                        if len(nvals) != 2 or not -90 <= nvals[0] <= 90 or not -180 <= nvals[1] <= 180:
+                            raise ValueError("Near phải là lat,lon (WGS84)")
+                        near = (nvals[0], nvals[1])
                     bbox = None
                     if "bbox" in params:
                         vals = [float(v) for v in params["bbox"][0].split(",")]
@@ -197,7 +208,7 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                         # Always respect request filtering; capped to prevent unbounded memory.
                         lim = min(max(int((params.get("limit") or ["20000"])[0]), 1), 20000)
                         with session(db_path) as c:
-                            places, total = list_places(c, search, province, bbox, lim)
+                            places, total = list_places(c, search, province, bbox, lim, category=category, near=near)
                         fc = {
                             "type": "FeatureCollection",
                             "name": "vietnam_atlas_export",
@@ -209,7 +220,7 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                     lim = min(max(int((params.get("limit") or ["500"])[0]), 1), 1000)
                     offset = max(int((params.get("offset") or ["0"])[0]), 0)
                     with session(db_path) as c:
-                        items, total = list_places(c, search, province, bbox, lim, offset)
+                        items, total = list_places(c, search, province, bbox, lim, offset, category=category, near=near)
                     return self.json(200, {"items": items, "total": total, "limit": lim, "offset": offset})
                 if path == "/api/export.csv":
                     with session(db_path) as c:

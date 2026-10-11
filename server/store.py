@@ -13,6 +13,7 @@ import unicodedata
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 
 FIELDS = ("name", "category", "address", "province", "phone", "website", "lat", "lon", "notes", "source", "source_id", "status")
@@ -52,16 +53,63 @@ def search_alias_map(con):
 
 _AND = " AND "
 
+_PROVINCE_MERGERS = Path(__file__).resolve().parents[1] / "data" / "province_mergers_2025.json"
 
-def build_match_query(tokens, aliases):
-    """FTS5 MATCH expression: tokens are prefix-matched; alias tokens also OR their expansion phrase."""
+
+def _phrase_tokens(text):
+    return tuple(re.findall(r"[\w]+", normalize(text)))
+
+
+@lru_cache(maxsize=1)
+def province_phrase_aliases():
+    """Map legacy province phrase (normalized tokens) -> new province tokens.
+
+    One-directional (old -> new): queries naming a pre-merger province also match
+    POIs recorded under the 2025 unified name. Built from the merger table plus
+    historical aliases in data/province_mergers_2025.json; cached per process.
+    """
+    aliases = {}
+    try:
+        data = json.loads(_PROVINCE_MERGERS.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    for new, olds in (data.get("new_to_old") or {}).items():
+        new_tokens = _phrase_tokens(new)
+        for old in olds:
+            old_tokens = _phrase_tokens(old)
+            if old_tokens != new_tokens:
+                aliases[old_tokens] = new_tokens
+    for old, new in (data.get("historical_aliases") or {}).items():
+        old_tokens, new_tokens = _phrase_tokens(old), _phrase_tokens(new)
+        if old_tokens != new_tokens:
+            aliases[old_tokens] = new_tokens
+    return aliases
+
+
+def build_match_query(tokens, aliases, phrase_aliases=None):
+    """FTS5 MATCH expression: tokens are prefix-matched; alias tokens also OR their
+    expansion phrase. A legacy province phrase found on token boundaries becomes an
+    OR-group keeping BOTH spellings: (("sai" AND "gon") OR ("ho" AND "chi" AND "minh"))."""
+    phrase_aliases = phrase_aliases or {}
+    spans = sorted(phrase_aliases, key=len, reverse=True)  # longest phrase wins
     parts = []
-    for token in tokens:
+    i = 0
+    while i < len(tokens):
+        old = next((span for span in spans if tuple(tokens[i : i + len(span)]) == span), None)
+        if old:
+            new = phrase_aliases[old]
+            old_group = _AND.join('"' + t + '"*' for t in old)
+            new_group = _AND.join('"' + t + '"*' for t in new)
+            parts.append("((" + old_group + ") OR (" + new_group + "))")
+            i += len(old)
+            continue
+        token = tokens[i]
         expansion = aliases.get(token)
         if expansion:
             parts.append('("' + token + '"* OR "' + expansion + '"*)')
         else:
             parts.append('"' + token + '"*')
+        i += 1
     # Explicit AND: FTS5 rejects an implicit conjunction right after a parenthesised group.
     return _AND.join(parts)
 
@@ -305,7 +353,7 @@ def _search_clause(con, search, where, args):
         # SQL-side ranking boost (name_norm), NOT a candidate filter — reordered or aliased
         # matches must stay findable.
         where.append("places_fts MATCH ?")
-        args.append(build_match_query(tokens, search_alias_map(con)))
+        args.append(build_match_query(tokens, search_alias_map(con), province_phrase_aliases()))
         return join, True
     for token in tokens:
         where.append("places.search_text LIKE ?")
@@ -326,7 +374,23 @@ def _bbox_clause(bbox, where, args):
     args.extend((s, n))
 
 
-def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
+def _category_clause(category, where, args):
+    """Extend where/args with an OR of OSM category-prefix predicates (e.g. 'amenity:cafe|shop:')."""
+    prefixes = [p for p in category.split("|") if p][:20]
+    if prefixes:
+        where.append("(" + " OR ".join("places.category LIKE ? || '%'" for _ in prefixes) + ")")
+        args.extend(prefixes)
+
+
+# Great-circle distance in km (haversine), rounded to 0.1 — needs SQLite math
+# functions (sin/cos/asin/sqrt/radians), available in CPython's bundled SQLite.
+_DISTANCE_SQL = (
+    "ROUND(12742.0 * ASIN(MIN(1.0, SQRT(POWER(SIN(RADIANS(places.lat - ?) / 2.0), 2)"
+    " + COS(RADIANS(?)) * COS(RADIANS(places.lat)) * POWER(SIN(RADIANS(places.lon - ?) / 2.0), 2)))), 1)"
+)
+
+
+def list_places(con, search="", province="", bbox=None, limit=500, offset=0, category="", near=None):
     where = []
     args = []
     join = ""
@@ -334,10 +398,15 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
     if province:
         where.append("places.province = ?")
         args.append(province)
+    if category:
+        _category_clause(category, where, args)
     if search:
         join, ranked = _search_clause(con, search, where, args)
     if bbox:
         _bbox_clause(bbox, where, args)
+    # distance_km is SELECT-side, so its bound params precede the WHERE args.
+    distance_sql = (", " + _DISTANCE_SQL + " AS distance_km") if near else ""
+    head_args = [near[0], near[0], near[1]] if near else []
     base = " FROM places" + join
     predicate = (" WHERE " + _AND.join(where)) if where else ""
     count = con.execute("SELECT COUNT(*)" + base + predicate, args).fetchone()[0]
@@ -346,10 +415,11 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
         # deep offsets): exact normalized-name match first, then BM25, then recency.
         rows = con.execute(
             "SELECT places.*, bm25(places_fts) AS search_rank"
+            + distance_sql
             + base
             + predicate
             + " ORDER BY (CASE WHEN places.name_norm = ? THEN 0 ELSE 1 END), search_rank, places.updated_at DESC, places.id LIMIT ? OFFSET ?",
-            [*args, normalize(search).strip(), limit, offset],
+            [*head_args, *args, normalize(search).strip(), limit, offset],
         ).fetchall()
         out = []
         for row in rows:
@@ -358,8 +428,9 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
             item.pop("name_norm", None)
             out.append(item)
         return out, count
+    order = " ORDER BY distance_km, places.id" if near else " ORDER BY places.updated_at DESC, places.id"
     rows = con.execute(
-        "SELECT places.*" + base + predicate + " ORDER BY places.updated_at DESC, places.id LIMIT ? OFFSET ?", [*args, limit, offset]
+        "SELECT places.*" + distance_sql + base + predicate + order + " LIMIT ? OFFSET ?", [*head_args, *args, limit, offset]
     ).fetchall()
     return [as_dict(r) for r in rows], count
 

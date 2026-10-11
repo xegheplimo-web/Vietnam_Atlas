@@ -45,15 +45,25 @@ def run_one(con, item, limit, repeats):
         latencies.append((time.perf_counter() - started) * 1000)
         top_ids = [row["id"] for row in rows if row]
     rank = None
+    coverage_gap = bool(item.get("coverage_gap"))
     if expected:
         rank = next((i + 1 for i, pid in enumerate(top_ids) if pid in expected), None)
         hit = rank is not None
         reciprocal = 1.0 / rank if rank else 0.0
+        recall = len(expected.intersection(top_ids)) / len(expected)
+        false_positive = None
+    elif coverage_gap:
+        # Coverage probe: the DB is not expected to hold matching data; the row is
+        # reported separately and never counted in the headline hit-rate.
+        hit = len(top_ids) > 0
+        reciprocal = None
+        recall = None
         false_positive = None
     else:
         # No-match query: correct behaviour is an empty result set.
         hit = len(top_ids) == 0
         reciprocal = None
+        recall = None
         false_positive = len(top_ids)
     row = {
         "id": item["id"],
@@ -62,7 +72,9 @@ def run_one(con, item, limit, repeats):
         HIT10: hit,
         "rank": rank if expected else None,
         "rr": round(reciprocal, 4) if reciprocal is not None else None,
+        "recall@10": round(recall, 4) if recall is not None else None,
         "false_positive": false_positive,
+        "coverage_gap": coverage_gap,
         "top1": top_ids[0] if top_ids else None,
         "note": item.get("note", ""),
     }
@@ -70,20 +82,27 @@ def run_one(con, item, limit, repeats):
 
 
 def summarize(per_query, latencies):
-    labelled = [r for r in per_query if r["false_positive"] is None]
+    coverage = [r for r in per_query if r["coverage_gap"]]
+    labelled = [r for r in per_query if r["false_positive"] is None and not r["coverage_gap"]]
     no_match = [r for r in per_query if r["false_positive"] is not None]
     hits = [r for r in labelled if r[HIT10]]
     by_kind = {}
+    recall_by_kind = {}
     for kind in sorted({r["kind"] for r in per_query}):
         group = [r for r in labelled if r["kind"] == kind]
         if group:
             by_kind[kind] = round(sum(1 for r in group if r[HIT10]) / len(group), 4)
+            recall_by_kind[kind] = round(sum(r["recall@10"] or 0.0 for r in group) / len(group), 4)
     return {
         "queries_total": len(per_query),
         "queries_labelled": len(labelled),
         HIT10: round(len(hits) / len(labelled), 4) if labelled else None,
         "mrr@10": round(sum((r["rr"] or 0.0) for r in labelled) / len(labelled), 4) if labelled else None,
+        "recall@10": round(sum(r["recall@10"] or 0.0 for r in labelled) / len(labelled), 4) if labelled else None,
         "hit@10_by_kind": by_kind,
+        "recall@10_by_kind": recall_by_kind,
+        "coverage_gap_queries": len(coverage),
+        "coverage_gap_returning_results": sum(1 for r in coverage if r[HIT10]),
         "no_match_queries": len(no_match),
         "no_match_false_positives": sum(1 for r in no_match if r["false_positive"]),
         "latency_ms_p50": round(percentile(latencies, 0.50), 2),
@@ -124,7 +143,7 @@ def main():
         print(json.dumps(result["summary"], indent=2, ensure_ascii=False))
         if a.json_out:
             a.json_out.parent.mkdir(parents=True, exist_ok=True)
-            a.json_out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")  # NOSONAR(S8707)
+            a.json_out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")  # NOSONAR(S8707)
             print("full results:", a.json_out)
         return 0
     except (OSError, ValueError, KeyError, sqlite3.Error) as e:
