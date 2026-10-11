@@ -7,13 +7,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import html
 import io
 import json
 import os
 import sqlite3
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, unquote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from .store import (
     add_media,
@@ -41,6 +42,41 @@ MIME = {
     ".png": "image/png",
     ".ico": "image/x-icon",
 }
+
+
+
+def satellite_layer_config():
+    """Describe a licensed XYZ satellite source without proxying or downloading tiles.
+
+    A MapTiler browser key is intentionally visible to the client: restrict it by
+    Allowed HTTP Origin in the provider dashboard. Never use a secret server token.
+    """
+    custom_url = os.getenv("ATLAS_SATELLITE_TILES_URL", "").strip()
+    if custom_url:
+        parsed = urlsplit(custom_url)
+        permitted = parsed.scheme == "https" or (
+            parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+        )
+        attribution = os.getenv("ATLAS_SATELLITE_ATTRIBUTION", "").strip()
+        if not (permitted and parsed.netloc and attribution and
+                all("{" + axis + "}" in custom_url for axis in ("z", "x", "y"))):
+            return None
+        return {
+            "url": custom_url,
+            "attribution": html.escape(attribution),
+            "maxNativeZoom": 19,
+            "source": "custom",
+        }
+
+    key = os.getenv("ATLAS_MAPTILER_KEY", "").strip()
+    if not key or len(key) > 256:
+        return None
+    return {
+        "url": "https://api.maptiler.com/tiles/satellite-v4/{z}/{x}/{y}?key=" + quote(key, safe=""),
+        "attribution": '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> | Satellite imagery providers',
+        "maxNativeZoom": 19,
+        "source": "maptiler",
+    }
 
 
 def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
@@ -105,6 +141,8 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
         def do_GET(self):
             path, params = self.route()
             try:
+                if path == "/api/map-config":
+                    return self.json(200, {"satellite": satellite_layer_config()})
                 if path == "/api/health":
                     with session(db_path) as c:
                         c.execute("SELECT 1")
