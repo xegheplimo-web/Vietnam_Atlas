@@ -26,6 +26,7 @@ async function configureSatelliteLayer(){
     satelliteSource=sat.source;
     layers.satellite=L.tileLayer(sat.url,{
       maxZoom:20,maxNativeZoom:Math.min(20,Math.max(0,Number(sat.maxNativeZoom)||19)),
+      tileSize:sat.tileSize===512?512:256,zoomOffset:sat.tileSize===512?-1:0,
       attribution:sat.attribution,updateWhenIdle:true
     });
     let warned=false;
