@@ -264,5 +264,43 @@ class AtlasTest(unittest.TestCase):
             self.assertNotIn("<script>", credit)
 
 
+    def test_10_live_sse_updates_after_committed_write(self):
+        # Streaming clients should receive a committed revision without polling
+        # for all places or reopening the map.
+        with urlopen(self.base + "/api/live", timeout=5) as stream:
+            self.assertTrue(stream.headers["Content-Type"].startswith("text/event-stream"))
+            ready_lines = []
+            while True:
+                line = stream.readline().decode("utf-8").strip()
+                if not line:
+                    if any(x.startswith("event: ready") for x in ready_lines):
+                        break
+                    continue
+                ready_lines.append(line)
+            self.assertIn("event: ready", ready_lines)
+
+            code, created = self.request(
+                "/api/places",
+                "POST",
+                {"name": "Điểm live demo", "lat": 21.03, "lon": 105.85, "source": "test_live", "source_id": "stream-01"},
+            )
+            self.assertIn(code, (200, 201))
+            event_lines = []
+            while True:
+                line = stream.readline().decode("utf-8").strip()
+                if not line:
+                    if event_lines:
+                        break
+                    continue
+                event_lines.append(line)
+            self.assertIn("event: changed", event_lines)
+            self.assertTrue(any(line.startswith("id: ") for line in event_lines))
+            payload = json.loads(next(line.split("data: ", 1)[1] for line in event_lines if line.startswith("data: ")))
+            self.assertGreater(payload["revision"], 0)
+
+        place_id = created["item"]["id"]
+        self.request("/api/places/" + place_id, "DELETE")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
