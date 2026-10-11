@@ -7,9 +7,9 @@ import sys
 import tempfile
 import threading
 import unittest
-from unittest.mock import patch
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
