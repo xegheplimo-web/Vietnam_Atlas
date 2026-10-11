@@ -28,6 +28,44 @@ def normalize(text):
     return "".join(ch for ch in unicodedata.normalize("NFD", s) if unicodedata.category(ch) != "Mn")
 
 
+# Seed aliases commonly typed by Vietnamese users (normalized, no diacritics).
+# Keep entries short and unambiguous; expansions are space-separated token phrases.
+ALIAS_SEED = (
+    ("bv", "benh vien"),
+    ("ks", "khach san"),
+    ("dh", "dai hoc"),
+    ("tp", "thanh pho"),
+    ("tx", "thi xa"),
+    ("tt", "thi tran"),
+    ("dv", "dich vu"),
+    ("ubnd", "uy ban nhan dan"),
+)
+
+
+def search_alias_map(con):
+    """Return {alias: expansion} used to widen FTS queries; empty when the table is absent."""
+    try:
+        return {row["alias"]: row["expansion"] for row in con.execute("SELECT alias, expansion FROM search_aliases")}
+    except sqlite3.OperationalError:
+        return {}
+
+
+_AND = " AND "
+
+
+def build_match_query(tokens, aliases):
+    """FTS5 MATCH expression: tokens are prefix-matched; alias tokens also OR their expansion phrase."""
+    parts = []
+    for token in tokens:
+        expansion = aliases.get(token)
+        if expansion:
+            parts.append('("' + token + '"* OR "' + expansion + '"*)')
+        else:
+            parts.append('"' + token + '"*')
+    # Explicit AND: FTS5 rejects an implicit conjunction right after a parenthesised group.
+    return _AND.join(parts)
+
+
 def connect(dbpath):
     con = sqlite3.connect(str(dbpath), timeout=20)
     con.row_factory = sqlite3.Row
@@ -59,6 +97,7 @@ def init_db(dbpath):
           lat REAL NOT NULL, lon REAL NOT NULL, notes TEXT NOT NULL DEFAULT '',
           source TEXT NOT NULL DEFAULT 'user', source_id TEXT NOT NULL DEFAULT '',
           status TEXT NOT NULL DEFAULT 'unverified', search_text TEXT NOT NULL DEFAULT '',
+          name_norm TEXT NOT NULL DEFAULT '',
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
           CHECK(lat BETWEEN -90 AND 90), CHECK(lon BETWEEN -180 AND 180)
         );
@@ -75,6 +114,9 @@ def init_db(dbpath):
         CREATE INDEX IF NOT EXISTS idx_change_place ON changes(place_id, seq DESC);
         CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         INSERT OR IGNORE INTO metadata(key,value) VALUES('schema_version','1');
+        CREATE TABLE IF NOT EXISTS search_aliases (
+          alias TEXT PRIMARY KEY, expansion TEXT NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS memory_records (
           id TEXT PRIMARY KEY, place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
           kind TEXT NOT NULL, content TEXT NOT NULL, source TEXT NOT NULL,
@@ -90,6 +132,15 @@ def init_db(dbpath):
         );
         CREATE INDEX IF NOT EXISTS idx_media_place ON place_media(place_id);
         """)
+        con.executemany("INSERT OR IGNORE INTO search_aliases(alias, expansion) VALUES(?,?)", ALIAS_SEED)
+        # Migration: name_norm backs the SQL-side exact-name boost (databases created before it get ALTER + backfill).
+        columns = {row["name"] for row in con.execute("PRAGMA table_info(places)")}
+        if "name_norm" not in columns:
+            con.execute("ALTER TABLE places ADD COLUMN name_norm TEXT NOT NULL DEFAULT ''")
+        missing = con.execute("SELECT id, name FROM places WHERE name_norm = ''").fetchall()
+        if missing:
+            con.executemany("UPDATE places SET name_norm = ? WHERE id = ?", [(normalize(row["name"]), row["id"]) for row in missing])
+        con.execute("CREATE INDEX IF NOT EXISTS idx_places_name_norm ON places(name_norm)")
         # Search indexes are optional for SQLite builds without FTS5.
         try:
             con.executescript("""
@@ -142,11 +193,15 @@ def clean(payload):
         raise ValueError("Trạng thái không hợp lệ")
     p["source"] = p["source"] or "user"
     p["search_text"] = normalize(" ".join(p.get(k, "") for k in ("name", "category", "address", "province", "phone", "notes")))
+    p["name_norm"] = normalize(p["name"])
     return p
 
 
 def get_place(con, place_id):
-    return as_dict(con.execute("SELECT * FROM places WHERE id = ?", (place_id,)).fetchone())
+    place = as_dict(con.execute("SELECT * FROM places WHERE id = ?", (place_id,)).fetchone())
+    if place is not None:
+        place.pop("name_norm", None)  # internal ranking column, not part of the public record
+    return place
 
 
 def save_place(con, payload, place_id=None):
@@ -162,13 +217,13 @@ def save_place(con, payload, place_id=None):
     old = get_place(con, place_id)
     now = utcnow()
     if old:
-        columns = [k for k in FIELDS] + ["search_text", "updated_at"]
-        vals = [p[k] for k in FIELDS] + [p["search_text"], now, place_id]
+        columns = [k for k in FIELDS] + ["search_text", "name_norm", "updated_at"]
+        vals = [p[k] for k in FIELDS] + [p["search_text"], p["name_norm"], now, place_id]
         con.execute("UPDATE places SET " + ",".join(f"{k}=?" for k in columns) + " WHERE id=?", vals)
         action = "update"
     else:
-        columns = ["id", *list(FIELDS), "search_text", "created_at", "updated_at"]
-        vals = [place_id] + [p[k] for k in FIELDS] + [p["search_text"], now, now]
+        columns = ["id", *list(FIELDS), "search_text", "name_norm", "created_at", "updated_at"]
+        vals = [place_id] + [p[k] for k in FIELDS] + [p["search_text"], p["name_norm"], now, now]
         con.execute("INSERT INTO places (" + ",".join(columns) + ") VALUES (" + ",".join("?" for _ in columns) + ")", vals)
         action = "create"
     current = get_place(con, place_id)
@@ -240,37 +295,69 @@ def add_media(con, place_id, payload):
     return dict(con.execute("SELECT * FROM place_media WHERE id=?", (mid,)).fetchone())
 
 
+def _search_clause(con, search, where, args):
+    """Extend where/args with the search predicate; return (join fragment, ranked flag)."""
+    tokens = re.findall(r"[\w]+", normalize(search))[:8]
+    fts = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='places_fts'").fetchone()
+    if tokens and fts:
+        join = " JOIN places_fts ON places.rowid=places_fts.rowid"
+        # Candidate set: AND-of-prefixes (+ alias OR-expansions). Exact-name priority is a
+        # SQL-side ranking boost (name_norm), NOT a candidate filter — reordered or aliased
+        # matches must stay findable.
+        where.append("places_fts MATCH ?")
+        args.append(build_match_query(tokens, search_alias_map(con)))
+        return join, True
+    for token in tokens:
+        where.append("places.search_text LIKE ?")
+        args.append("%" + token + "%")
+    return "", False
+
+
+def _bbox_clause(bbox, where, args):
+    """Extend where/args with the viewport bbox predicate (handles antimeridian wrap)."""
+    w, s, e, n = bbox
+    if w <= e:
+        where.append("places.lon BETWEEN ? AND ?")
+        args.extend((w, e))
+    else:
+        where.append("(places.lon >= ? OR places.lon <= ?)")
+        args.extend((w, e))
+    where.append("places.lat BETWEEN ? AND ?")
+    args.extend((s, n))
+
+
 def list_places(con, search="", province="", bbox=None, limit=500, offset=0):
     where = []
     args = []
     join = ""
+    ranked = False
     if province:
         where.append("places.province = ?")
         args.append(province)
     if search:
-        tokens = re.findall(r"[\w]+", normalize(search))[:8]
-        fts = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='places_fts'").fetchone()
-        if tokens and fts:
-            join = " JOIN places_fts ON places.rowid=places_fts.rowid"
-            where.append("places_fts MATCH ?")
-            args.append(" ".join('"' + t + '"*' for t in tokens))
-        else:
-            for token in tokens:
-                where.append("places.search_text LIKE ?")
-                args.append("%" + token + "%")
+        join, ranked = _search_clause(con, search, where, args)
     if bbox:
-        w, s, e, n = bbox
-        if w <= e:
-            where.append("places.lon BETWEEN ? AND ?")
-            args.extend((w, e))
-        else:
-            where.append("(places.lon >= ? OR places.lon <= ?)")
-            args.extend((w, e))
-        where.append("places.lat BETWEEN ? AND ?")
-        args.extend((s, n))
+        _bbox_clause(bbox, where, args)
     base = " FROM places" + join
-    predicate = (" WHERE " + " AND ".join(where)) if where else ""
+    predicate = (" WHERE " + _AND.join(where)) if where else ""
     count = con.execute("SELECT COUNT(*)" + base + predicate, args).fetchone()[0]
+    if ranked:
+        # Relevance order fully in SQL (stable across pages, no Python materialization of
+        # deep offsets): exact normalized-name match first, then BM25, then recency.
+        rows = con.execute(
+            "SELECT places.*, bm25(places_fts) AS search_rank"
+            + base
+            + predicate
+            + " ORDER BY (CASE WHEN places.name_norm = ? THEN 0 ELSE 1 END), search_rank, places.updated_at DESC, places.id LIMIT ? OFFSET ?",
+            [*args, normalize(search).strip(), limit, offset],
+        ).fetchall()
+        out = []
+        for row in rows:
+            item = dict(row)
+            item.pop("search_rank", None)
+            item.pop("name_norm", None)
+            out.append(item)
+        return out, count
     rows = con.execute(
         "SELECT places.*" + base + predicate + " ORDER BY places.updated_at DESC, places.id LIMIT ? OFFSET ?", [*args, limit, offset]
     ).fetchall()
@@ -286,7 +373,7 @@ def stats(con):
 
 
 def geometry_feature(p):
-    attrs = {k: v for k, v in p.items() if k not in ("lat", "lon", "search_text")}
+    attrs = {k: v for k, v in p.items() if k not in ("lat", "lon", "search_text", "name_norm")}
     return {"type": "Feature", "id": p["id"], "geometry": {"type": "Point", "coordinates": [p["lon"], p["lat"]]}, "properties": attrs}
 
 

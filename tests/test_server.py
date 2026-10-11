@@ -345,6 +345,169 @@ class AtlasTest(unittest.TestCase):
         finally:
             live.slots.release()
 
+    def test_13_search_relevance_and_vietnamese_aliases(self):
+        # Exact normalized-name match must beat a newer row that only shares tokens (BM25 + exact boost).
+        code, older = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon", "lat": 21.03, "lon": 105.85, "category": "restaurant", "source": "test_search", "source_id": "rank-old"},
+        )
+        self.assertEqual(code, 201)
+        code, newer = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon 2", "lat": 21.04, "lon": 105.86, "category": "restaurant", "source": "test_search", "source_id": "rank-new"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=qu%C3%A1n%20%C4%83n%20ngon")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertEqual(ids[0], older["item"]["id"])  # exact name first, despite being older
+        self.assertIn(newer["item"]["id"], ids)
+
+        # Vietnamese aliases: bv → bệnh viện.
+        code, hosp = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Bệnh viện Đa khoa Tâm Anh",
+                "lat": 21.0,
+                "lon": 105.8,
+                "category": "hospital",
+                "source": "test_search",
+                "source_id": "alias-hosp",
+            },
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=bv%20tam%20anh")
+        self.assertEqual(next(x["id"] for x in result["items"]), hosp["item"]["id"])
+
+        # The alias OR keeps the literal token working too (ubnd stays ubnd).
+        code, gov = self.request(
+            "/api/places",
+            "POST",
+            {"name": "UBND xã Test Alias", "lat": 21.05, "lon": 105.87, "category": "townhall", "source": "test_search", "source_id": "alias-gov"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=ubnd%20xa%20test")
+        self.assertEqual(next(x["id"] for x in result["items"]), gov["item"]["id"])
+
+        # Unrelated query returns nothing (no false positives).
+        code, result = self.request("/api/places?search=zzzqqq%20khong%20co")
+        self.assertEqual(result["total"], 0)
+        self.assertEqual(result["items"], [])
+
+        for item in (older, newer, hosp, gov):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_14_benchmark_harness_scores_fixed_queries(self):
+        import importlib.util
+
+        root = Path(__file__).resolve().parents[1]
+        spec = importlib.util.spec_from_file_location("search_benchmark", root / "tools" / "search_benchmark.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        code, created = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Bến xe Miền Đông Mới", "lat": 10.85, "lon": 106.8, "category": "bus_station", "source": "test_bench", "source_id": "bench-01"},
+        )
+        self.assertEqual(code, 201)
+        pid = created["item"]["id"]
+        queries = [
+            {"id": "b1", "kind": "exact_name", "query": "Bến xe Miền Đông Mới", "expected_ids": [pid]},
+            {"id": "b2", "kind": "no_match", "query": "zzzqqq khong co gi", "expected_ids": []},
+        ]
+        result = module.run_benchmark(self.db, queries, limit=10, repeats=1)
+        self.assertEqual(result["summary"]["hit@10"], 1.0)
+        self.assertEqual(result["summary"]["no_match_false_positives"], 0)
+        self.request("/api/places/" + pid, "DELETE")
+
+    def test_16_reordered_matches_survive_exact_boost(self):
+        # PR#6 review: a phrase-first candidate set used to hide reordered matches.
+        # The exact match must rank first while reordered-token matches stay findable.
+        code, a = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon T16", "lat": 21.02, "lon": 105.83, "category": "restaurant", "source": "test_search", "source_id": "reorder-a"},
+        )
+        self.assertEqual(code, 201)
+        code, b = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ngon Ăn T16", "lat": 21.021, "lon": 105.831, "category": "restaurant", "source": "test_search", "source_id": "reorder-b"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=quan%20an%20ngon%20t16&limit=50")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertEqual(ids[0], a["item"]["id"])
+        self.assertIn(b["item"]["id"], ids)
+        for item in (a, b):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_17_bbox_search_keeps_reordered_in_map(self):
+        # PR#6 review: an off-map phrase match used to empty an otherwise valid in-map search
+        # (the phrase probe ignored the viewport filter).
+        code, far = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ăn Ngon T17", "lat": 21.03, "lon": 105.85, "category": "restaurant", "source": "test_search", "source_id": "bbox-far"},
+        )
+        self.assertEqual(code, 201)
+        code, near = self.request(
+            "/api/places",
+            "POST",
+            {"name": "Quán Ngon Ăn T17", "lat": 16.05, "lon": 108.20, "category": "restaurant", "source": "test_search", "source_id": "bbox-near"},
+        )
+        self.assertEqual(code, 201)
+        code, result = self.request("/api/places?search=quan%20an%20ngon%20t17&bbox=108.15,16.0,108.25,16.1")
+        self.assertEqual(code, 200)
+        ids = [x["id"] for x in result["items"]]
+        self.assertIn(near["item"]["id"], ids)
+        self.assertNotIn(far["item"]["id"], ids)
+        for item in (far, near):
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_15_long_exact_name_survives_doc_length_bias(self):
+        # A long exact name must outrank many short names sharing the same leading tokens:
+        # BM25 doc-length bias used to bury it beyond the fetch window (phrase-first match pins it).
+        created = []
+        for i in range(12):
+            code, item = self.request(
+                "/api/places",
+                "POST",
+                {
+                    "name": f"Trường Tiểu học và Trung học cơ sở Test {i}",
+                    "lat": 21.02,
+                    "lon": 105.83,
+                    "category": "school",
+                    "source": "test_search",
+                    "source_id": f"bias-{i}",
+                },
+            )
+            self.assertEqual(code, 201)
+            created.append(item)
+        code, exact = self.request(
+            "/api/places",
+            "POST",
+            {
+                "name": "Trường Trung Học Cơ Sở Và Trung Học Phổ Thông Test Long",
+                "lat": 21.03,
+                "lon": 105.84,
+                "category": "school",
+                "source": "test_search",
+                "source_id": "bias-exact",
+            },
+        )
+        self.assertEqual(code, 201)
+        created.append(exact)
+        code, result = self.request("/api/places?search=truong%20trung%20hoc%20co%20so%20va%20trung%20hoc%20pho%20thong%20test%20long")
+        self.assertEqual(code, 200)
+        self.assertEqual(next(x["id"] for x in result["items"]), exact["item"]["id"])
+        for item in created:
+            self.request("/api/places/" + item["item"]["id"], "DELETE")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

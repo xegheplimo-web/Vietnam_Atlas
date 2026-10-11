@@ -1,0 +1,361 @@
+{
+  "summary": {
+    "queries_total": 31,
+    "queries_labelled": 27,
+    "hit@10": 0.7778,
+    "mrr@10": 0.7593,
+    "hit@10_by_kind": {
+      "alias": 0.0,
+      "category_token": 1.0,
+      "exact_name": 1.0,
+      "no_diacritic": 1.0
+    },
+    "no_match_queries": 4,
+    "no_match_false_positives": 0,
+    "latency_ms_p50": 0.15,
+    "latency_ms_p95": 0.34
+  },
+  "per_query": [
+    {
+      "id": "exact_01",
+      "kind": "exact_name",
+      "query": "Bệnh Viện Đa Khoa Long An - Khoa Nội A1",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "06b98aef-c7db-4296-b9d9-8d14538a2e44",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "exact_02",
+      "kind": "exact_name",
+      "query": "Khách Sạn Hanoi Backpackers Palace",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "f19ebbda-1de6-4044-8828-29e03e394429",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "exact_03",
+      "kind": "exact_name",
+      "query": "Nhà Hàng Tiệc Cưới 108 Nguyễn Du",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "e7176363-3735-4178-811d-511a5181dff9",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "exact_04",
+      "kind": "exact_name",
+      "query": "Trường Trung Học Cơ Sở Và Trung Học Phổ Thông Hà Long",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "00517b68-bd18-4fec-9d57-604ba2c287b4",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "exact_05",
+      "kind": "exact_name",
+      "query": "Chợ Vàm Sáng Cây Dương",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "7b4f32f9-82d0-48ba-801d-72ff530dbf5b",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "exact_06",
+      "kind": "exact_name",
+      "query": "UBND Phường Đông Giang",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "a9ff07b2-8d3f-4879-80f4-7ecacd9e15f0",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "exact_07",
+      "kind": "exact_name",
+      "query": "Công viên nước Đăk Lăk",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "d0a32e50-7543-4a2e-a9c4-f9553e6898e5",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "exact_08",
+      "kind": "exact_name",
+      "query": "Bến phà Bến Chùa - bờ Tân Phú Đông",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "03d391bd-b121-4f49-8b45-1600363369e7",
+      "note": "tên đầy đủ có dấu"
+    },
+    {
+      "id": "nodiac_09",
+      "kind": "no_diacritic",
+      "query": "benh vien phu san quoc te phuong chau",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "6571c592-770a-4061-874a-13465c0e44df",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "nodiac_10",
+      "kind": "no_diacritic",
+      "query": "khach san little saigon boutique",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "3bf80117-c97d-4b30-a643-77d1242b55bc",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "nodiac_11",
+      "kind": "no_diacritic",
+      "query": "nha hang chay & ca phe thup an",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "a36aa76e-0934-4979-b0ba-de5048b2a9dc",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "nodiac_12",
+      "kind": "no_diacritic",
+      "query": "truong tieu hoc nam mon 2 - phan hieu lang muong",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "0a7bc068-5faa-473f-8c65-41894ac1ca95",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "nodiac_13",
+      "kind": "no_diacritic",
+      "query": "cho trung tam pleiku",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "62436cc6-313f-4ad6-b88c-111171860029",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "nodiac_14",
+      "kind": "no_diacritic",
+      "query": "ubnd huyen chau thanh",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "05a220d6-1d8f-485f-b3ae-b5c398ace194",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "nodiac_15",
+      "kind": "no_diacritic",
+      "query": "ca phe giai khat diem tam wifi hoi quan tre",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "66382e71-6162-490a-966c-d7e220352bf0",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "nodiac_16",
+      "kind": "no_diacritic",
+      "query": "nha tho thanh phao lo",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "7e418747-9afd-4db4-828d-f69a7c401439",
+      "note": "tên không dấu"
+    },
+    {
+      "id": "alias_17",
+      "kind": "alias",
+      "query": "bv da khoa tu nhan van cao",
+      "hit@10": false,
+      "rank": null,
+      "rr": 0.0,
+      "false_positive": null,
+      "top1": null,
+      "note": "bv → bệnh viện"
+    },
+    {
+      "id": "alias_18",
+      "kind": "alias",
+      "query": "bv dai hoc tay nguyen",
+      "hit@10": false,
+      "rank": null,
+      "rr": 0.0,
+      "false_positive": null,
+      "top1": null,
+      "note": "bv → bệnh viện"
+    },
+    {
+      "id": "alias_19",
+      "kind": "alias",
+      "query": "bv hoan my da nang",
+      "hit@10": false,
+      "rank": null,
+      "rr": 0.0,
+      "false_positive": null,
+      "top1": null,
+      "note": "bv → bệnh viện"
+    },
+    {
+      "id": "alias_20",
+      "kind": "alias",
+      "query": "ks windsor plaza sai gon",
+      "hit@10": false,
+      "rank": null,
+      "rr": 0.0,
+      "false_positive": null,
+      "top1": null,
+      "note": "ks → khách sạn"
+    },
+    {
+      "id": "alias_21",
+      "kind": "alias",
+      "query": "ks little hanoi diamond",
+      "hit@10": false,
+      "rank": null,
+      "rr": 0.0,
+      "false_positive": null,
+      "top1": null,
+      "note": "ks → khách sạn"
+    },
+    {
+      "id": "alias_22",
+      "kind": "alias",
+      "query": "dh ngan hang",
+      "hit@10": false,
+      "rank": null,
+      "rr": 0.0,
+      "false_positive": null,
+      "top1": null,
+      "note": "dh → đại học"
+    },
+    {
+      "id": "cat_23",
+      "kind": "category_token",
+      "query": "khach san",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "00bd2bb7-50aa-4735-951f-4eeb2b5d94e2",
+      "note": "cụm từ khóa 'khach san' trong tên (158 POI khớp — hit nếu top10 chứa bất kỳ)"
+    },
+    {
+      "id": "cat_24",
+      "kind": "category_token",
+      "query": "benh vien",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "0ccffe57-4148-45bc-99c8-15fbcedf2073",
+      "note": "cụm từ khóa 'benh vien' trong tên (16 POI khớp — hit nếu top10 chứa bất kỳ)"
+    },
+    {
+      "id": "cat_25",
+      "kind": "category_token",
+      "query": "nha hang",
+      "hit@10": true,
+      "rank": 2,
+      "rr": 0.5,
+      "false_positive": null,
+      "top1": "0443f048-4dce-4762-8f2b-94d4897ebf87",
+      "note": "cụm từ khóa 'nha hang' trong tên (135 POI khớp — hit nếu top10 chứa bất kỳ)"
+    },
+    {
+      "id": "cat_26",
+      "kind": "category_token",
+      "query": "nha tho",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "087f496e-e4c9-4181-8621-051dfd241ef1",
+      "note": "cụm từ khóa 'nha tho' trong tên (13 POI khớp — hit nếu top10 chứa bất kỳ)"
+    },
+    {
+      "id": "cat_27",
+      "kind": "category_token",
+      "query": "cafe",
+      "hit@10": true,
+      "rank": 1,
+      "rr": 1.0,
+      "false_positive": null,
+      "top1": "002a7516-4977-424c-ae24-7c0dfdbbd7d2",
+      "note": "cafe → category amenity:cafe (839 POI khớp — hit nếu top10 chứa bất kỳ)"
+    },
+    {
+      "id": "nomatch_28",
+      "kind": "no_match",
+      "query": "zxqwvbnm",
+      "hit@10": true,
+      "rank": null,
+      "rr": null,
+      "false_positive": 0,
+      "top1": null,
+      "note": "không có kết quả đúng"
+    },
+    {
+      "id": "nomatch_29",
+      "kind": "no_match",
+      "query": "bệnh viện zzz không tồn tại",
+      "hit@10": true,
+      "rank": null,
+      "rr": null,
+      "false_positive": 0,
+      "top1": null,
+      "note": "không có kết quả đúng"
+    },
+    {
+      "id": "nomatch_30",
+      "kind": "no_match",
+      "query": "pizza 99999 xyz",
+      "hit@10": true,
+      "rank": null,
+      "rr": null,
+      "false_positive": 0,
+      "top1": null,
+      "note": "không có kết quả đúng"
+    },
+    {
+      "id": "nomatch_31",
+      "kind": "no_match",
+      "query": "quán ăn qwertyuiop",
+      "hit@10": true,
+      "rank": null,
+      "rr": null,
+      "false_positive": 0,
+      "top1": null,
+      "note": "không có kết quả đúng"
+    }
+  ]
+}
