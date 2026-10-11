@@ -22,6 +22,7 @@
     ".github/workflows/ci.yml": "f1f6eb6766f2be30cc31a428781fc0ad0ff2fdd482a520b72146e5e3e1ef7e81",
     ".github/workflows/codeql.yml": "929f53fbd87f396c95f373bcdff0d37d720ed057bedb32a04f05499c49d85de0",
     ".gitignore": "b5db4f4c612834d59c8fdced2757cd3df117b9c6f5ff0fb92ca481d53c7b0c42",
+    "COMMERCIAL_USE.md": "979396d37f986f7f86dfc3c619fa0873249c2f83c05bc7ffd2b005ade3f8fea0",
     "compose.yaml": "f3e84a77d2bee97cc33aec7aae5c264597eb92098511c3ed5326b5492abc84ba",
     "data/province_mergers_2025.json": "3450afeea2adb8648225f2dff60d520fd17c3d09fe8b3487ab0c1ac5d15b1109",
     "data/provinces_34.json": "bfa682830f9507d09c506a74e696bea146391f33898b37f005729e699e09775d",
@@ -30,13 +31,14 @@
     "Dockerfile": "63e09a00c805fd74a4645af363fdf14eb6dfe00356eeec670ff8abbd383a9a3c",
     "docs/API.md": "793f73d5f8337a84488f0aee0ecb3143225a3ac092e366911bebd21ddcb4c699",
     "docs/ARCHITECTURE.md": "6e32d9a562e5373507416eed0d36b32b39aae2d7d4575c6cbdb7876298863359",
-    "docs/LICENSING.md": "e584096c3a9242deb3afac5dc88fed96dc8cbefb906e886d85dbe655d7481a36",
+    "docs/LICENSING.md": "7c136b3f21003b3f7b4656c2a595eea4759a782da92b5336e1afee7130dd5d03",
     "docs/OFFLINE_ROADS.md": "cd642a2c805a3d5a591108dbd04c9943e83af44ff436db6844aae3dc47725cfd",
     "docs/schema_postgis_optional.sql": "fa8107777017e317099434531d6aed173404ca4c8477b6f024e13c3557bfee93",
     "docs/VERIFICATION.md": "aa16303e72b635a40d40ce8a964dc37ace43e4e3534cab6433f83238ea9611bb",
-    "LICENSE": "d1fb218a5b32f4580cb348a4a5579a94144dab70c4dd1fc3ca92348dc3387b20",
+    "LICENSE": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
+    "NOTICE": "94b4ea0137cebdc64efd3d39957bacd8b2233689ecfab87575f9f703d2611d7b",
     "pyproject.toml": "bfdc5eb77d41a631da94d637c6b71ab2030e38e54b275daa6255a00c5ea0185a",
-    "README.md": "44e64f79a4649c12d26195d04ab59e07f6b0e3a1dd55d5121e4f408c7232e092",
+    "README.md": "b3313d87ff446b5c12e1f1faffe2a46f1606c8b0c4fc327c7b09722b84526973",
     "RUN_CHECKS_WINDOWS.bat": "bad466d1745c67e2c1f779f4c91bf1a62277707de94eedf469a28e03a4599986",
     "server/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "server/app.py": "67413912cb40d0dfa9aa2d4b0e61632ba49dc7f96b7257440c7f8b889b742474",
@@ -58,6 +60,6 @@
     "repository": "https://github.com/xegheplimo-web/Vietnam_Atlas",
     "ci": "GitHub Actions: test matrix (Ubuntu Python 3.10-3.14, Windows 3.12), ruff lint + format check, compileall, node --check, JSON validation, Docker build + /api/health smoke test, CodeQL",
     "verified_locally_before_publish": "8/8 integration tests (Python 3.14.7), ruff check clean, ruff format clean, compileall OK, node --check OK, JSON valid, docker build OK, container /api/health OK",
-    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section"
+    "post_zip_changes": "ruff format normalization; lint fixes (B904, PIE810, PLW1510, RUF001, RUF059, F841, RUF005); added LICENSE (MIT), pyproject.toml (ruff config), .gitattributes, .editorconfig, .github/workflows/ci.yml, .github/workflows/codeql.yml, .github/dependabot.yml; README badges + CI section; license switched MIT->PolyForm Noncommercial 1.0.0 (PR #1, merged 2026-10-10T23:57:18Z), prior MIT grants remain valid for earlier revisions; see NOTICE, COMMERCIAL_USE.md, docs/LICENSING.md"
   }
 }
