@@ -833,6 +833,53 @@ class AtlasTest(unittest.TestCase):
             self.assertEqual(total, 1)
             self.assertEqual(items[0]["source_id"], "t27-fallback")
 
+    def test_28_geo_scope_search(self):
+        # Province name in the query geo-scopes results: in-polygon POIs win via
+        # province_code, while literal text matches (outside polygon / unassigned)
+        # stay reachable through the OR fallback.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                save_place(con, {"name": "Phở Geo T28", "lat": 10.776, "lon": 106.700, "source": "t28", "source_id": "t28-hcm1"})
+                save_place(con, {"name": "Phở Geo T28 Hai", "lat": 10.81, "lon": 106.67, "source": "t28", "source_id": "t28-hcm2"})
+                save_place(con, {"name": "Phở Geo T28 HN", "lat": 21.03, "lon": 105.85, "source": "t28", "source_id": "t28-hn"})
+                # Sea point (outside every polygon) that names the province literally.
+                save_place(
+                    con,
+                    {"name": "Phở Biển T28", "address": "Hồ Chí Minh", "lat": 16.0, "lon": 110.0, "source": "t28", "source_id": "t28-sea"},
+                )
+                save_place(con, {"name": "Quán Ăn T28", "lat": 22.147, "lon": 105.834, "source": "t28", "source_id": "t28-bk"})
+            with session(db) as con:
+                items, _total = list_places(con, search="phở hồ chí minh")
+                ids = {x["source_id"] for x in items}
+                in_hcm = [x for x in items if x["province_code"] == "79"]
+                self.assertGreaterEqual(len(in_hcm), 2)
+                self.assertIn("t28-hcm1", ids)
+                self.assertIn("t28-hcm2", ids)
+                # No text mention of HCM → the Hà Nội POI is out of scope.
+                self.assertNotIn("t28-hn", ids)
+                # Outside-polygon POI still found via the province-text fallback.
+                self.assertIn("t28-sea", ids)
+                # Old province name scopes to the merged province (Bắc Kạn → Thái Nguyên).
+                items, _total = list_places(con, search="quán ăn bắc kạn")
+                self.assertGreaterEqual(len(items), 1)
+                self.assertEqual(items[0]["province_code"], "19")
+                self.assertEqual(items[0]["source_id"], "t28-bk")
+                # No province in query → old behaviour: both provinces' POIs return.
+                items, _total = list_places(con, search="phở geo t28")
+                self.assertEqual({x["province_code"] for x in items}, {"79", "01"})
+
+    def test_29_save_place_assigns_province_code(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "geo.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                current, _ = save_place(con, {"name": "T29 HCM", "lat": 10.776, "lon": 106.700, "source": "t29", "source_id": "t29-in"})
+                self.assertEqual(current["province_code"], "79")
+                current, _ = save_place(con, {"name": "T29 Sea", "lat": 16.0, "lon": 110.0, "source": "t29", "source_id": "t29-out"})
+                self.assertIsNone(current["province_code"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

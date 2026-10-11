@@ -244,12 +244,36 @@ def _best_match(query: tuple, candidates) -> tuple | None:
     return best
 
 
-def resolve_province(text):
-    """Resolve tên tỉnh (có dấu/không dấu/alias cũ) → Province; None nếu không khớp.
+def _subspan_match(query: tuple, candidates) -> tuple | None:
+    """Khớp cụm con: dãy con liên tiếp (≥2 token) của query nằm trong token của 1 ứng viên.
 
-    Khớp theo ranh giới từ/cụm: token của tên tỉnh phải xuất hiện liên tiếp trong
-    token truy vấn (vd "tp hồ chí minh" khớp "hồ chí minh"). Ưu tiên tên hiện hành
-    (name/full_name, khớp dài nhất), sau đó alias cũ→mới từ province_mergers_2025.json.
+    Vd "vũng tàu" ⊆ "bà rịa vũng tàu". Không khớp 1 token đơn ("tàu", "phú").
+    Deterministic: span dài nhất trước, rồi vị trí trái nhất, rồi thứ tự ứng viên.
+    """
+    max_len = min(len(query), max((len(toks) for toks, _ in candidates), default=0))
+    for length in range(max_len, 1, -1):
+        for start in range(len(query) - length + 1):
+            span = query[start : start + length]
+            for toks, value in candidates:
+                if _is_subsequence(span, toks):
+                    return (span, value)
+    return None
+
+
+def _candidates_for(province) -> list:
+    """Mọi cụm token resolve về cùng 1 tỉnh: name_norm, full_name và alias cũ→mới."""
+    pairs = [(_tokens(province.name_norm), province), (_tokens(province.full_name), province)]
+    pairs.extend((toks, target) for toks, target in _province_aliases() if target is province)
+    return pairs
+
+
+def resolve_province_detail(text):
+    """Resolve → (Province, consumed_span, kind) | None; consumed_span = token truy vấn đã dùng.
+
+    kind "name": khớp tên hiện hành/full_name; "alias": khớp alias cũ→mới hoặc cụm
+    con ≥2 token của tên/alias ("vũng tàu" ⊆ "bà rịa vũng tàu"). consumed_span là
+    cụm dài nhất trong các ứng viên cùng resolve về tỉnh đó (vd "thừa thiên huế"
+    dài hơn "huế" dù cùng → Huế) — để search loại đúng token khỏi text-match.
     """
     if not text:
         return None
@@ -261,9 +285,27 @@ def resolve_province(text):
         ((toks, province) for province in _provinces() for toks in (_tokens(province.name_norm), _tokens(province.full_name))),
     )
     if current is not None:
-        return current[1]
+        province = current[1]
+        span = _best_match(query, _candidates_for(province))
+        return province, span[0], "name"
     alias = _best_match(query, _province_aliases())
-    return alias[1] if alias is not None else None
+    if alias is not None:
+        return alias[1], alias[0], "alias"
+    candidates = [(_tokens(province.name_norm), province) for province in _provinces()] + list(_province_aliases())
+    hit = _subspan_match(query, candidates)
+    return (hit[1], hit[0], "alias") if hit is not None else None
+
+
+def resolve_province(text):
+    """Resolve tên tỉnh (có dấu/không dấu/alias cũ) → Province; None nếu không khớp.
+
+    Khớp theo ranh giới từ/cụm: token của tên tỉnh phải xuất hiện liên tiếp trong
+    token truy vấn (vd "tp hồ chí minh" khớp "hồ chí minh"). Ưu tiên tên hiện hành
+    (name/full_name, khớp dài nhất), sau đó alias cũ→mới từ province_mergers_2025.json.
+    Khi không khớp trọn cụm, thử cụm con ≥2 token ("vũng tàu" ⊆ "bà rịa vũng tàu").
+    """
+    detail = resolve_province_detail(text)
+    return detail[0] if detail is not None else None
 
 
 def province_bbox(code_or_name):

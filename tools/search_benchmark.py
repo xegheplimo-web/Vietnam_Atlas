@@ -33,16 +33,19 @@ def percentile(values, q):
 
 def run_one(con, item, limit, repeats):
     """Score a single labelled query; returns (per-query row, latency samples in ms)."""
+    from server import geo
     from server.store import list_places
 
     query = item["query"]
     expected = set(item.get("expected_ids") or [])
     top_ids: list = []
+    top_rows: list = []
     latencies = []
     for _ in range(repeats):
         started = time.perf_counter()
         rows, _count = list_places(con, search=query, limit=limit)
         latencies.append((time.perf_counter() - started) * 1000)
+        top_rows = rows
         top_ids = [row["id"] for row in rows if row]
     rank = None
     coverage_gap = bool(item.get("coverage_gap"))
@@ -65,6 +68,13 @@ def run_one(con, item, limit, repeats):
         reciprocal = None
         recall = None
         false_positive = len(top_ids)
+    # Secondary geo metric (never counted in hit@10): does the top-10 contain a
+    # POI physically inside the province the query resolved to? Reported honestly
+    # for coverage-gap queries that have no labelable expected IDs.
+    resolved = geo.resolve_province(query)
+    geo_hit = None
+    if coverage_gap and resolved is not None:
+        geo_hit = any((found := geo.province_at(row["lat"], row["lon"])) is not None and found.code == resolved.code for row in top_rows)
     row = {
         "id": item["id"],
         "kind": item.get("kind", ""),
@@ -76,6 +86,8 @@ def run_one(con, item, limit, repeats):
         "false_positive": false_positive,
         "coverage_gap": coverage_gap,
         "top1": top_ids[0] if top_ids else None,
+        "geo_province": resolved.name if resolved is not None else None,
+        "geo_hit": geo_hit,
         "note": item.get("note", ""),
     }
     return row, latencies
@@ -103,6 +115,8 @@ def summarize(per_query, latencies):
         "recall@10_by_kind": recall_by_kind,
         "coverage_gap_queries": len(coverage),
         "coverage_gap_returning_results": sum(1 for r in coverage if r[HIT10]),
+        "coverage_gap_geo_hits": sum(1 for r in coverage if r["geo_hit"]),
+        "geo_resolved_queries": sum(1 for r in per_query if r["geo_province"] is not None),
         "no_match_queries": len(no_match),
         "no_match_false_positives": sum(1 for r in no_match if r["false_positive"]),
         "latency_ms_p50": round(percentile(latencies, 0.50), 2),

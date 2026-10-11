@@ -60,3 +60,35 @@ Headline round-B numbers with the audited ground truth: Hit@10 132/136
 place qualifier (`hồ chí minh`, `hải phòng`, `việt trì`, `vũng tàu`) is not in
 the POI name — the AND-token engine cannot combine a category token with a
 geo qualifier. Tracked for round C (geo-aware category search).
+
+## Round C — geo-aware province search (2026-10-12, `after_round_c.json`)
+
+Province polygons (round C · T1) are now wired into search. `places` gained a
+`province_code` column (GSO code, `province_at(lat, lon)` point-in-polygon);
+`tools/backfill_province_codes.py` assigned 96,893 of 98,617 POIs and reports
+1,724 POIs outside all polygons (islands/coastal edge) — kept, never deleted.
+
+A query containing a province name — current (`hồ chí minh`) or legacy alias
+(`bắc kạn`, `vũng tàu` ⊆ `bà rịa–vũng tàu`; min 2-token subspans only, longest
+match wins) — scopes to `(province_code = <code> OR province text match)`. The
+scoped ranking is a two-branch UNION: the legacy pool (full-expression match ∧
+province text) keeps full-token BM25, then in-polygon rows matching the
+remaining tokens (accent-faithful names first, then the rest). This preserves
+round-B ordering for text-labelled POIs while adding POIs that only exist
+geographically (empty `province`/`address` in the snapshot).
+
+Headline round-C numbers on the same 150 queries / labels:
+
+- Hit@10 **135/136 (99.26%)** (round B: 132/136 = 97.06%) — zero regressions.
+- MRR@10 **0.914** (was 0.871), Recall@10 **0.866** (was 0.842).
+- Fixed: `phở hồ chí minh`, `quán ăn hải phòng`, `cơm vũng tàu` (all hit@10=1).
+- Still missing: `phở việt trì` — Việt Trì is a city in Phú Thọ, not a
+  province; province polygons cannot scope to it. Needs ward/city-level data.
+- `coverage_gap` queries are still excluded from the headline rate; the new
+  secondary metric `geo_hit` (any top-10 POI resolving to the requested new
+  province by coordinates) reports **4/4**: `cơm Phú Yên`→Đắk Lắk,
+  `quán ăn Bình Thuận`→Lâm Đồng, `khách sạn Đắk Nông`→Lâm Đồng,
+  `quán ăn Bắc Kạn`→Thái Nguyên.
+- `geo_resolved_queries`: 50 queries carry a province reference.
+- no-match false positives: 0/10. p50 8.2 ms, p95 45.2 ms (union runs two FTS
+  matches — roughly 2× round-B latency, still well under the 200 ms budget).

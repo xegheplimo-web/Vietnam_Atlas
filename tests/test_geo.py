@@ -94,6 +94,32 @@ class ResolveProvinceTest(unittest.TestCase):
         self.assertIsNone(geo.resolve_province(""))
 
 
+class SubspanResolveTest(unittest.TestCase):
+    """Contained multi-token phrases of old province names resolve; single tokens don't."""
+
+    def test_vung_tau_resolves_hcm(self):
+        self.assertEqual(geo.resolve_province("vũng tàu").name, "Hồ Chí Minh")
+        self.assertEqual(geo.resolve_province("cơm vũng tàu").name, "Hồ Chí Minh")
+        self.assertEqual(geo.resolve_province("vung tau").name, "Hồ Chí Minh")
+
+    def test_single_token_fragments_do_not_resolve(self):
+        for text in ("tàu", "phú", "đắk"):
+            with self.subTest(text=text):
+                self.assertIsNone(geo.resolve_province(text))
+
+    def test_detail_returns_consumed_span(self):
+        detail = geo.resolve_province_detail("phở hồ chí minh")
+        self.assertEqual(detail[0].name, "Hồ Chí Minh")
+        self.assertEqual(detail[1], ("ho", "chi", "minh"))
+        detail = geo.resolve_province_detail("quán ăn bắc kạn")
+        self.assertEqual(detail[0].name, "Thái Nguyên")
+        self.assertEqual(detail[1], ("bac", "kan"))
+
+    def test_longest_span_wins(self):
+        detail = geo.resolve_province_detail("nhà hàng thừa thiên huế")
+        self.assertEqual(detail[1], ("thua", "thien", "hue"))
+
+
 class LoadProvincesTest(unittest.TestCase):
     def test_34_provinces(self):
         provinces = geo.load_provinces()

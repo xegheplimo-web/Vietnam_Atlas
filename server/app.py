@@ -182,6 +182,8 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                 if path == "/api/places" or path == "/api/export.geojson":
                     search = (params.get("search") or [""])[0]
                     province = (params.get("province") or [""])[0]
+                    if len(province) > 200:
+                        raise ValueError("Province phải là mã GSO (vd 79) hoặc tên/alias tỉnh (vd 'Hồ Chí Minh', 'Sài Gòn')")
                     category = (params.get("category") or [""])[0]
                     if category:
                         prefixes = category.split("|")
