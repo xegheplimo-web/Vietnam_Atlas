@@ -194,36 +194,48 @@ class AtlasTest(unittest.TestCase):
                 self.assertEqual(c.execute("SELECT COUNT(*) FROM places").fetchone()[0], 2)
 
     def test_09_satellite_opt_in_and_url_validation(self):
-        with patch.dict(os.environ, {
-            "ATLAS_MAPTILER_KEY": "",
-            "ATLAS_SATELLITE_TILES_URL": "",
-            "ATLAS_SATELLITE_ATTRIBUTION": "",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "ATLAS_MAPTILER_KEY": "",
+                "ATLAS_SATELLITE_TILES_URL": "",
+                "ATLAS_SATELLITE_ATTRIBUTION": "",
+            },
+        ):
             code, data = self.request("/api/map-config")
             self.assertEqual(code, 200)
             self.assertIsNone(data["satellite"])
 
-        with patch.dict(os.environ, {
-            "ATLAS_MAPTILER_KEY": "browser-key-test",
-            "ATLAS_SATELLITE_TILES_URL": "",
-            "ATLAS_SATELLITE_ATTRIBUTION": "",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "ATLAS_MAPTILER_KEY": "browser-key-test",
+                "ATLAS_SATELLITE_TILES_URL": "",
+                "ATLAS_SATELLITE_ATTRIBUTION": "",
+            },
+        ):
             code, data = self.request("/api/map-config")
             self.assertEqual(code, 200)
             self.assertEqual(data["satellite"]["source"], "maptiler")
             self.assertIn("key=browser-key-test", data["satellite"]["url"])
 
-        with patch.dict(os.environ, {
-            "ATLAS_SATELLITE_TILES_URL": "https://tiles.example.test/{z}/{x}/{y}.png",
-            "ATLAS_SATELLITE_ATTRIBUTION": "Imagery & Maps",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "ATLAS_SATELLITE_TILES_URL": "https://tiles.example.test/{z}/{x}/{y}.png",
+                "ATLAS_SATELLITE_ATTRIBUTION": "Imagery & Maps",
+            },
+        ):
             self.assertEqual(satellite_layer_config()["source"], "custom")
             self.assertIn("&amp;", satellite_layer_config()["attribution"])
 
-        with patch.dict(os.environ, {
-            "ATLAS_SATELLITE_TILES_URL": "http://external.example.test/{z}/{x}/{y}.png",
-            "ATLAS_SATELLITE_ATTRIBUTION": "Unsafe",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "ATLAS_SATELLITE_TILES_URL": "http://external.example.test/{z}/{x}/{y}.png",
+                "ATLAS_SATELLITE_ATTRIBUTION": "Unsafe",
+            },
+        ):
             self.assertIsNone(satellite_layer_config())
 
 
