@@ -44,13 +44,13 @@ MIME = {
 }
 
 
-
 def satellite_layer_config():
     """Describe a licensed XYZ satellite source without proxying or downloading tiles.
 
     A MapTiler browser key is intentionally visible to the client: restrict it by
     Allowed HTTP Origin in the provider dashboard. Never use a secret server token.
     """
+
     custom_url = os.getenv("ATLAS_SATELLITE_TILES_URL", "").strip()
     if custom_url:
         parsed = urlsplit(custom_url)
@@ -58,8 +58,12 @@ def satellite_layer_config():
             parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
         )
         attribution = os.getenv("ATLAS_SATELLITE_ATTRIBUTION", "").strip()
-        if not (permitted and parsed.netloc and attribution and
-                all("{" + axis + "}" in custom_url for axis in ("z", "x", "y"))):
+        if not (
+            permitted
+            and parsed.netloc
+            and attribution
+            and all("{" + axis + "}" in custom_url for axis in ("z", "x", "y"))
+        ):
             return None
         return {
             "url": custom_url,
