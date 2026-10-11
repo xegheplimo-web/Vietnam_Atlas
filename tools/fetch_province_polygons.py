@@ -222,6 +222,25 @@ def polygon_area_km2(rings: list[list[tuple[float, float]]]) -> float:
     return max(total, 0.0)
 
 
+def _parse_geometry(geom: dict, folder: str):
+    gtype = geom.get("type")
+    if gtype == "MultiPolygon":
+        return geom["coordinates"]
+    if gtype == "Polygon":
+        return [geom["coordinates"]]
+    raise RuntimeError(f"{folder}: geometry không hỗ trợ: {gtype}")
+
+
+def _parse_ring(ring, folder: str) -> list[tuple[float, float]]:
+    pts = [(float(c[0]), float(c[1])) for c in ring]
+    if len(pts) < 3:
+        raise RuntimeError(f"{folder}: ring ít hơn 3 điểm")
+    for lon, lat in pts:
+        if not (SANITY_LON[0] <= lon <= SANITY_LON[1] and SANITY_LAT[0] <= lat <= SANITY_LAT[1]):
+            raise RuntimeError(f"{folder}: tọa độ ({lon},{lat}) ngoài vùng Việt Nam")
+    return pts
+
+
 def parse_province_geojson(data: bytes, folder: str):
     """Parse + validate 1 file province.geojson → (MultiPolygon [(lon,lat)], matinh)."""
     doc = json.loads(data.decode("utf-8"))
@@ -230,29 +249,16 @@ def parse_province_geojson(data: bytes, folder: str):
     features = doc.get("features") or []
     if len(features) != 1:
         raise RuntimeError(f"{folder}: cần đúng 1 feature, thấy {len(features)}")
-    geom = features[0].get("geometry") or {}
-    gtype = geom.get("type")
-    if gtype == "MultiPolygon":
-        polygons = geom["coordinates"]
-    elif gtype == "Polygon":
-        polygons = [geom["coordinates"]]
-    else:
-        raise RuntimeError(f"{folder}: geometry không hỗ trợ: {gtype}")
+    polygons = _parse_geometry(features[0].get("geometry") or {}, folder)
     props = features[0].get("properties") or {}
     matinh = str(props.get("matinh") or "")
     if not matinh.isdigit():
         raise RuntimeError(f"{folder}: matinh không hợp lệ: {props.get('matinh')!r}")
+    parsed = []
     for poly in polygons:
         if not isinstance(poly, list) or not poly:
             raise RuntimeError(f"{folder}: polygon rỗng")
-        for ring in poly:
-            pts = [(float(c[0]), float(c[1])) for c in ring]
-            if len(pts) < 3:
-                raise RuntimeError(f"{folder}: ring ít hơn 3 điểm")
-            for lon, lat in pts:
-                if not (SANITY_LON[0] <= lon <= SANITY_LON[1] and SANITY_LAT[0] <= lat <= SANITY_LAT[1]):
-                    raise RuntimeError(f"{folder}: tọa độ ({lon},{lat}) ngoài vùng Việt Nam")
-    parsed = [[[(float(c[0]), float(c[1])) for c in ring] for ring in poly] for poly in polygons]
+        parsed.append([_parse_ring(ring, folder) for ring in poly])
     return parsed, matinh
 
 
@@ -311,7 +317,7 @@ def build_merged(sources: list[tuple[str, bytes]]) -> tuple[list[dict], dict]:
 
 
 def cmd_fetch(out_dir: Path, force: bool, log) -> int:
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)  # NOSONAR(S8707): out_dir từ argparse, CLI cục bộ vận hành
     sources = collect_sources(out_dir, force, log)
     features, meta = build_merged(sources)
     if len(features) != len(PROVINCE_FOLDERS):

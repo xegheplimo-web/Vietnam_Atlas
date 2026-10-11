@@ -204,6 +204,15 @@ def _province_aliases() -> tuple:
     return tuple(aliases)
 
 
+def _best_match(query: tuple, candidates) -> tuple | None:
+    """Trong các cặp (tokens, value), chọn cặp có tokens dài nhất là dãy con liên tiếp của query."""
+    best = None
+    for toks, value in candidates:
+        if _is_subsequence(toks, query) and (best is None or len(toks) > len(best[0])):
+            best = (toks, value)
+    return best
+
+
 def resolve_province(text):
     """Resolve tên tỉnh (có dấu/không dấu/alias cũ) → Province; None nếu không khớp.
 
@@ -216,18 +225,14 @@ def resolve_province(text):
     query = _tokens(text)
     if not query:
         return None
-    best = None
-    for province in _provinces():
-        for toks in (_tokens(province.name_norm), _tokens(province.full_name)):
-            if _is_subsequence(toks, query) and (best is None or len(toks) > len(best[0])):
-                best = (toks, province)
-    if best is not None:
-        return best[1]
-    best_alias = None
-    for alias_tokens, target in _province_aliases():
-        if _is_subsequence(alias_tokens, query) and (best_alias is None or len(alias_tokens) > len(best_alias[0])):
-            best_alias = (alias_tokens, target)
-    return best_alias[1] if best_alias is not None else None
+    current = _best_match(
+        query,
+        ((toks, province) for province in _provinces() for toks in (_tokens(province.name_norm), _tokens(province.full_name))),
+    )
+    if current is not None:
+        return current[1]
+    alias = _best_match(query, _province_aliases())
+    return alias[1] if alias is not None else None
 
 
 def province_bbox(code_or_name):
