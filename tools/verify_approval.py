@@ -37,6 +37,35 @@ def latest_full_snapshot(con):
     return {"id": row[0], "file_sha256": row[1]} if row else None
 
 
+def check_recheck(report, recheck_path: Path) -> int:
+    """Compare a fresh pre-apply preview with the approved report.
+
+    Returns 0 when the four change counters match, 1 when the recheck file is
+    unreadable, and 2 on drift (options or Atlas/staging changed since approval).
+    """
+    try:
+        # Đường dẫn đến từ cờ CLI của chính công cụ cục bộ (người vận hành chạy).
+        recheck_text = recheck_path.read_text(encoding="utf-8")  # NOSONAR(S8707)
+        recheck = json.loads(recheck_text)
+        if not isinstance(recheck, dict):
+            raise ValueError("recheck JSON is not an object")
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: cannot read recheck preview {recheck_path}: {exc}", file=sys.stderr)
+        return 1
+    approved_changes = report.get("changes") or {}
+    for key in RECHECK_KEYS:
+        current = int(recheck.get(key) or 0)
+        approved = int(approved_changes.get(key) or 0)
+        if current != approved:
+            print(
+                f"LECH PREVIEW: {key} hiện tại {current} != report đã duyệt {approved} "
+                "(options/Atlas/staging đã đổi kể từ lúc duyệt — chạy lại preview, duyệt lại report rồi mới apply).",
+                file=sys.stderr,
+            )
+            return 2
+    return 0
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description="Verify an approved preview report still matches the PBF and staging snapshot before -Apply.")
     p.add_argument("--report", type=Path, required=True, help="approved reports/update-<stamp>.json (must be a preview report)")
@@ -110,30 +139,11 @@ def main(argv=None):
         return 2
 
     # Bind the apply to the APPROVED preview: re-run the current preview and
-    # compare its change counters with the approved report. Any drift (different
-    # sync options between preview and apply, or Atlas/staging changed since
-    # approval) fails closed with exit 2.
+    # compare its change counters with the approved report (drift fails closed).
     if a.recheck is not None:
-        try:
-            # Đường dẫn đến từ cờ CLI của chính công cụ cục bộ (người vận hành chạy).
-            recheck_text = a.recheck.read_text(encoding="utf-8")  # NOSONAR(S8707)
-            recheck = json.loads(recheck_text)
-            if not isinstance(recheck, dict):
-                raise ValueError("recheck JSON is not an object")
-        except (OSError, ValueError) as exc:
-            print(f"ERROR: cannot read recheck preview {a.recheck}: {exc}", file=sys.stderr)
-            return 1
-        approved_changes = report.get("changes") or {}
-        for key in RECHECK_KEYS:
-            current = int(recheck.get(key) or 0)
-            approved = int(approved_changes.get(key) or 0)
-            if current != approved:
-                print(
-                    f"LECH PREVIEW: {key} hiện tại {current} != report đã duyệt {approved} "
-                    "(options/Atlas/staging đã đổi kể từ lúc duyệt — chạy lại preview, duyệt lại report rồi mới apply).",
-                    file=sys.stderr,
-                )
-                return 2
+        code = check_recheck(report, a.recheck)
+        if code != 0:
+            return code
 
     print(json.dumps({"ok": True, "pbf_sha256": actual_sha, "snapshot": latest}, indent=2, ensure_ascii=False))
     return 0
