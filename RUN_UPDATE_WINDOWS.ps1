@@ -4,12 +4,17 @@ param(
   [switch]$OnlyDownload,
   [switch]$ForceDownload,
   [switch]$SkipDownload,
-  [int]$Limit = 0
+  [int]$Limit = 0,
+  [int]$VerifyMinActive = 50000,
+  [string]$ApprovedReport = ''
 )
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
 if ($Limit -lt 0) { throw 'Limit must be >= 0' }
+if ($Apply -and [string]::IsNullOrWhiteSpace($ApprovedReport)) {
+  throw '-Apply yeu cau -ApprovedReport <path report.json>: chay preview truoc, duyet reports/update-<stamp>.json, roi truyen lai duong dan report de rang buoc apply vao snapshot da duyet.'
+}
 $py = Get-Command py -ErrorAction SilentlyContinue
 if ($py) { $cmd = 'py'; $prefix = @('-3') } else { $cmd = 'python'; $prefix = @() }
 & $cmd @prefix --version
@@ -29,28 +34,37 @@ if (-not $SkipDownload) {
   Write-Host 'SkipDownload: bo qua buoc tai PBF, dung snapshot hien co.' -ForegroundColor Yellow
   $pbfPath = 'data/vietnam-latest.osm.pbf'
   $sidecarPath = "$pbfPath.provenance.json"
-  if ((Test-Path $pbfPath) -and (Test-Path $sidecarPath)) {
-    $expected = (Get-Content $sidecarPath -Raw | ConvertFrom-Json).sha256
-    $actual = (Get-FileHash -Algorithm SHA256 -Path $pbfPath).Hash.ToLowerInvariant()
-    if ($expected -and ($actual -ne $expected.ToString().ToLowerInvariant())) {
-      throw 'SkipDownload: SHA-256 PBF khong khop provenance sidecar (file bi thay?); chay lai khong -SkipDownload de tai moi va lam moi metadata.'
-    }
-    Write-Host 'SkipDownload: provenance khop PBF hien co.' -ForegroundColor Yellow
-  } else {
-    Write-Host 'SkipDownload: thieu PBF hoac sidecar provenance; bao cao se thieu metadata nguon.' -ForegroundColor Yellow
+  if (-not (Test-Path $pbfPath) -or -not (Test-Path $sidecarPath)) {
+    throw 'SkipDownload: thieu PBF hoac sidecar provenance; chay lai khong -SkipDownload de tai moi truoc.'
   }
+  $expected = (Get-Content $sidecarPath -Raw | ConvertFrom-Json).sha256
+  $actual = (Get-FileHash -Algorithm SHA256 -Path $pbfPath).Hash.ToLowerInvariant()
+  if ($expected -and ($actual -ne $expected.ToString().ToLowerInvariant())) {
+    throw 'SkipDownload: SHA-256 PBF khong khop provenance sidecar (file bi thay?); chay lai khong -SkipDownload de tai moi va lam moi metadata.'
+  }
+  Write-Host 'SkipDownload: provenance khop PBF hien co.' -ForegroundColor Yellow
 }
 if ($OnlyDownload) { exit 0 }
-$importArgs = @('tools/vn_osm_dataset.py', 'data/vietnam-latest.osm.pbf', '--db', 'data/osm_vietnam.sqlite3')
-if ($Limit -gt 0) { $importArgs += @('--limit', "$Limit") }
-& $cmd @prefix @importArgs
-if ($LASTEXITCODE -ne 0) { throw 'OSM import that bai; khong cap nhat Atlas.' }
 $ts = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
 $rawDir = "reports/_raw/$ts"
 New-Item -ItemType Directory -Force -Path $rawDir | Out-Null
+$importArgs = @('tools/vn_osm_dataset.py', 'data/vietnam-latest.osm.pbf', '--db', 'data/osm_vietnam.sqlite3')
+if ($Limit -gt 0) {
+  $importArgs += @('--limit', "$Limit")
+} else {
+  # Full-scope cycle marks disappeared OSM objects inactive (retire evidence); banned with --limit by the importer.
+  $importArgs += '--mark-missing'
+}
+& $cmd @prefix @importArgs | Tee-Object -FilePath "$rawDir/import.json"
+if ($LASTEXITCODE -ne 0) { throw 'OSM import that bai; khong cap nhat Atlas.' }
 & $cmd @prefix tools/vn_osm_dataset.py --stats --db data/osm_vietnam.sqlite3 | Tee-Object -FilePath "$rawDir/stats.txt"
 if ($LASTEXITCODE -ne 0) { throw 'Stage database khong san sang' }
-& $cmd @prefix tools/verify_osm_snapshot.py --db data/osm_vietnam.sqlite3 --min-active 1 | Tee-Object -FilePath "$rawDir/verify.txt"
+if ($Limit -gt 0) {
+  Write-Warning 'TEST MODE (limit): snapshot khong duoc chung nhan full-scope.'
+  & $cmd @prefix tools/verify_osm_snapshot.py --db data/osm_vietnam.sqlite3 --min-active 1 | Tee-Object -FilePath "$rawDir/verify.txt"
+} else {
+  & $cmd @prefix tools/verify_osm_snapshot.py --db data/osm_vietnam.sqlite3 --require-full --min-active $VerifyMinActive | Tee-Object -FilePath "$rawDir/verify.txt"
+}
 if ($LASTEXITCODE -ne 0) { throw 'Snapshot validation FAIL' }
 # Preview before actual live DB changes.
 $syncArgs = @('tools/sync_osm_into_atlas.py', '--osm-db', 'data/osm_vietnam.sqlite3', '--atlas-db', 'data/atlas.sqlite3')
@@ -61,16 +75,44 @@ Write-Host 'Preview changes to Atlas:'
 if ($LASTEXITCODE -ne 0) { throw 'Dry-run that bai; khong ghi database.' }
 $reportInput = "$rawDir/preview.json"
 if ($Apply) {
+  & $cmd @prefix tools/verify_approval.py --report $ApprovedReport --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3
+  if ($LASTEXITCODE -ne 0) { throw 'Report duyet khong con khop PBF/snapshot staging (report cu); chay lai preview va duyet lai report moi.' }
   Write-Host 'Apply: auto-backup atlas.sqlite3 before write' -ForegroundColor Yellow
   $applyArgs = $syncArgs + @('--apply')
   & $cmd @prefix @applyArgs | Tee-Object -FilePath "$rawDir/apply.json"
   if ($LASTEXITCODE -ne 0) { throw 'Ghi Atlas that bai; kiem tra backup va log.' }
   $reportInput = "$rawDir/apply.json"
+  # Idempotency evidence: re-run the same dry-run after apply; leftover would_insert/would_update = warning.
+  & $cmd @prefix @syncArgs | Tee-Object -FilePath "$rawDir/postapply.json"
+  if ($LASTEXITCODE -ne 0) {
+    Write-Warning 'Post-apply dry-run loi; bao cao se thieu bang chung idempotency.'
+  } else {
+    try {
+      $postApply = Get-Content "$rawDir/postapply.json" -Raw | ConvertFrom-Json
+      if ($postApply.would_insert -gt 0 -or $postApply.would_update -gt 0) {
+        Write-Warning "Sau apply van con thay doi ghi duoc (would_insert=$($postApply.would_insert), would_update=$($postApply.would_update)); kiem tra sync truoc chu ky tiep."
+      }
+    } catch {
+      Write-Warning "Khong doc duoc postapply.json: $($_.Exception.Message)"
+    }
+  }
 } else {
   Write-Host 'DRY RUN only. Chay voi -Apply de ghi vao Atlas.' -ForegroundColor Yellow
 }
 Write-Host 'Tao bao cap nhat tu cac file da chup...'
-& $cmd @prefix tools/update_report.py --preview "$reportInput" --provenance 'data/vietnam-latest.osm.pbf.provenance.json' --staging-stats "$rawDir/stats.txt" --verify "$rawDir/verify.txt" --out-dir reports --stamp $ts
+$reportArgs = @(
+  'tools/update_report.py', '--preview', "$reportInput",
+  '--provenance', 'data/vietnam-latest.osm.pbf.provenance.json',
+  '--staging-stats', "$rawDir/stats.txt",
+  '--verify', "$rawDir/verify.txt",
+  '--import-json', "$rawDir/import.json",
+  '--post-apply', "$rawDir/postapply.json",
+  '--pbf', 'data/vietnam-latest.osm.pbf',
+  '--staging-db', 'data/osm_vietnam.sqlite3',
+  '--atlas-db', 'data/atlas.sqlite3',
+  '--out-dir', 'reports', '--stamp', $ts
+)
+& $cmd @prefix @reportArgs
 if ($LASTEXITCODE -ne 0) { throw 'Tao bao cap nhat that bai; kiem tra file preview va stderr.' }
 Write-Host "Bao cap nhat: reports/update-$ts.json"
 Write-Host "Bao cap nhat: reports/update-$ts.md"

@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""Fail-closed approval guard before an OSM snapshot write into Vietnam Atlas.
+
+An `-Apply` run must be bound to a preview report a human already reviewed:
+the PBF on disk and the latest full staging snapshot must still match what the
+approved report recorded. Any drift means the report is stale — refuse to write.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sqlite3
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCHEMA = 1
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def latest_full_snapshot(con):
+    """Return {id, file_sha256} of the newest FULL-scope ingestion snapshot."""
+    cur = con.execute("SELECT id, file_sha256 FROM ingestion_snapshots WHERE mode LIKE '%:full:%' ORDER BY imported_at DESC, rowid DESC LIMIT 1")
+    row = cur.fetchone()
+    return {"id": row[0], "file_sha256": row[1]} if row else None
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description="Verify an approved preview report still matches the PBF and staging snapshot before -Apply.")
+    p.add_argument("--report", type=Path, required=True, help="approved reports/update-<stamp>.json (must be a preview report)")
+    p.add_argument("--pbf", type=Path, default=ROOT / "data" / "vietnam-latest.osm.pbf")
+    p.add_argument("--staging-db", type=Path, default=ROOT / "data" / "osm_vietnam.sqlite3")
+    a = p.parse_args(argv)
+
+    try:
+        report = json.loads(a.report.read_text(encoding="utf-8"))
+        if not isinstance(report, dict):
+            raise ValueError("report JSON is not an object")
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: cannot read approved report {a.report}: {exc}", file=sys.stderr)
+        return 1
+
+    if report.get("stage") != "preview":
+        print(
+            f"ERROR: report stage must be 'preview', got {report.get('stage')!r} — only an approved PREVIEW report may be applied.",
+            file=sys.stderr,
+        )
+        return 2
+
+    snapshot = report.get("snapshot") or {}
+    expected_sha = snapshot.get("sha256")
+    if not expected_sha:
+        print("ERROR: report is missing snapshot.sha256; cannot bind approval to a source file.", file=sys.stderr)
+        return 1
+
+    if not a.pbf.is_file():
+        print(f"ERROR: PBF not found: {a.pbf}", file=sys.stderr)
+        return 1
+    actual_sha = sha256_file(a.pbf)
+    if actual_sha != str(expected_sha).lower():
+        print(
+            f"LECH SHA: current PBF {actual_sha} != report.snapshot.sha256 {expected_sha} (PBF replaced after approval).",
+            file=sys.stderr,
+        )
+        return 2
+
+    if not a.staging_db.is_file():
+        print(f"ERROR: staging db not found: {a.staging_db}", file=sys.stderr)
+        return 1
+    con = sqlite3.connect(f"file:{a.staging_db.resolve().as_posix()}?mode=ro", uri=True)
+    try:
+        latest = latest_full_snapshot(con)
+    finally:
+        con.close()
+    if latest is None:
+        print("ERROR: staging db has no FULL-scope snapshot; refusing to bind approval.", file=sys.stderr)
+        return 2
+
+    rep_latest = (report.get("staging") or {}).get("latest_snapshot") or {}
+    if latest["id"] != rep_latest.get("id"):
+        print(
+            f"LECH SNAPSHOT: latest full staging snapshot id={latest['id']} != report.staging.latest_snapshot.id={rep_latest.get('id')!r}.",
+            file=sys.stderr,
+        )
+        return 2
+    if latest["file_sha256"] != rep_latest.get("file_sha256"):
+        print(
+            f"LECH FILE_SHA: latest full staging snapshot file_sha256={latest['file_sha256']} != "
+            f"report.staging.latest_snapshot.file_sha256={rep_latest.get('file_sha256')!r}.",
+            file=sys.stderr,
+        )
+        return 2
+
+    print(json.dumps({"ok": True, "pbf_sha256": actual_sha, "snapshot": latest}, indent=2, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
