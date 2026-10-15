@@ -168,13 +168,30 @@ class Collector:
         self.seen_keys = set() if max_poi else None  # only in a bounded pilot
         self.timestamp = now_utc()
 
+    def pilot_full(self) -> bool:
+        """True once a bounded pilot collected its quota; later objects are out of scope."""
+        return bool(self.max_poi) and (self.counts["inserted"] + self.counts["updated"] + self.counts["unchanged"]) >= self.max_poi
+
+    def note_skip(self, reason: str) -> None:
+        """Count one dropped object so every reject lands in both counters (skipped = Σ skip_reasons).
+        Once a pilot is full later rejects are out of scope and are not counted at all."""
+        if self.pilot_full():
+            return
+        self.counts["skipped"] += 1
+        self.skip_reasons[reason] += 1
+
+    def note_invalid_geometry(self) -> None:
+        if self.pilot_full():
+            return
+        self.counts["invalid_geometry"] += 1
+        self.note_skip("invalid_geometry")
+
     def add(self, kind, ident, tags, loc):
-        if self.max_poi and (self.counts["inserted"] + self.counts["updated"] + self.counts["unchanged"]) >= self.max_poi:
+        if self.pilot_full():
             return
         d = record(kind, ident, tags, loc)
         if d is None:
-            self.counts["skipped"] += 1
-            self.skip_reasons[reject_reason(tags, loc) or "unknown"] += 1
+            self.note_skip(reject_reason(tags, loc) or "unknown")
             return
         key = (d["osm_type"], d["osm_id"])
         if self.seen_keys is not None:
@@ -223,7 +240,7 @@ def import_small_osm_xml(path: Path, collector: Collector):
             try:
                 lat, lon = float(elem.attrib["lat"]), float(elem.attrib["lon"])
             except (KeyError, ValueError):
-                collector.skip_reasons["missing_or_invalid_coordinates"] += 1
+                collector.note_skip("missing_or_invalid_coordinates")
                 elem.clear()
                 continue
             nid = int(elem.attrib["id"])
@@ -246,7 +263,7 @@ def import_small_osm_xml(path: Path, collector: Collector):
                         coords.extend(way_coords.get(int(m.attrib["ref"]), []))
                 collector.add("relation", int(elem.attrib["id"]), tags, locator(coords))
             else:
-                collector.skip_reasons["non_area_relation"] += 1
+                collector.note_skip("non_area_relation")
         if typ in ("node", "way", "relation"):
             elem.clear()
 
@@ -262,34 +279,34 @@ def import_national_pbf(path: Path, collector: Collector):
             try:
                 tags = dict(node.tags)
                 if not node.location.valid():
-                    collector.skip_reasons["missing_or_invalid_coordinates"] += 1
+                    collector.note_skip("missing_or_invalid_coordinates")
                     return
                 if "name" not in tags and NAME_VI not in tags:
-                    collector.skip_reasons["missing_name"] += 1
+                    collector.note_skip("missing_name")
                     return
                 if not any(k in tags for k in CATEGORIES):
-                    collector.skip_reasons["unsupported_category"] += 1
+                    collector.note_skip("unsupported_category")
                     return
                 collector.add("node", node.id, tags, (node.location.lat, node.location.lon))
             except (ValueError, TypeError, RuntimeError):
-                collector.counts["invalid_geometry"] += 1
+                collector.note_invalid_geometry()
 
         def way(self, way):
             try:
                 tags = dict(way.tags)
                 if "name" not in tags and NAME_VI not in tags:
-                    collector.skip_reasons["missing_name"] += 1
+                    collector.note_skip("missing_name")
                     return
                 if not any(k in tags for k in CATEGORIES):
-                    collector.skip_reasons["unsupported_category"] += 1
+                    collector.note_skip("unsupported_category")
                     return
                 pts = [(ref.location.lon, ref.location.lat) for ref in way.nodes if ref.location.valid()]
                 if not pts or len(pts) < len(way.nodes):
-                    collector.counts["invalid_geometry"] += 1
+                    collector.note_invalid_geometry()
                     return
                 collector.add("way", way.id, tags, locator(pts))
             except (ValueError, TypeError, RuntimeError):
-                collector.counts["invalid_geometry"] += 1
+                collector.note_invalid_geometry()
 
         def area(self, area):
             try:
@@ -297,10 +314,10 @@ def import_national_pbf(path: Path, collector: Collector):
                     return  # already handled as a way
                 tags = dict(area.tags)
                 if "name" not in tags and NAME_VI not in tags:
-                    collector.skip_reasons["missing_name"] += 1
+                    collector.note_skip("missing_name")
                     return
                 if not any(k in tags for k in CATEGORIES):
-                    collector.skip_reasons["unsupported_category"] += 1
+                    collector.note_skip("unsupported_category")
                     return
                 all_rings = []
                 for outer in area.outer_rings():
@@ -308,13 +325,13 @@ def import_national_pbf(path: Path, collector: Collector):
                     if pts:
                         all_rings.append(pts)
                 if not all_rings:
-                    collector.counts["invalid_geometry"] += 1
+                    collector.note_invalid_geometry()
                     return
                 # Choose the largest outer ring by planar area for the map locator; never use this as precise polygon data.
                 pts = max(all_rings, key=ring_area)
                 collector.add("relation", area.orig_id(), tags, locator(pts))
             except (ValueError, TypeError, RuntimeError):
-                collector.counts["invalid_geometry"] += 1
+                collector.note_invalid_geometry()
 
     handler = Handler()
     # PBF area callback assembles multipolygons, including relation POIs.
@@ -389,8 +406,6 @@ def create_snapshot(source: Path, database: Path, max_poi=0, mark_missing=False,
             con.rollback()
             raise
         skip_reasons = dict(collector.skip_reasons)
-        if collector.counts["invalid_geometry"]:
-            skip_reasons["invalid_geometry"] = collector.counts["invalid_geometry"]
         return {
             "status": "imported",
             "file_sha256": digest,

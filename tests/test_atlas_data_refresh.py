@@ -6,6 +6,7 @@ import csv
 import gzip
 import hashlib
 import io
+import json
 import sqlite3
 import sys
 import tempfile
@@ -210,8 +211,9 @@ class RefreshTests(unittest.TestCase):
     def test_retired_staging_records_mark_unverified_atlas_rows_inactive(self):
         if not (ROOT / "server/store.py").is_file():
             self.skipTest("Run after copying toolkit into a Vietnam_Atlas checkout")
+        state = self.d / "retired_by_sync.json"
         osm.create_snapshot(self.xml, self.osm_db)
-        sync.sync(self.osm_db, self.atlas_db, apply=True)
+        sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
         with closing(sqlite3.connect(self.atlas_db)) as c:
             c.execute("UPDATE places SET status='verified' WHERE source_id='node/1001'")
             c.commit()
@@ -219,25 +221,27 @@ class RefreshTests(unittest.TestCase):
         changed = self.d / "changed.osm"
         changed.write_text(data, encoding="utf-8")
         osm.create_snapshot(changed, self.osm_db, mark_missing=True)
-        preview = sync.sync(self.osm_db, self.atlas_db)
+        preview = sync.sync(self.osm_db, self.atlas_db, retired_state=state)
         self.assertEqual(preview["would_retire"], 1)
         self.assertEqual(preview["retired"], 0)
-        blocked = sync.sync(self.osm_db, self.atlas_db, apply=True)
+        blocked = sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
         self.assertEqual(blocked["retired"], 0)  # lifecycle writes need --apply-lifecycle
         with closing(sqlite3.connect(self.atlas_db)) as c:
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='relation/3001'").fetchone()[0], "unverified")
-        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True)
+        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, retired_state=state)
         self.assertEqual(result["retired"], 1)
         with closing(sqlite3.connect(self.atlas_db)) as c:
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='relation/3001'").fetchone()[0], "inactive")
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='node/1001'").fetchone()[0], "verified")
             self.assertEqual(c.execute("SELECT count(*) FROM places WHERE status='inactive'").fetchone()[0], 1)
+        self.assertIn("relation/3001", json.loads(state.read_text(encoding="utf-8"))["sids"])  # sổ retire ghi lại nguồn gốc
 
     def test_reappeared_poi_restore_gated_and_preserves_manual_fields(self):
         if not (ROOT / "server/store.py").is_file():
             self.skipTest("Run after copying toolkit into a Vietnam_Atlas checkout")
+        state = self.d / "retired_by_sync.json"
         osm.create_snapshot(self.xml, self.osm_db)
-        sync.sync(self.osm_db, self.atlas_db, apply=True)
+        sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
         with closing(sqlite3.connect(self.atlas_db)) as c:
             c.execute("UPDATE places SET notes='giữ-nguyên',province='TT' WHERE source_id='relation/3001'")
             c.commit()
@@ -246,31 +250,33 @@ class RefreshTests(unittest.TestCase):
             self.xml.read_text(encoding="utf-8").replace('    <tag k="name" v="Nhà hàng THỬ NGHIỆM"/>', '    <tag k="name" v=""/>'), encoding="utf-8"
         )
         osm.create_snapshot(missing, self.osm_db, mark_missing=True)
-        sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True)
+        sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, retired_state=state)
         back = self.d / "back.osm"
         back.write_text(self.xml.read_text(encoding="utf-8").replace("Nhà hàng THỬ NGHIỆM", "Nhà hàng TÁI XUẤT"), encoding="utf-8")
         osm.create_snapshot(back, self.osm_db)
-        preview = sync.sync(self.osm_db, self.atlas_db)
+        preview = sync.sync(self.osm_db, self.atlas_db, retired_state=state)
         self.assertEqual(preview["would_restore"], 1)
         self.assertEqual(preview["restored"], 0)
         self.assertEqual(preview["restore_samples"], [{"source_id": "relation/3001", "name": "Nhà hàng TÁI XUẤT"}])
         self.assertEqual(preview["changed_in_source"], 1)  # inactive row with renamed source also counts as evidence
-        blocked = sync.sync(self.osm_db, self.atlas_db, apply=True)
+        blocked = sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
         self.assertEqual(blocked["restored"], 0)  # apply without --apply-lifecycle must not write
         with closing(sqlite3.connect(self.atlas_db)) as c:
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='relation/3001'").fetchone()[0], "inactive")
-        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True)
+        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, retired_state=state)
         self.assertTrue(result["apply_lifecycle"])
         self.assertEqual(result["restored"], 1)
         with closing(sqlite3.connect(self.atlas_db)) as c:
             row = c.execute("SELECT name,status,notes,province FROM places WHERE source_id='relation/3001'").fetchone()
             self.assertEqual(tuple(row), ("Nhà hàng TÁI XUẤT", "unverified", "giữ-nguyên", "TT"))
+        self.assertNotIn("relation/3001", json.loads(state.read_text(encoding="utf-8"))["sids"])  # khôi phục xong thì xoá khỏi sổ
 
     def test_verified_and_closed_rows_never_retire_or_restore(self):
         if not (ROOT / "server/store.py").is_file():
             self.skipTest("Run after copying toolkit into a Vietnam_Atlas checkout")
+        state = self.d / "retired_by_sync.json"
         osm.create_snapshot(self.xml, self.osm_db)
-        sync.sync(self.osm_db, self.atlas_db, apply=True)
+        sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
         with closing(sqlite3.connect(self.atlas_db)) as c:
             c.execute("UPDATE places SET status='verified' WHERE source_id='node/1001'")
             c.execute("UPDATE places SET status='closed' WHERE source_id='node/1002'")
@@ -281,14 +287,14 @@ class RefreshTests(unittest.TestCase):
         missing = self.d / "missing.osm"
         missing.write_text(data, encoding="utf-8")
         osm.create_snapshot(missing, self.osm_db, mark_missing=True)
-        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True)
+        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, retired_state=state)
         self.assertEqual(result["would_retire"], 1)  # only the unverified relation row is a candidate
         self.assertEqual(result["retired"], 1)
         with closing(sqlite3.connect(self.atlas_db)) as c:
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='node/1001'").fetchone()[0], "verified")
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='node/1002'").fetchone()[0], "closed")
         osm.create_snapshot(self.xml, self.osm_db, force=True)  # same file+scope was already imported once
-        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True)
+        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, retired_state=state)
         self.assertEqual(result["restored"], 1)  # relation/3001 only; verified/closed stay untouched
         with closing(sqlite3.connect(self.atlas_db)) as c:
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='node/1001'").fetchone()[0], "verified")
@@ -351,8 +357,9 @@ class RefreshTests(unittest.TestCase):
     def test_limit_skips_lifecycle_evaluation(self):
         if not (ROOT / "server/store.py").is_file():
             self.skipTest("Run after copying toolkit into a Vietnam_Atlas checkout")
+        state = self.d / "retired_by_sync.json"
         osm.create_snapshot(self.xml, self.osm_db)
-        sync.sync(self.osm_db, self.atlas_db, apply=True)
+        sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
         with closing(sqlite3.connect(self.atlas_db)) as c:
             c.execute("UPDATE places SET status='inactive' WHERE source_id='node/1001'")  # restore candidate
             c.commit()
@@ -361,7 +368,7 @@ class RefreshTests(unittest.TestCase):
             self.xml.read_text(encoding="utf-8").replace('    <tag k="name" v="Nhà hàng THỬ NGHIỆM"/>', '    <tag k="name" v=""/>'), encoding="utf-8"
         )
         osm.create_snapshot(missing, self.osm_db, mark_missing=True)  # retire candidate
-        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, limit=1)
+        result = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, limit=1, retired_state=state)
         self.assertTrue(result["retire_skipped_limit"])
         self.assertTrue(result["restore_skipped_limit"])
         self.assertEqual(result["would_restore"], 0)
@@ -372,9 +379,53 @@ class RefreshTests(unittest.TestCase):
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='node/1001'").fetchone()[0], "inactive")
             self.assertEqual(c.execute("SELECT status FROM places WHERE source_id='relation/3001'").fetchone()[0], "unverified")
 
+    def test_restore_never_overrides_operator_inactive_rows(self):
+        if not (ROOT / "server/store.py").is_file():
+            self.skipTest("Run after copying toolkit into a Vietnam_Atlas checkout")
+        state = self.d / "retired_by_sync.json"
+        osm.create_snapshot(self.xml, self.osm_db)
+        sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
+        # Người vận hành tự đặt inactive cho một POI vẫn còn active trong staging (không có trong sổ sync).
+        with closing(sqlite3.connect(self.atlas_db)) as c:
+            c.execute("UPDATE places SET status='inactive',notes='do-operator' WHERE source_id='relation/3001'")
+            c.commit()
+        dry = sync.sync(self.osm_db, self.atlas_db, retired_state=state)
+        self.assertEqual(dry["would_restore"], 0)
+        self.assertEqual(dry["restore_blocked_manual"], 1)
+        applied = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, retired_state=state)
+        self.assertEqual(applied["restored"], 0)  # không ghi đè quyết định của người vận hành
+        self.assertTrue(applied["apply_lifecycle"])  # APPLY_NO_CHANGES vẫn giữ đúng cờ vòng đời
+        with closing(sqlite3.connect(self.atlas_db)) as c:
+            row = c.execute("SELECT status,notes FROM places WHERE source_id='relation/3001'").fetchone()
+            self.assertEqual(tuple(row), ("inactive", "do-operator"))
+
+    def test_pilot_reactivation_is_not_restore_evidence(self):
+        if not (ROOT / "server/store.py").is_file():
+            self.skipTest("Run after copying toolkit into a Vietnam_Atlas checkout")
+        state = self.d / "retired_by_sync.json"
+        osm.create_snapshot(self.xml, self.osm_db)
+        sync.sync(self.osm_db, self.atlas_db, apply=True, retired_state=state)
+        missing = self.d / "missing.osm"
+        missing.write_text(
+            self.xml.read_text(encoding="utf-8").replace('    <tag k="name" v="Nhà hàng THỬ NGHIỆM"/>', '    <tag k="name" v=""/>'), encoding="utf-8"
+        )
+        osm.create_snapshot(missing, self.osm_db, mark_missing=True)
+        retired = sync.sync(self.osm_db, self.atlas_db, apply=True, apply_lifecycle=True, retired_state=state)
+        self.assertEqual(retired["retired"], 1)  # sổ đã ghi relation/3001
+        back = self.d / "back.osm"
+        back.write_text(self.xml.read_text(encoding="utf-8").replace("Nhà hàng THỬ NGHIỆM", "Nhà hàng TÁI XUẤT"), encoding="utf-8")
+        osm.create_snapshot(back, self.osm_db, max_poi=99)  # pilot import kích hoạt lại dòng staging
+        dry = sync.sync(self.osm_db, self.atlas_db, retired_state=state)
+        self.assertEqual(dry["would_restore"], 0)  # tái kích hoạt bởi pilot KHÔNG đủ bằng chứng
+        self.assertEqual(dry["restore_blocked_manual"], 0)
+        osm.create_snapshot(back, self.osm_db)  # import full xác nhận lại sự tái xuất hiện
+        dry2 = sync.sync(self.osm_db, self.atlas_db, retired_state=state)
+        self.assertEqual(dry2["would_restore"], 1)
+
     def test_import_result_reports_skip_reasons(self):
         result = osm.create_snapshot(self.xml, self.osm_db)
         self.assertEqual(result["skip_reasons"], {"missing_name": 10})
+        self.assertEqual(result["skipped"], sum(result["skip_reasons"].values()))  # hai bộ đếm luôn khớp
         mini = self.d / "mini.osm"
         mini.write_text(
             "<osm>"
@@ -386,6 +437,21 @@ class RefreshTests(unittest.TestCase):
         )
         res = osm.create_snapshot(mini, self.d / "mini.sqlite3")
         self.assertEqual(res["skip_reasons"], {"missing_or_invalid_coordinates": 1, "missing_name": 1, "unsupported_category": 1})
+        self.assertEqual(res["skipped"], 3)
+        # Sau khi pilot đầy quota, các đối tượng bị bỏ tiếp theo nằm ngoài phạm vi và không được đếm.
+        pilot = self.d / "pilot.osm"
+        pilot.write_text(
+            "<osm>"
+            '<node id="1" lon="106"><tag k="name" v="x"/></node>'
+            '<node id="2" lat="10" lon="106"><tag k="name" v="ok"/><tag k="amenity" v="cafe"/></node>'
+            '<node id="3" lat="11" lon="106"><tag k="amenity" v="cafe"/></node>'
+            "</osm>",
+            encoding="utf-8",
+        )
+        sized = osm.create_snapshot(pilot, self.d / "pilot.sqlite3", max_poi=1)
+        self.assertEqual(sized["inserted"], 1)
+        self.assertEqual(sized["skip_reasons"], {"missing_or_invalid_coordinates": 1})  # chỉ bản ghi trước quota
+        self.assertEqual(sized["skipped"], 1)
 
     def test_verify_require_full_evidence(self):
         # A pilot scope (limit) is a valid snapshot but cannot certify full coverage.
