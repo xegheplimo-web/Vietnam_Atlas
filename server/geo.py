@@ -124,8 +124,12 @@ def _load_provinces(path) -> list[Province]:
     if not isinstance(data, dict):
         logger.warning("geo: %s không phải FeatureCollection — trả về danh sách tỉnh rỗng", path)
         return []
+    features = data.get("features")
+    if not isinstance(features, list):
+        logger.warning("geo: %s có 'features' không phải danh sách — trả về danh sách tỉnh rỗng", path)
+        return []
     provinces = []
-    for index, feature in enumerate(data.get("features") or []):
+    for index, feature in enumerate(features):
         try:
             provinces.append(_feature_to_province(feature))
         except (AttributeError, IndexError, KeyError, TypeError, ValueError) as exc:

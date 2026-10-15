@@ -68,9 +68,15 @@ def credit_html(value: str) -> str:
     return "".join(parts)
 
 
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", chr(0xFF1D), chr(0xFF0B), chr(0xFF0D), chr(0xFF20))
+
+
 def csv_safe_cell(value):
-    """Neutralize spreadsheet formula injection: prefix risky text cells with a single quote."""
-    if isinstance(value, str) and value[:1] in ("=", "+", "-", "@", "\t", "\r"):
+    """Neutralize spreadsheet formula injection: prefix risky text cells with a single quote.
+
+    Gồm 4 biến thể full-width của OWASP (U+FF1D, U+FF0B, U+FF0D, U+FF20).
+    """
+    if isinstance(value, str) and value[:1] in _CSV_FORMULA_PREFIXES:
         return "'" + value
     return value
 
@@ -186,7 +192,9 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                         return self.json(200, stats(c))
                 if path == "/api/provinces":
                     data = json.loads((ROOT / "data" / "provinces_34.json").read_text(encoding="utf-8"))
-                    return self.json(200, {"items": [x["name"] for x in data], "count": len(data), "boundary_available": bool(geo.all_provinces())})
+                    # boundary_available: đủ 34 polygon GSO nạp được (file thiếu/hỏng/không đủ → False, không crash)
+                    provinces = geo.all_provinces()
+                    return self.json(200, {"items": [x["name"] for x in data], "count": len(data), "boundary_available": len(provinces) == 34})
                 if path == "/api/places" or path == "/api/export.geojson":
                     search = (params.get("search") or [""])[0]
                     province = (params.get("province") or [""])[0]

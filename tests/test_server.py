@@ -971,7 +971,7 @@ class AtlasTest(unittest.TestCase):
         import csv as _csv
         import io as _io
 
-        names = ["=SUM(A1:A9)", "+1+1", "@cmd", "-2+3", "Bánh mì Bình Tân"]
+        names = ["=SUM(A1:A9)", "+1+1", "@cmd", "-2+3", "Bánh mì Bình Tân", chr(0xFF1D) + "SUM(A1:A9)"]
         created = []
         try:
             for i, name in enumerate(names):
@@ -987,15 +987,27 @@ class AtlasTest(unittest.TestCase):
             text = data.decode("utf-8-sig") if isinstance(data, (bytes, bytearray)) else data
             rows = list(_csv.DictReader(_io.StringIO(text)))
             by_source = {r["source_id"]: r for r in rows if r.get("source_id", "").startswith("csv-safe-")}
-            self.assertEqual(len(by_source), 5)
+            self.assertEqual(len(by_source), 6)
             self.assertEqual(by_source["csv-safe-0"]["name"], "'=SUM(A1:A9)")
             self.assertEqual(by_source["csv-safe-1"]["name"], "'+1+1")
             self.assertEqual(by_source["csv-safe-2"]["name"], "'@cmd")
             self.assertEqual(by_source["csv-safe-3"]["name"], "'-2+3")
             self.assertEqual(by_source["csv-safe-4"]["name"], "Bánh mì Bình Tân")
+            self.assertEqual(by_source["csv-safe-5"]["name"], "'" + chr(0xFF1D) + "SUM(A1:A9)")
         finally:
             for item in created:
                 self.request("/api/places/" + item["item"]["id"], "DELETE")
+
+    def test_37_provinces_partial_boundary_not_available(self):
+        # Review PR #13 (Devin/Codex): boundary_available chỉ true khi ĐỦ 34 polygon — partial phải false.
+        from server import geo as geo_mod
+
+        real = geo_mod._load_provinces(geo_mod._DATA_FILE)[:1]
+        self.assertEqual(len(real), 1)
+        with patch.object(geo_mod, "_provinces", return_value=tuple(real)):
+            code, data = self.request("/api/provinces")
+        self.assertEqual(code, 200)
+        self.assertFalse(data["boundary_available"])
 
 
 if __name__ == "__main__":

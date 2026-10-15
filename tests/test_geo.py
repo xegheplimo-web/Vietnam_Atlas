@@ -1,5 +1,7 @@
 """Unit tests cho server/geo.py: PIP, bbox, resolve tên tỉnh, load, area sanity, holes."""
 
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -154,6 +156,32 @@ class LoadProvincesTest(unittest.TestCase):
     def test_missing_file_returns_empty(self):
         missing = ROOT / "data" / "provinces" / "khong_ton_tai.geojson"
         self.assertEqual(geo.load_provinces(path=str(missing)), [])
+
+    def test_features_not_list_returns_empty(self):
+        # Review PR #13 (Devin): 'features' không iterable từng gây TypeError — contract là [] + log.
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Path(tmp) / "bad_features.geojson"
+            bad.write_text('{"type":"FeatureCollection","features":3}', encoding="utf-8")
+            self.assertEqual(geo.load_provinces(path=str(bad)), [])
+
+    def test_partial_collection_skips_invalid_features(self):
+        # Collection lẫn feature hỏng → chỉ giữ feature hợp lệ (endpoint tự phán "đủ 34"?).
+        # GeoJSON trong repo dùng MultiPolygon (4 cấp: multipolygon → polygon → ring → point).
+        valid = {
+            "type": "Feature",
+            "properties": {"code": "01", "name": "Hà Nội test", "full_name": "TP test", "area_km2": 1.0},
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [[[[105.0, 21.0], [105.5, 21.0], [105.5, 21.5], [105.0, 21.5], [105.0, 21.0]]]],
+            },
+        }
+        malformed = {"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": []}}
+        with tempfile.TemporaryDirectory() as tmp:
+            partial = Path(tmp) / "partial.geojson"
+            partial.write_text(json.dumps({"type": "FeatureCollection", "features": [valid, malformed]}), encoding="utf-8")
+            provinces = geo.load_provinces(path=str(partial))
+        self.assertEqual(len(provinces), 1)
+        self.assertEqual(provinces[0].code, "01")
 
 
 class AreaSanityTest(unittest.TestCase):
