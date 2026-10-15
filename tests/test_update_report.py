@@ -55,7 +55,7 @@ MD_SECTIONS = ("Nguồn OSM", "Kết quả so sánh với Atlas", "Staging/verif
 
 class TestBuildReport(unittest.TestCase):
     def test_normal_counts_and_change_verdict(self):
-        report, md = update_report.build_report(json.dumps(PREVIEW), PROVENANCE, "stats text", "verify text", stamp=STAMP)
+        report, md = update_report.build_report(json.dumps(PREVIEW), PROVENANCE, stamp=STAMP)
         self.assertEqual(report["stamp"], STAMP)
         self.assertEqual(report["mode"], "DRY_RUN")
         self.assertEqual(report["would_insert"], 12)

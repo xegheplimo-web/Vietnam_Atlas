@@ -38,12 +38,24 @@ def read_text_any_bom(path) -> str:
     PowerShell 5.1 Tee-Object writes UTF-16LE with BOM, so the _raw captures it
     produces must not be read as plain UTF-8.
     """
-    data = Path(path).read_bytes()
+    # Path đến từ CLI flag của tool chạy cục bộ bởi người vận hành (không phải input từ xa).
+    data = Path(path).read_bytes()  # NOSONAR(S8707)
     if data.startswith(codecs.BOM_UTF8):
         return data.decode("utf-8-sig")
     if data.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
         return data.decode("utf-16")
     return data.decode("utf-8")
+
+
+def _string_scan_state(char, escaped):
+    """Advance the JSON-string state machine one char: returns (in_string, escaped)."""
+    if escaped:
+        return True, False
+    if char == "\\":
+        return True, True
+    if char == '"':
+        return False, False
+    return True, False
 
 
 def iter_json_object_spans(text):
@@ -59,12 +71,7 @@ def iter_json_object_spans(text):
     escaped = False
     for index, char in enumerate(text):
         if in_string:
-            if escaped:
-                escaped = False
-            elif char == "\\":
-                escaped = True
-            elif char == '"':
-                in_string = False
+            in_string, escaped = _string_scan_state(char, escaped)
             continue
         if char == '"':
             in_string = True
@@ -152,15 +159,15 @@ def render_markdown(report, stamp, raw_paths=None):
     return "\n".join(lines)
 
 
-def build_report(preview_text, provenance=None, stats_text=None, verify_text=None, *, stamp="", out_dir="reports", raw_paths=None):
+def build_report(preview_text, provenance=None, *, stamp="", out_dir="reports", raw_paths=None):
     """Build (machine report dict, markdown text) from captured pipeline outputs.
 
     preview_text: raw content of the captured sync preview (wrapper text tolerated).
     provenance: parsed provenance dict or raw JSON text (only a subset is kept).
-    stats_text / verify_text: captured staging-stats and verify console text
-        (kept for pipeline completeness; the markdown references their raw paths).
     raw_paths: optional {"preview": ..., "stats": ..., "verify": ...} raw capture
-        file paths referenced under "Staging/verify" and "Kết luận".
+        file paths referenced in the markdown report. The staging-stats and verify
+        captures matter only as raw file paths; their text content is not part of
+        the report payload.
     """
     preview = extract_preview_dict(preview_text)
     counts = {key: int(preview.get(key) or 0) for key in COUNT_KEYS}
@@ -185,12 +192,13 @@ def build_report(preview_text, provenance=None, stats_text=None, verify_text=Non
 
 def write_reports(report, markdown, out_dir, stamp):
     """Write reports/update-<stamp>.{json,md}; returns the artifact paths written."""
-    out = Path(out_dir)
+    # out_dir/stamp đến từ CLI flag của tool chạy cục bộ bởi người vận hành (không phải input từ xa).
+    out = Path(out_dir)  # NOSONAR(S8707)
     out.mkdir(parents=True, exist_ok=True)
-    json_path = out / f"update-{stamp}.json"
-    md_path = out / f"update-{stamp}.md"
-    json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    md_path.write_text(markdown, encoding="utf-8")
+    json_path = out / f"update-{stamp}.json"  # NOSONAR(S8707)
+    md_path = out / f"update-{stamp}.md"  # NOSONAR(S8707)
+    json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")  # NOSONAR(S8707)
+    md_path.write_text(markdown, encoding="utf-8")  # NOSONAR(S8707)
     report["artifacts"] = {"json": json_path.as_posix(), "markdown": md_path.as_posix()}
     return report["artifacts"]
 
@@ -220,8 +228,6 @@ def main(argv=None):
     try:
         preview_text = read_text_any_bom(args.preview)
         provenance_text = read_text_any_bom(args.provenance) if args.provenance and args.provenance.is_file() else None
-        stats_text = read_text_any_bom(args.staging_stats) if args.staging_stats and args.staging_stats.is_file() else None
-        verify_text = read_text_any_bom(args.verify) if args.verify and args.verify.is_file() else None
     except (OSError, UnicodeError) as exc:
         print(f"ERROR: cannot read captured input: {exc}", file=sys.stderr)
         raise SystemExit(2) from None
@@ -229,8 +235,6 @@ def main(argv=None):
         report, markdown = build_report(
             preview_text,
             provenance_text,
-            stats_text,
-            verify_text,
             stamp=stamp,
             out_dir=args.out_dir,
             raw_paths={
