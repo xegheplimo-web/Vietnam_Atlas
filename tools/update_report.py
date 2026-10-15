@@ -194,7 +194,7 @@ def write_reports(report, markdown, out_dir, stamp):
     """Write reports/update-<stamp>.{json,md}; returns the artifact paths written."""
     # out_dir/stamp đến từ CLI flag của tool chạy cục bộ bởi người vận hành (không phải input từ xa).
     out = Path(out_dir)  # NOSONAR(S8707)
-    out.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)  # NOSONAR(S8707)
     json_path = out / f"update-{stamp}.json"  # NOSONAR(S8707)
     md_path = out / f"update-{stamp}.md"  # NOSONAR(S8707)
     json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")  # NOSONAR(S8707)
