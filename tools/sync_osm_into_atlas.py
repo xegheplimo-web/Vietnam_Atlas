@@ -41,7 +41,8 @@ RETIRED_SYNC_STATE_DEFAULT = ROOT / "reports" / "_state" / "retired_by_sync.json
 def load_retired_sids(state_path: Path) -> dict:
     """source_id -> retired_at for rows retired by this tool; fail-closed (any problem = empty)."""
     try:
-        data = json.loads(state_path.read_text(encoding="utf-8"))  # NOSONAR(S8707): đường dẫn từ cờ CLI cục bộ do người vận hành chạy
+        # Đường dẫn đến từ cờ --retired-state của chính CLI này, người vận hành chạy cục bộ (precedent Vòng D).
+        data = json.loads(state_path.read_text(encoding="utf-8"))  # NOSONAR(S8707)
         if isinstance(data, dict) and isinstance(data.get("sids"), dict):
             return {str(k): v for k, v in data["sids"].items() if isinstance(v, str)}
     except (OSError, ValueError):
@@ -55,7 +56,8 @@ def save_retired_sids(state_path: Path, sids: dict) -> None:
     tmp = state_path.with_suffix(".tmp")
     payload = {"schema": 1, "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "sids": sids}
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    tmp.replace(state_path)  # NOSONAR(S8707): đường dẫn từ cờ CLI cục bộ do người vận hành chạy
+    # Đường dẫn đến từ cờ --retired-state của chính CLI này, người vận hành chạy cục bộ (precedent Vòng D).
+    tmp.replace(state_path)  # NOSONAR(S8707)
 
 
 def coverage_report(src):
