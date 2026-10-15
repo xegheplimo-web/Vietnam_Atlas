@@ -119,7 +119,7 @@ async function refresh(){
     const data=await api('/api/places?'+query.qs,{signal:controller.signal});
     if(seq!==loadSeq)return;
     places=data.items;
-    if(nearMe.active)places.sort((a,b)=>(a.distance_km??Infinity)-(b.distance_km??Infinity));
+    if(nearMe.active&&!query.search&&!query.category)places.sort((a,b)=>(a.distance_km??Infinity)-(b.distance_km??Infinity));
     renderMarkers();renderPlaces();
     $('visibleCount').textContent=placesCountText(data,query);
     $('serverStatus').textContent='Kho bộ nhớ đã kết nối';

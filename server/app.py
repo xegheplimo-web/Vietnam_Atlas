@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
+from . import geo
 from .live import LiveChanges
 from .store import (
     add_media,
@@ -65,6 +66,19 @@ def credit_html(value: str) -> str:
         pos = match.end()
     parts.append(html.escape(value[pos:]))
     return "".join(parts)
+
+
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", chr(0xFF1D), chr(0xFF0B), chr(0xFF0D), chr(0xFF20))
+
+
+def csv_safe_cell(value):
+    """Neutralize spreadsheet formula injection: prefix risky text cells with a single quote.
+
+    Gồm 4 biến thể full-width của OWASP (U+FF1D, U+FF0B, U+FF0D, U+FF20).
+    """
+    if isinstance(value, str) and value[:1] in _CSV_FORMULA_PREFIXES:
+        return "'" + value
+    return value
 
 
 def satellite_layer_config():
@@ -178,7 +192,9 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                         return self.json(200, stats(c))
                 if path == "/api/provinces":
                     data = json.loads((ROOT / "data" / "provinces_34.json").read_text(encoding="utf-8"))
-                    return self.json(200, {"items": [x["name"] for x in data], "count": len(data), "boundary_available": False})
+                    # boundary_available: đủ 34 polygon GSO nạp được (file thiếu/hỏng/không đủ → False, không crash)
+                    provinces = geo.all_provinces()
+                    return self.json(200, {"items": [x["name"] for x in data], "count": len(data), "boundary_available": len(provinces) == 34})
                 if path == "/api/places" or path == "/api/export.geojson":
                     search = (params.get("search") or [""])[0]
                     province = (params.get("province") or [""])[0]
@@ -247,7 +263,7 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                     ]
                     w = csv.DictWriter(sio, fieldnames=keys, extrasaction="ignore")
                     w.writeheader()
-                    w.writerows(items)
+                    w.writerows([{k: csv_safe_cell(p.get(k)) for k in keys} for p in items])
                     return self.respond(200, "\ufeff" + sio.getvalue(), "text/csv; charset=utf-8", "vietnam-atlas.csv")
                 if path.startswith("/api/places/"):
                     sub = path[len("/api/places/") :]

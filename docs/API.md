@@ -36,9 +36,9 @@ JSON mẫu:
 - `GET /api/places/{id}/media`: danh sách tham chiếu ảnh/tài liệu (tối đa 500).
 - `POST /api/places/{id}/media`: thêm `{ "url":"https://...", "rights_basis":"own photo", "source":"user", "caption":"..." }`. Chỉ lưu liên kết và metadata, không tải ảnh.
 - `GET /api/export.geojson?limit=20000`: snapshot đến 20.000 đối tượng; `total_matching` cho biết tổng trước cắt. Nhận cùng bộ lọc với `/api/places` (`search`, `province`, `bbox`, `category`, `near`); khi có `near`, properties mỗi feature kèm `distance_km`. Nếu nhiều dữ liệu, phân trang `/api/places` hoặc export trực tiếp từ database.
-- `GET /api/export.csv`: xuất tối đa 20.000 đối tượng hiện hành và BOM UTF-8 cho Excel.
+- `GET /api/export.csv`: xuất tối đa 20.000 đối tượng hiện hành và BOM UTF-8 cho Excel. Ô văn bản bắt đầu bằng `=`,`+`,`-`,`@`, tab, CR (kể cả biến thể full-width `＝`,`＋`,`－`,`＠`) được chèn `'` ở đầu để chống formula injection khi mở bằng spreadsheet.
 - `POST /api/import`: request body GeoJSON FeatureCollection (chỉ Point). Tối đa 10.000 features hoặc 16 MiB/call. Trả `created,updated,rejected,errors`. Features có `properties.id` hoặc `feature.id` sẽ được dùng như stable identity; nếu thiếu, dùng `(source,source_id)` khi có, nếu thiếu nữa sẽ sinh UUID mới, dễ trùng khi import lại.
-- `GET /api/provinces`: tên 34 đơn vị cấp tỉnh, thông báo `boundary_available:false`.
+- `GET /api/provinces`: tên 34 đơn vị cấp tỉnh, kèm `boundary_available` (true khi đủ 34 polygon ranh giới nạp được từ `data/provinces/provinces_34.geojson`; false khi file thiếu/hỏng hoặc không đủ 34 — request không sập).
 - `GET /api/health`: kiểm tra database.
 - `GET /api/live`: SSE stream read-only (\`text/event-stream\`) phát `ready` và `changed` với JSON `{\"revision\":<changes.seq>}`. Browser `EventSource` tự reconnect bằng `Last-Event-ID`; phát lại invalidation khi có commit. Chỉ báo cập nhật POI, không phải ảnh vệ tinh trực tiếp. Tối đa 32 luồng đồng thời trên một tiến trình. Xem [Realtime Map](REALTIME_MAP.md).
 - `GET /api/stats`: số địa điểm, sự kiện lịch sử và tỉnh có dữ liệu.
