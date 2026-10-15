@@ -22,6 +22,7 @@ from pathlib import Path
 
 STAMP_RE = re.compile(r"^\d{8}T\d{6}Z$")
 COUNT_KEYS = ("would_insert", "would_update", "would_retire", "protected", "existing")
+PREVIEW_MARKERS = ("mode", *COUNT_KEYS)
 PROVENANCE_KEYS = ("source_url", "last_modified", "sha256", "size_bytes")
 
 VERDICT_CHANGE = "change"
@@ -87,16 +88,19 @@ def iter_json_object_spans(text):
 
 
 def extract_preview_dict(preview_text):
-    """Return the last parseable top-level JSON object inside *preview_text*."""
-    spans = list(iter_json_object_spans(preview_text))
-    for start, end in reversed(spans):
+    """Return the last top-level JSON object that looks like a sync-tool result.
+
+    A candidate must carry at least one known preview key, so an unrelated
+    trailing JSON object cannot silently become a zero-count report.
+    """
+    for start, end in reversed(list(iter_json_object_spans(preview_text))):
         try:
             candidate = json.loads(preview_text[start:end])
         except ValueError:
             continue
-        if isinstance(candidate, dict):
+        if isinstance(candidate, dict) and any(marker in candidate for marker in PREVIEW_MARKERS):
             return candidate
-    raise ValueError("no parseable top-level JSON object found in preview text")
+    raise ValueError(f"no sync preview JSON object found (expected keys: {', '.join(PREVIEW_MARKERS)})")
 
 
 def provenance_subset(provenance):

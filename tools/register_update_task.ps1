@@ -12,8 +12,9 @@ if ($Action -eq 'Register') {
   if ($Time -notmatch '^\d{2}:\d{2}$') { throw "Time phai dinh dang HH:MM (24h), nhan: '$Time'" }
   if ($Day -notmatch '^(MON|TUE|WED|THU|FRI|SAT|SUN)$') { throw "Day phai la MON..SUN, nhan: '$Day'" }
 }
-$RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot = Split-Path -Parent $PSScriptRoot
 $Runner = Join-Path $RepoRoot 'RUN_UPDATE_WINDOWS.ps1'
+if (-not (Test-Path $Runner)) { throw "Khong tim thay RUN_UPDATE_WINDOWS.ps1 tai: $Runner" }
 $TaskRun = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$Runner`""
 switch ($Action) {
   'Register' {

@@ -27,6 +27,18 @@ if (-not $SkipDownload) {
   if ($LASTEXITCODE -ne 0) { throw 'Download that bai; khong nhap vao Atlas.' }
 } else {
   Write-Host 'SkipDownload: bo qua buoc tai PBF, dung snapshot hien co.' -ForegroundColor Yellow
+  $pbfPath = 'data/vietnam-latest.osm.pbf'
+  $sidecarPath = "$pbfPath.provenance.json"
+  if ((Test-Path $pbfPath) -and (Test-Path $sidecarPath)) {
+    $expected = (Get-Content $sidecarPath -Raw | ConvertFrom-Json).sha256
+    $actual = (Get-FileHash -Algorithm SHA256 -Path $pbfPath).Hash.ToLowerInvariant()
+    if ($expected -and ($actual -ne $expected.ToString().ToLowerInvariant())) {
+      throw 'SkipDownload: SHA-256 PBF khong khop provenance sidecar (file bi thay?); chay lai khong -SkipDownload de tai moi va lam moi metadata.'
+    }
+    Write-Host 'SkipDownload: provenance khop PBF hien co.' -ForegroundColor Yellow
+  } else {
+    Write-Host 'SkipDownload: thieu PBF hoac sidecar provenance; bao cao se thieu metadata nguon.' -ForegroundColor Yellow
+  }
 }
 if ($OnlyDownload) { exit 0 }
 $importArgs = @('tools/vn_osm_dataset.py', 'data/vietnam-latest.osm.pbf', '--db', 'data/osm_vietnam.sqlite3')
@@ -47,16 +59,18 @@ if ($UpdateExisting) { $syncArgs += '--update-existing' }
 Write-Host 'Preview changes to Atlas:'
 & $cmd @prefix @syncArgs | Tee-Object -FilePath "$rawDir/preview.json"
 if ($LASTEXITCODE -ne 0) { throw 'Dry-run that bai; khong ghi database.' }
+$reportInput = "$rawDir/preview.json"
 if ($Apply) {
   Write-Host 'Apply: auto-backup atlas.sqlite3 before write' -ForegroundColor Yellow
   $applyArgs = $syncArgs + @('--apply')
-  & $cmd @prefix @applyArgs | Tee-Object -FilePath "$rawDir/preview.json"
+  & $cmd @prefix @applyArgs | Tee-Object -FilePath "$rawDir/apply.json"
   if ($LASTEXITCODE -ne 0) { throw 'Ghi Atlas that bai; kiem tra backup va log.' }
+  $reportInput = "$rawDir/apply.json"
 } else {
   Write-Host 'DRY RUN only. Chay voi -Apply de ghi vao Atlas.' -ForegroundColor Yellow
 }
 Write-Host 'Tao bao cap nhat tu cac file da chup...'
-& $cmd @prefix tools/update_report.py --preview "$rawDir/preview.json" --provenance 'data/vietnam-latest.osm.pbf.provenance.json' --staging-stats "$rawDir/stats.txt" --verify "$rawDir/verify.txt" --out-dir reports --stamp $ts
+& $cmd @prefix tools/update_report.py --preview "$reportInput" --provenance 'data/vietnam-latest.osm.pbf.provenance.json' --staging-stats "$rawDir/stats.txt" --verify "$rawDir/verify.txt" --out-dir reports --stamp $ts
 if ($LASTEXITCODE -ne 0) { throw 'Tao bao cap nhat that bai; kiem tra file preview va stderr.' }
 Write-Host "Bao cap nhat: reports/update-$ts.json"
 Write-Host "Bao cap nhat: reports/update-$ts.md"

@@ -7,7 +7,7 @@ Tài liệu mô tả chu kỳ cập nhật dữ liệu OpenStreetMap vào Vietna
 - Mặc định mọi lần chạy đều là **preview (dry-run)**: không ghi gì vào `data/atlas.sqlite3`.
 - Dữ liệu chỉ được ghi khi người vận hành chạy có chủ đích với `-Apply` (tùy chọn thêm `-Update-existing`).
 - Báo cáo `reports/update-<stamp>.md` là tài liệu cần đọc **trước** khi quyết định ghi.
-- Mỗi lần chạy đều chụp đầu ra thô vào `reports/_raw/<YYYYMMDDTHHMMSSZ>/` (`stats.txt`, `verify.txt`, `preview.json`); console vẫn hiển thị qua `Tee-Object`.
+- Mỗi lần chạy đều chụp đầu ra thô vào `reports/_raw/<YYYYMMDDTHHMMSSZ>/` (`stats.txt`, `verify.txt`, `preview.json`, và `apply.json` khi chạy `-Apply`); console vẫn hiển thị qua `Tee-Object`.
 
 ## 2. Các bước tuần tự (RUN_UPDATE_WINDOWS.ps1)
 
@@ -16,16 +16,17 @@ Tài liệu mô tả chu kỳ cập nhật dữ liệu OpenStreetMap vào Vietna
 | 1 | Download | `tools/fetch_vn_geofabrik.py --out data/vietnam-latest.osm.pbf` | `data/vietnam-latest.osm.pbf`, `data/vietnam-latest.osm.pbf.provenance.json` |
 | 2 | Import staging | `tools/vn_osm_dataset.py data/vietnam-latest.osm.pbf --db data/osm_vietnam.sqlite3` | `data/osm_vietnam.sqlite3` |
 | 3 | Verify | `tools/verify_osm_snapshot.py --db data/osm_vietnam.sqlite3 --min-active 1` | `reports/_raw/<stamp>/verify.txt` |
-| 4 | Preview | `tools/sync_osm_into_atlas.py --osm-db data/osm_vietnam.sqlite3 --atlas-db data/atlas.sqlite3` (dry-run, in đúng 1 JSON object) | `reports/_raw/<stamp>/preview.json` |
+| 4 | Preview | `tools/sync_osm_into_atlas.py --osm-db data/osm_vietnam.sqlite3 --atlas-db data/atlas.sqlite3` (dry-run, in đúng 1 JSON object) | `reports/_raw/<stamp>/preview.json` (`apply.json` khi `-Apply`) |
 | 5 | Report | `tools/update_report.py` | `reports/update-<stamp>.json`, `reports/update-<stamp>.md` |
 
 Ghi chú:
 
 - Fetch là **etag-aware**: nguồn không đổi thì bỏ qua tải lại; `-ForceDownload` ép tải lại.
-- `-SkipDownload` bỏ qua bước 1, dùng snapshot hiện có và chạy tiếp import/verify/preview/report.
+- `-SkipDownload` bỏ qua bước 1 với một kiểm tra an toàn: SHA-256 của PBF cục bộ phải khớp sidecar provenance, lệch là dừng ngay (tránh báo cáo gắn nhầm metadata nguồn cũ).
 - `-Limit N` chạy pilot trên N POI đầu (vô hiệu hóa đánh giá retirement).
 - `-OnlyDownload` chỉ tải PBF rồi thoát.
-- `-Apply` chạy preview rồi ghi Atlas; `-Apply -Update-existing` cập nhật thêm các dòng OSM chưa verified.
+- `-Apply` chạy preview rồi ghi Atlas; kết quả ghi được chụp riêng ở `apply.json`, còn `preview.json` giữ nguyên bản dry-run đã được duyệt (không bị ghi đè). `-Apply -Update-existing` cập nhật thêm các dòng OSM chưa verified.
+- Không chạy kèm `-Limit` khi muốn đánh giá retirement (`would_retire`) trong tương lai: retirement chỉ có ý nghĩa trên snapshot đầy đủ.
 
 ## 3. Đọc báo cáo
 
@@ -60,8 +61,11 @@ py -3 tools/update_report.py --preview reports/_raw/<stamp>/preview.json --prove
 
 ## 6. Được bảo vệ
 
-- `protected`: bản ghi `verified` hoặc do người dùng tạo — sync không bao giờ sửa/xóa.
+- `protected`: dòng đã có trong Atlas mà sync không sửa/xóa. Ý nghĩa tùy chế độ chạy:
+  - **Mặc định (không `-Update-existing`)**: mọi dòng đã có đều bị tính `protected` (kể cả OSM `unverified`) vì tính năng cập nhật đang tắt.
+  - **Khi `-Update-existing`**: chỉ dòng `verified`/do người dùng tạo được bảo vệ; dòng `unverified` được phép cập nhật (và đếm vào `would_update`).
 - `would_retire` chỉ áp dụng cho dòng OSM `unverified` tương ứng đã ngừng xuất hiện trong snapshot staging (import với `--mark-missing` đánh bộ inactive, không bao giờ xóa).
+- **Lưu ý retirement**: chu kỳ hiện chạy import **không** kèm `--mark-missing`, nên staging không đánh dấu được địa điểm biến mất khỏi OSM → `would_retire` thực tế luôn 0. Bật `--mark-missing` (chạy full, không `-Limit`) là hạng mục tiếp theo của roadmap khi muốn theo dõi các địa điểm ngừng xuất hiện.
 
 ## 7. Idempotency
 

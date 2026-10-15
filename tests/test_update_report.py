@@ -93,6 +93,16 @@ class TestBuildReport(unittest.TestCase):
         self.assertEqual(report["would_insert"], 1)
         self.assertEqual(report["verdict"], "change")
 
+    def test_trailing_unrelated_json_object_is_ignored(self):
+        text = json.dumps(PREVIEW) + "\n" + json.dumps({"event": "cleanup", "ok": True}) + "\n"
+        report, _ = update_report.build_report(text, stamp=STAMP)
+        self.assertEqual(report["would_insert"], 12)
+        self.assertEqual(report["verdict"], "change")
+
+    def test_only_unrelated_json_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            update_report.build_report(json.dumps({"event": "cleanup", "ok": True}), stamp=STAMP)
+
     def test_unparseable_text_raises_value_error(self):
         with self.assertRaises(ValueError):
             update_report.build_report("khong co JSON o day {", stamp=STAMP)
