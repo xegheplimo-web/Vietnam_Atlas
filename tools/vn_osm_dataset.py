@@ -75,15 +75,22 @@ def locator(coords: list[tuple[float, float]]) -> tuple[float, float] | None:
     return p if p is not None and coordinates_valid(*p) else None
 
 
-def record(kind: str, ident: int | str, tags: dict, location: tuple[float, float] | None):
+def reject_reason(tags: dict, location: tuple[float, float] | None) -> str | None:
+    """Why record() drops an object (None = accepted); same check order as record()."""
     if location is None or not coordinates_valid(*location):
+        return "missing_or_invalid_coordinates"
+    if not str(tags.get("name") or tags.get(NAME_VI) or "").strip():
+        return "missing_name"
+    if not any(tags.get(k) for k in CATEGORIES):
+        return "unsupported_category"
+    return None
+
+
+def record(kind: str, ident: int | str, tags: dict, location: tuple[float, float] | None):
+    if reject_reason(tags, location) is not None:
         return None
     name = str(tags.get("name") or tags.get(NAME_VI) or "").strip()
-    if not name:
-        return None
     category = next((f"{k}:{tags[k]}" for k in CATEGORIES if tags.get(k)), None)
-    if not category:
-        return None
     lat, lon = location
     addr = " ".join(
         filter(None, [tags.get("addr:housenumber", ""), tags.get("addr:street", ""), tags.get("addr:ward", ""), tags.get("addr:city", "")])
@@ -157,15 +164,34 @@ class Collector:
         self.run_id = run_id
         self.max_poi = max_poi
         self.counts = Counter()
+        self.skip_reasons = Counter()  # reason -> count for every rejected object
         self.seen_keys = set() if max_poi else None  # only in a bounded pilot
         self.timestamp = now_utc()
 
+    def pilot_full(self) -> bool:
+        """True once a bounded pilot collected its quota; later objects are out of scope."""
+        return bool(self.max_poi) and (self.counts["inserted"] + self.counts["updated"] + self.counts["unchanged"]) >= self.max_poi
+
+    def note_skip(self, reason: str) -> None:
+        """Count one dropped object so every reject lands in both counters (skipped = Σ skip_reasons).
+        Once a pilot is full later rejects are out of scope and are not counted at all."""
+        if self.pilot_full():
+            return
+        self.counts["skipped"] += 1
+        self.skip_reasons[reason] += 1
+
+    def note_invalid_geometry(self) -> None:
+        if self.pilot_full():
+            return
+        self.counts["invalid_geometry"] += 1
+        self.note_skip("invalid_geometry")
+
     def add(self, kind, ident, tags, loc):
-        if self.max_poi and (self.counts["inserted"] + self.counts["updated"] + self.counts["unchanged"]) >= self.max_poi:
+        if self.pilot_full():
             return
         d = record(kind, ident, tags, loc)
         if d is None:
-            self.counts["skipped"] += 1
+            self.note_skip(reject_reason(tags, loc) or "unknown")
             return
         key = (d["osm_type"], d["osm_id"])
         if self.seen_keys is not None:
@@ -214,6 +240,7 @@ def import_small_osm_xml(path: Path, collector: Collector):
             try:
                 lat, lon = float(elem.attrib["lat"]), float(elem.attrib["lon"])
             except (KeyError, ValueError):
+                collector.note_skip("missing_or_invalid_coordinates")
                 elem.clear()
                 continue
             nid = int(elem.attrib["id"])
@@ -235,6 +262,8 @@ def import_small_osm_xml(path: Path, collector: Collector):
                     if m.attrib.get("type") == "way" and m.attrib.get("role", "outer") in ("", "outer"):
                         coords.extend(way_coords.get(int(m.attrib["ref"]), []))
                 collector.add("relation", int(elem.attrib["id"]), tags, locator(coords))
+            else:
+                collector.note_skip("non_area_relation")
         if typ in ("node", "way", "relation"):
             elem.clear()
 
@@ -249,32 +278,46 @@ def import_national_pbf(path: Path, collector: Collector):
         def node(self, node):
             try:
                 tags = dict(node.tags)
-                if node.location.valid() and ("name" in tags or NAME_VI in tags) and any(k in tags for k in CATEGORIES):
-                    collector.add("node", node.id, tags, (node.location.lat, node.location.lon))
+                if not node.location.valid():
+                    collector.note_skip("missing_or_invalid_coordinates")
+                    return
+                if "name" not in tags and NAME_VI not in tags:
+                    collector.note_skip("missing_name")
+                    return
+                if not any(k in tags for k in CATEGORIES):
+                    collector.note_skip("unsupported_category")
+                    return
+                collector.add("node", node.id, tags, (node.location.lat, node.location.lon))
             except (ValueError, TypeError, RuntimeError):
-                collector.counts["invalid_geometry"] += 1
+                collector.note_invalid_geometry()
 
         def way(self, way):
             try:
                 tags = dict(way.tags)
                 if "name" not in tags and NAME_VI not in tags:
+                    collector.note_skip("missing_name")
                     return
                 if not any(k in tags for k in CATEGORIES):
+                    collector.note_skip("unsupported_category")
                     return
                 pts = [(ref.location.lon, ref.location.lat) for ref in way.nodes if ref.location.valid()]
                 if not pts or len(pts) < len(way.nodes):
-                    collector.counts["invalid_geometry"] += 1
+                    collector.note_invalid_geometry()
                     return
                 collector.add("way", way.id, tags, locator(pts))
             except (ValueError, TypeError, RuntimeError):
-                collector.counts["invalid_geometry"] += 1
+                collector.note_invalid_geometry()
 
         def area(self, area):
             try:
                 if area.from_way():
                     return  # already handled as a way
                 tags = dict(area.tags)
-                if ("name" not in tags and NAME_VI not in tags) or not any(k in tags for k in CATEGORIES):
+                if "name" not in tags and NAME_VI not in tags:
+                    collector.note_skip("missing_name")
+                    return
+                if not any(k in tags for k in CATEGORIES):
+                    collector.note_skip("unsupported_category")
                     return
                 all_rings = []
                 for outer in area.outer_rings():
@@ -282,13 +325,13 @@ def import_national_pbf(path: Path, collector: Collector):
                     if pts:
                         all_rings.append(pts)
                 if not all_rings:
-                    collector.counts["invalid_geometry"] += 1
+                    collector.note_invalid_geometry()
                     return
                 # Choose the largest outer ring by planar area for the map locator; never use this as precise polygon data.
                 pts = max(all_rings, key=ring_area)
                 collector.add("relation", area.orig_id(), tags, locator(pts))
             except (ValueError, TypeError, RuntimeError):
-                collector.counts["invalid_geometry"] += 1
+                collector.note_invalid_geometry()
 
     handler = Handler()
     # PBF area callback assembles multipolygons, including relation POIs.
@@ -321,7 +364,7 @@ def create_snapshot(source: Path, database: Path, max_poi=0, mark_missing=False,
     con = open_database(database)
     try:
         if not force and con.execute("SELECT 1 FROM ingestion_snapshots WHERE id=?", (key,)).fetchone():
-            return {"status": "unchanged_snapshot_skipped", "file_sha256": digest, "snapshot_id": key, "database": str(database)}
+            return {"status": "unchanged_snapshot_skipped", "file_sha256": digest, "snapshot_id": key, "skip_reasons": {}, "database": str(database)}
         collector = Collector(con, key, max_poi=max_poi)
         con.execute("BEGIN IMMEDIATE")
         try:
@@ -362,6 +405,7 @@ def create_snapshot(source: Path, database: Path, max_poi=0, mark_missing=False,
         except BaseException:
             con.rollback()
             raise
+        skip_reasons = dict(collector.skip_reasons)
         return {
             "status": "imported",
             "file_sha256": digest,
@@ -370,6 +414,7 @@ def create_snapshot(source: Path, database: Path, max_poi=0, mark_missing=False,
             "updated": collector.counts["updated"],
             "unchanged": collector.counts["unchanged"],
             "skipped": collector.counts["skipped"],
+            "skip_reasons": skip_reasons,
             "invalid_geometry": collector.counts["invalid_geometry"],
             "retired": retired,
             "active": con.execute(SQL_ACTIVE_COUNT).fetchone()[0],
