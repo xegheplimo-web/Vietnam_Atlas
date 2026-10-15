@@ -39,8 +39,8 @@ if (-not $SkipDownload) {
   }
   $expected = (Get-Content $sidecarPath -Raw | ConvertFrom-Json).sha256
   $actual = (Get-FileHash -Algorithm SHA256 -Path $pbfPath).Hash.ToLowerInvariant()
-  if ($expected -and ($actual -ne $expected.ToString().ToLowerInvariant())) {
-    throw 'SkipDownload: SHA-256 PBF khong khop provenance sidecar (file bi thay?); chay lai khong -SkipDownload de tai moi va lam moi metadata.'
+  if (-not $expected -or ($actual -ne $expected.ToString().ToLowerInvariant())) {
+    throw 'SkipDownload: provenance sidecar thieu SHA-256 hoac khong khop PBF (file bi thay?); chay lai khong -SkipDownload de tai moi va lam moi metadata.'
   }
   Write-Host 'SkipDownload: provenance khop PBF hien co.' -ForegroundColor Yellow
 }
@@ -75,8 +75,12 @@ Write-Host 'Preview changes to Atlas:'
 if ($LASTEXITCODE -ne 0) { throw 'Dry-run that bai; khong ghi database.' }
 $reportInput = "$rawDir/preview.json"
 if ($Apply) {
-  & $cmd @prefix tools/verify_approval.py --report $ApprovedReport --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3
-  if ($LASTEXITCODE -ne 0) { throw 'Report duyet khong con khop PBF/snapshot staging (report cu); chay lai preview va duyet lai report moi.' }
+  # Recheck: chay lai dung preview hien tai (cung options) truoc khi ghi; verify_approval
+  # doi chieu voi report da duyet => bat ca doi options lan Atlas/staging troi ke tu luc duyet.
+  & $cmd @prefix @syncArgs | Tee-Object -FilePath "$rawDir/recheck.json"
+  if ($LASTEXITCODE -ne 0) { throw 'Recheck preview that bai; khong ghi database.' }
+  & $cmd @prefix tools/verify_approval.py --report $ApprovedReport --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3 --recheck "$rawDir/recheck.json"
+  if ($LASTEXITCODE -ne 0) { throw 'Report duyet khong con khop PBF/snapshot/ket qua preview hien tai; chay lai preview va duyet lai report moi.' }
   Write-Host 'Apply: auto-backup atlas.sqlite3 before write' -ForegroundColor Yellow
   $applyArgs = $syncArgs + @('--apply')
   & $cmd @prefix @applyArgs | Tee-Object -FilePath "$rawDir/apply.json"

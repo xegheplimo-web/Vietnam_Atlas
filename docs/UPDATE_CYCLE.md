@@ -8,7 +8,7 @@ Tài liệu mô tả chu kỳ cập nhật dữ liệu OpenStreetMap vào Vietna
 - Dữ liệu chỉ được ghi khi người vận hành chạy có chủ đích với `-Apply` (tùy chọn thêm `-Update-existing`).
 - `-Apply` **bắt buộc** `-ApprovedReport <path report.json>` — apply phải ràng buộc vào một báo cáo preview đã được duyệt; `tools/verify_approval.py` đối chiếu SHA-256 của PBF hiện tại và snapshot staging full mới nhất với đúng những gì report đã ghi, lệch là từ chối ghi.
 - Báo cáo `reports/update-<stamp>.md` là tài liệu cần đọc **trước** khi quyết định ghi.
-- Mỗi lần chạy đều chụp đầu ra thô vào `reports/_raw/<YYYYMMDDTHHMMSSZ>/` (`import.json`, `stats.txt`, `verify.txt`, `preview.json`, và `apply.json` + `postapply.json` khi chạy `-Apply`); console vẫn hiển thị qua `Tee-Object`.
+- Mỗi lần chạy đều chụp đầu ra thô vào `reports/_raw/<YYYYMMDDTHHMMSSZ>/` (`import.json`, `stats.txt`, `verify.txt`, `preview.json`, và khi chạy `-Apply` thêm `recheck.json` + `apply.json` + `postapply.json`); console vẫn hiển thị qua `Tee-Object`.
 
 ## 2. Các bước tuần tự (RUN_UPDATE_WINDOWS.ps1)
 
@@ -18,9 +18,10 @@ Tài liệu mô tả chu kỳ cập nhật dữ liệu OpenStreetMap vào Vietna
 | 2 | Import staging | `tools/vn_osm_dataset.py data/vietnam-latest.osm.pbf --db data/osm_vietnam.sqlite3 --mark-missing` (chu kỳ full) | `data/osm_vietnam.sqlite3`, `reports/_raw/<stamp>/import.json` |
 | 3 | Verify | `tools/verify_osm_snapshot.py --db data/osm_vietnam.sqlite3 --require-full --min-active 50000` (chu kỳ full) | `reports/_raw/<stamp>/verify.txt` |
 | 4 | Preview | `tools/sync_osm_into_atlas.py --osm-db data/osm_vietnam.sqlite3 --atlas-db data/atlas.sqlite3` (dry-run, in đúng 1 JSON object) | `reports/_raw/<stamp>/preview.json` (`apply.json` khi `-Apply`) |
-| 5 | Binding | `tools/verify_approval.py --report <approved report.json> --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3` (chỉ khi `-Apply`) | chỉ chặn/cho qua |
-| 6 | Post-apply | chạy lại sync dry-run sau apply (chỉ khi `-Apply`) | `reports/_raw/<stamp>/postapply.json` |
-| 7 | Report | `tools/update_report.py` | `reports/update-<stamp>.json`, `reports/update-<stamp>.md` |
+| 5 | Recheck | chạy lại sync dry-run ngay trước khi ghi (chỉ khi `-Apply`) | `reports/_raw/<stamp>/recheck.json` |
+| 6 | Binding | `tools/verify_approval.py --report <approved report.json> --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3 --recheck reports/_raw/<stamp>/recheck.json` (chỉ khi `-Apply`) | chỉ chặn/cho qua |
+| 7 | Post-apply | chạy lại sync dry-run sau apply (chỉ khi `-Apply`) | `reports/_raw/<stamp>/postapply.json` |
+| 8 | Report | `tools/update_report.py` | `reports/update-<stamp>.json`, `reports/update-<stamp>.md` |
 
 Ghi chú:
 
@@ -57,7 +58,7 @@ py -3 tools/update_report.py --preview reports/_raw/<stamp>/preview.json --prove
 
 1. Chạy chu kỳ preview (`RUN_UPDATE_WINDOWS.ps1` không `-Apply`), đọc `reports/update-<stamp>.md`; xem xét các dòng mới / cập nhật / ngừng xuất hiện / ứng viên retire.
 2. Duyệt xong, chạy `RUN_UPDATE_WINDOWS.ps1 -Apply -ApprovedReport reports/update-<stamp>.json` (thêm `-Update-existing` nếu muốn cập nhật cả dòng OSM đã có nhưng chưa verified). Thiếu `-ApprovedReport` → script `throw` ngay.
-3. Trước khi ghi, `tools/verify_approval.py` chạy trong pipeline kiểm tra report đã duyệt còn khớp thực tế: `stage=="preview"`, `snapshot.sha256` trùng SHA-256 PBF hiện tại, và `staging.latest_snapshot.{id,file_sha256}` trùng snapshot **full** mới nhất trong staging. Lệch bất kỳ điều kiện nào → exit 2 → script `throw`, không ghi. PBF hay staging thay đổi sau khi duyệt = report cũ → phải chạy preview lại và duyệt report mới.
+3. Trước khi ghi, pipeline kiểm tra report đã duyệt còn khớp thực tế theo hai lớp: **Recheck** chạy lại đúng sync dry-run hiện tại (cùng options) ngay trước khi ghi; **Binding** (`tools/verify_approval.py`) kiểm `stage=="preview"`, `snapshot.sha256` trùng SHA-256 PBF hiện tại, `staging.latest_snapshot.{id,file_sha256}` trùng snapshot **full** mới nhất trong staging, và 4 đếm `would_insert/would_update/would_retire/would_restore` của recheck phải bằng đúng report đã duyệt. Lệch bất kỳ điều kiện nào → exit 2 → script `throw`, không ghi. PBF, staging, Atlas trôi hoặc đổi options (ví dụ thêm `-Update-existing`) sau khi duyệt = report cũ → phải chạy preview lại và duyệt report mới.
 4. Khi ghi, `tools/sync_osm_into_atlas.py` tự tạo **backup online** `backups/atlas-pre-osm-sync-<YYYYMMDDTHHMMSSZ>.sqlite3` bằng SQLite online backup và chạy `PRAGMA integrity_check` ngay sau khi tạo.
 5. Lỗi ở bước sinh báo cáo làm script `throw` — kể cả khi apply đã hoàn tất (đánh dấu rõ chu kỳ đã ghi dữ liệu nhưng thiếu báo cáo).
 
@@ -74,9 +75,9 @@ py -3 tools/update_report.py --preview reports/_raw/<stamp>/preview.json --prove
   - **Mặc định (không `-Update-existing`)**: mọi dòng đã có đều bị tính `protected` (kể cả OSM `unverified`) vì tính năng cập nhật đang tắt.
   - **Khi `-Update-existing`**: chỉ dòng `verified`/do người dùng tạo được bảo vệ; dòng `unverified` được phép cập nhật (và đếm vào `would_update`).
 - `would_retire` chỉ áp dụng cho dòng OSM `unverified` tương ứng đã ngừng xuất hiện trong snapshot staging (import với `--mark-missing` đánh bộ inactive, không bao giờ xóa).
-- **Retirement tại E1**: chu kỳ full giờ chạy import kèm `--mark-missing`, nên staging đánh dấu được POI biến mất khỏi OSM. Ở slice E1, retire/restore vẫn là **candidates-only**: report chỉ ghi nhận ứng viên retire (xem mục 3) và đếm `would_retire`/`would_restore`/`restore_blocked_manual`; quyết định ghi lifecycle thật (cờ `--apply-lifecycle` trong `tools/sync_osm_into_atlas.py`) do lane khác phát triển.
-- **Ứng viên retire theo snapshot**: `tools/update_report.py` theo dõi từng `sid` inactive qua các lần chạy trong state file `reports/_state/retire_candidates.json` — `sid` mới vào `candidate`, lên `ready_for_review` khi vắng mặt trong ≥2 snapshot full khác nhau và ≥7 ngày; `sid` tái xuất hiện (staging active trở lại) → `cancelled_reappeared`. State giữ toàn bộ candidate/ready và tối đa 1000 cancelled gần nhất.
-- Dòng staging inactive mà Atlas tương ứng không còn `unverified` (verified/user) bị loại khỏi ứng viên và đếm vào `protected_missing`.
+- **Retirement tại E1**: chu kỳ full giờ chạy import kèm `--mark-missing`, nên staging đánh dấu được POI biến mất khỏi OSM. Retire/restore vẫn là **candidates-only**: report chỉ ghi nhận ứng viên retire (xem mục 3) và đếm `would_retire`/`would_restore`/`restore_blocked_manual`. Cờ ghi lifecycle thật `--apply-lifecycle` (mặc định TẮT) do người vận hành chủ động chạy; `RUN_UPDATE_WINDOWS.ps1` cố ý không bật cờ này — muốn retire/restore thật phải chạy sync tay với cờ + `--apply` sau khi các ứng viên đã `ready_for_review`.
+- **Ứng viên retire theo snapshot**: `tools/update_report.py` theo dõi từng `sid` inactive qua các lần chạy trong state file `reports/_state/retire_candidates.json` — bằng chứng vắng mặt mỗi lần chạy ghi theo **snapshot full hiện hành** (không dùng `last_snapshot` của dòng inactive, vốn đứng yên từ lần cuối xuất hiện); `sid` mới vào `candidate`, lên `ready_for_review` khi vắng mặt trong ≥2 snapshot full khác nhau và ≥7 ngày; `sid` tái xuất hiện (staging active trở lại) → `cancelled_reappeared`; ứng viên đang mở mà dòng Atlas không còn `unverified` (hoặc mất dòng) trong khi vẫn vắng mặt → đóng bằng `cancelled_protected`. State giữ toàn bộ candidate/ready và tối đa 1000 cancelled gần nhất (cả hai loại cancelled chung hạn mức).
+- Dòng staging inactive mà Atlas tương ứng không còn `unverified` (verified/user) hoặc không có dòng Atlas bị loại khỏi ứng viên và đếm vào `protected_missing`.
 
 ## 7. Idempotency
 

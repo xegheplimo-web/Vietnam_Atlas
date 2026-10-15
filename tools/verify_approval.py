@@ -17,11 +17,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = 1
+# Change counters re-checked against the approved report right before apply.
+RECHECK_KEYS = ("would_insert", "would_update", "would_retire", "would_restore")
 
 
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
-    with path.open("rb") as fh:
+    # Đường dẫn đến từ cờ CLI của chính công cụ cục bộ (người vận hành chạy).
+    with path.open("rb") as fh:  # NOSONAR(S8707)
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
@@ -39,6 +42,12 @@ def main(argv=None):
     p.add_argument("--report", type=Path, required=True, help="approved reports/update-<stamp>.json (must be a preview report)")
     p.add_argument("--pbf", type=Path, default=ROOT / "data" / "vietnam-latest.osm.pbf")
     p.add_argument("--staging-db", type=Path, default=ROOT / "data" / "osm_vietnam.sqlite3")
+    p.add_argument(
+        "--recheck",
+        type=Path,
+        default=None,
+        help="fresh dry-run preview JSON captured right before apply; its change counters must equal the approved report's",
+    )
     a = p.parse_args(argv)
 
     try:
@@ -99,6 +108,32 @@ def main(argv=None):
             file=sys.stderr,
         )
         return 2
+
+    # Bind the apply to the APPROVED preview: re-run the current preview and
+    # compare its change counters with the approved report. Any drift (different
+    # sync options between preview and apply, or Atlas/staging changed since
+    # approval) fails closed with exit 2.
+    if a.recheck is not None:
+        try:
+            # Đường dẫn đến từ cờ CLI của chính công cụ cục bộ (người vận hành chạy).
+            recheck_text = a.recheck.read_text(encoding="utf-8")  # NOSONAR(S8707)
+            recheck = json.loads(recheck_text)
+            if not isinstance(recheck, dict):
+                raise ValueError("recheck JSON is not an object")
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: cannot read recheck preview {a.recheck}: {exc}", file=sys.stderr)
+            return 1
+        approved_changes = report.get("changes") or {}
+        for key in RECHECK_KEYS:
+            current = int(recheck.get(key) or 0)
+            approved = int(approved_changes.get(key) or 0)
+            if current != approved:
+                print(
+                    f"LECH PREVIEW: {key} hiện tại {current} != report đã duyệt {approved} "
+                    "(options/Atlas/staging đã đổi kể từ lúc duyệt — chạy lại preview, duyệt lại report rồi mới apply).",
+                    file=sys.stderr,
+                )
+                return 2
 
     print(json.dumps({"ok": True, "pbf_sha256": actual_sha, "snapshot": latest}, indent=2, ensure_ascii=False))
     return 0

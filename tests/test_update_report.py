@@ -421,6 +421,46 @@ class TestRetireCandidates(unittest.TestCase):
         self.assertEqual(result["new_this_run"], 0)
         self.assertEqual(self.read_state()["candidates"], {})
 
+    def test_protected_while_missing_cancels_candidacy(self):
+        update_report.update_retire_candidates(
+            [("node/1", "Quan A", "sha-a")],
+            {"node/1": "unverified"},
+            self.state_path,
+            now_iso="2026-01-01T00:00:00+00:00",
+        )
+        # Still missing on day 9, but the atlas row became verified: close it.
+        result = update_report.update_retire_candidates(
+            [("node/1", "Quan A", "sha-b")],
+            {"node/1": "verified"},
+            self.state_path,
+            now_iso="2026-01-10T00:00:00+00:00",
+        )
+        self.assertEqual(result["total"], 0)
+        self.assertEqual(result["ready_for_review"], 0)
+        self.assertEqual(result["cancelled_protected"], 1)
+        self.assertEqual(result["protected_missing"], 1)
+        entry = self.read_state()["candidates"]["node/1"]
+        self.assertEqual(entry["status"], "cancelled_protected")
+        self.assertEqual(entry["cancelled_at"], "2026-01-10T00:00:00+00:00")
+
+    def test_vanished_atlas_row_also_cancels_candidacy(self):
+        update_report.update_retire_candidates(
+            [("node/1", "Quan A", "sha-a")],
+            {"node/1": "unverified"},
+            self.state_path,
+            now_iso="2026-01-01T00:00:00+00:00",
+        )
+        # Atlas row deleted while staging row stays inactive: close it too.
+        result = update_report.update_retire_candidates(
+            [("node/1", "Quan A", "sha-b")],
+            {},
+            self.state_path,
+            now_iso="2026-01-10T00:00:00+00:00",
+        )
+        self.assertEqual(result["total"], 0)
+        self.assertEqual(result["cancelled_protected"], 1)
+        self.assertEqual(self.read_state()["candidates"]["node/1"]["status"], "cancelled_protected")
+
     def test_state_keeps_active_and_caps_cancelled_at_1000(self):
         cancelled = {
             f"node/{i}": {
@@ -534,6 +574,9 @@ class TestE1ReportBlocks(unittest.TestCase):
         self.assertEqual(report["retire_candidates"]["total"], 1)  # node/3 only
         self.assertEqual(report["retire_candidates"]["new_this_run"], 1)
         self.assertEqual(report["retire_candidates"]["protected_missing"], 1)  # node/4 verified
+        self.assertEqual(report["retire_candidates"]["cancelled_protected"], 0)
+        # Evidence sha = CURRENT full snapshot, never the row's stale last_snapshot.
+        self.assertEqual(report["retire_candidates"]["samples"][0]["snapshots_absent"], ["snap-full-1"])
         self.assertEqual(report["post_apply"], {"would_insert": 0, "would_update": 0, "ok": True})
         for section in E1_MD_SECTIONS:
             self.assertIn(section, md)
@@ -544,7 +587,7 @@ class TestE1ReportBlocks(unittest.TestCase):
         preview = dict(PREVIEW, mode="APPLY", would_insert=0, would_update=0, would_retire=0)
         report, md = self.build(preview, post_apply_text=json.dumps({"would_insert": 2, "would_update": 0}))
         self.assertEqual(report["stage"], "apply")
-        self.assertEqual(report["post_apply"]["ok"], False)
+        self.assertFalse(report["post_apply"]["ok"])
         self.assertIn("CẢNH BÁO", md)
 
     def test_optional_inputs_missing_degrade_quietly(self):

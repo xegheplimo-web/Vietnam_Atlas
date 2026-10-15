@@ -55,6 +55,8 @@ RETIRE_SAMPLE_LIMIT = 15
 RETIRE_READY_DISTINCT_SHAS = 2
 RETIRE_READY_MIN_DAYS = 7
 RETIRE_CANCELLED_KEEP = 1000
+# Both cancellation kinds share the retention cap and the "fresh window" restart rule.
+CANCELLED_STATUSES = ("cancelled_reappeared", "cancelled_protected")
 RETIRE_STATE_SCHEMA = 1
 # Atlas statuses are looked up per staging sid in bounded chunks (spec F: "query
 # theo sid, chia chunk") so a national-size inactive set cannot blow up one SQL
@@ -253,36 +255,43 @@ def _atomic_write_json(state_path, payload):
     state_path = Path(state_path)  # NOSONAR(S8707)
     state_path.parent.mkdir(parents=True, exist_ok=True)  # NOSONAR(S8707)
     tmp = state_path.with_suffix(state_path.suffix + ".tmp")  # NOSONAR(S8707)
-    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")  # NOSONAR(S8707)
+    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")  # NOSONAR
     tmp.replace(state_path)  # NOSONAR(S8707)
 
 
-def update_retire_candidates(inactive_rows, atlas_status_by_sid, state_path, now_iso=None):
+def update_retire_candidates(inactive_rows, atlas_status_by_sid, state_path, now_iso=None):  # NOSONAR(S3776)
     """Merge one run's inactive staging rows into the retire-candidate state.
 
-    inactive_rows: iterable of (sid, name, last_snapshot_sha). Rows whose atlas OSM
-    record is not 'unverified' go to protected_missing (never retired). Returns the
+    inactive_rows: iterable of (sid, name, absent_snapshot_sha) — the sha of the
+    full ingestion snapshot the row is missing from (NOT its last-present sha;
+    an inactive row keeps its old last_snapshot forever, so that value could
+    never accumulate a second distinct absence). Rows whose atlas OSM record is
+    not 'unverified', or that have no atlas row, are ineligible: counted in
+    protected_missing, and any active candidacy of theirs is closed. Returns the
     report entry {total, new_this_run, ready_for_review, cancelled_reappeared,
-    protected_missing, samples}; the state file is updated atomically.
+    cancelled_protected, protected_missing, samples}; the state file is updated
+    atomically.
     """
     now = _parse_iso(now_iso) or datetime.now(timezone.utc)
     state = _load_retire_state(state_path)
     protected_missing = 0
     new_this_run = 0
     cancelled_this_run = 0
-    absent = set()
+    cancelled_protected_this_run = 0
+    rows = list(inactive_rows)
+    eligible = set()
 
-    for sid, name, sha in inactive_rows:
-        absent.add(sid)
+    for sid, name, sha in rows:
         status = atlas_status_by_sid.get(sid)
         if status is None:
             continue  # no atlas OSM row: not a retire candidate
         if status != "unverified":
             protected_missing += 1
             continue
+        eligible.add(sid)
         entry = state["candidates"].get(sid)
-        if entry is None or entry.get("status") == "cancelled_reappeared":
-            # Brand-new candidate, or absent again after a reappearance (fresh window).
+        if entry is None or entry.get("status") in CANCELLED_STATUSES:
+            # Brand-new candidate, or absent again after a cancellation (fresh window).
             entry = {
                 "first_missing_sha": sha,
                 "first_missing_at": now.isoformat(),
@@ -304,18 +313,27 @@ def update_retire_candidates(inactive_rows, atlas_status_by_sid, state_path, now
                 entry["status"] = "ready_for_review"
         state["candidates"][sid] = entry
 
-    # Rows that came back (no longer inactive) cancel their candidacy.
+    # Active candidacies that this run no longer supports must close:
+    # still-inactive-but-ineligible rows (atlas row protected or gone) become
+    # cancelled_protected; rows that left the inactive feed (reappeared) become
+    # cancelled_reappeared.
+    inactive_sids = {sid for sid, _n, _sh in rows}
     for sid, entry in state["candidates"].items():
-        if entry.get("status") in ("candidate", "ready_for_review") and sid not in absent:
+        if entry.get("status") not in ("candidate", "ready_for_review") or sid in eligible:
+            continue
+        entry["cancelled_at"] = now.isoformat()
+        if sid in inactive_sids:
+            entry["status"] = "cancelled_protected"
+            cancelled_protected_this_run += 1
+        else:
             entry["status"] = "cancelled_reappeared"
-            entry["cancelled_at"] = now.isoformat()
             cancelled_this_run += 1
 
     # Keep all active candidates plus the newest cancelled entries.
-    cancelled = [e for e in state["candidates"].values() if e.get("status") == "cancelled_reappeared"]
+    cancelled = [e for e in state["candidates"].values() if e.get("status") in CANCELLED_STATUSES]
     cancelled.sort(key=lambda e: e.get("cancelled_at") or e.get("last_absent_at") or "", reverse=True)
     keep_ids = {id(e) for e in cancelled[:RETIRE_CANCELLED_KEEP]}
-    state["candidates"] = {sid: e for sid, e in state["candidates"].items() if e.get("status") != "cancelled_reappeared" or id(e) in keep_ids}
+    state["candidates"] = {sid: e for sid, e in state["candidates"].items() if e.get("status") not in CANCELLED_STATUSES or id(e) in keep_ids}
     state["updated_at"] = now.isoformat()
     _atomic_write_json(Path(state_path), state)
 
@@ -330,6 +348,7 @@ def update_retire_candidates(inactive_rows, atlas_status_by_sid, state_path, now
         "new_this_run": new_this_run,
         "ready_for_review": sum(1 for e in active if e.get("status") == "ready_for_review"),
         "cancelled_reappeared": cancelled_this_run,
+        "cancelled_protected": cancelled_protected_this_run,
         "protected_missing": protected_missing,
         "samples": samples,
     }
@@ -355,7 +374,7 @@ def _md_skip_reasons(skip_reasons):
     return str(skip_reasons)
 
 
-def render_markdown(report, stamp, raw_paths=None):
+def render_markdown(report, stamp, raw_paths=None):  # NOSONAR(S3776)
     """Render the Vietnamese operator report from the machine report dict."""
     provenance = report.get("provenance") or {}
     raw_paths = raw_paths or {}
@@ -427,6 +446,7 @@ def render_markdown(report, stamp, raw_paths=None):
             f"- Mới trong lần chạy này: {retire.get('new_this_run', 0)}",
             f"- Sẵn sàng xem xét (ready_for_review): {retire.get('ready_for_review', 0)}",
             f"- Tái xuất hiện (cancelled_reappeared): {retire.get('cancelled_reappeared', 0)}",
+            f"- Đóng do không còn đủ điều kiện (cancelled_protected): {retire.get('cancelled_protected', 0)}",
             f"- Có dòng Atlas không unverified — không retire (protected_missing): {retire.get('protected_missing', 0)}",
         ]
         if not retire.get("total") and not retire.get("cancelled_reappeared"):
@@ -475,7 +495,7 @@ def render_markdown(report, stamp, raw_paths=None):
     return "\n".join(lines)
 
 
-def build_report(
+def build_report(  # NOSONAR(S3776)
     preview_text,
     provenance=None,
     *,
@@ -553,8 +573,14 @@ def build_report(
                 full = con.execute("SELECT count(*) FROM ingestion_snapshots WHERE mode LIKE '%:full:%'").fetchone()[0]
                 staging = {"latest_snapshot": latest, "full_snapshots": full}
                 quality["outside_region"] = _outside_region(con)
+                # Absence evidence = the CURRENT full snapshot, not the row's stale
+                # last_snapshot (the importer only flips is_active on missing rows).
+                full_row = con.execute(
+                    "SELECT id FROM ingestion_snapshots WHERE mode LIKE '%:full:%' ORDER BY imported_at DESC, rowid DESC LIMIT 1"
+                ).fetchone()
+                evidence_sha = full_row[0] if full_row else None
                 inactive_rows = [
-                    (f"{r[0]}/{r[1]}", r[2], r[3]) for r in con.execute("SELECT osm_type,osm_id,name,last_snapshot FROM osm_places WHERE is_active=0")
+                    (f"{r[0]}/{r[1]}", r[2], evidence_sha) for r in con.execute("SELECT osm_type,osm_id,name FROM osm_places WHERE is_active=0")
                 ]
             finally:
                 con.close()

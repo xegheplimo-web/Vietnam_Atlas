@@ -71,7 +71,7 @@ class TestVerifyApproval(unittest.TestCase):
         payload.update(overrides)
         self.report.write_text(json.dumps(payload), encoding="utf-8")
 
-    def run_tool(self, report=None, pbf=None, staging=None):
+    def run_tool(self, report=None, pbf=None, staging=None, recheck=None):
         argv = [
             "--report",
             str(report or self.report),
@@ -80,6 +80,8 @@ class TestVerifyApproval(unittest.TestCase):
             "--staging-db",
             str(staging or self.staging),
         ]
+        if recheck is not None:
+            argv += ["--recheck", str(recheck)]
         stdout, stderr = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
             code = verify_approval.main(argv)
@@ -129,6 +131,33 @@ class TestVerifyApproval(unittest.TestCase):
         code, err, _ = self.run_tool(staging=staging)
         self.assertEqual(code, 2)
         self.assertIn("full", err.lower())
+
+    def _recheck_file(self, **counts):
+        path = self.tmp / "recheck.json"
+        path.write_text(json.dumps(counts), encoding="utf-8")
+        return path
+
+    def test_recheck_match_returns_zero(self):
+        self.write_report(changes={"would_insert": 5, "would_update": 0, "would_retire": 2, "would_restore": 1})
+        recheck = self._recheck_file(would_insert=5, would_update=0, would_retire=2, would_restore=1)
+        code, err, _ = self.run_tool(recheck=recheck)
+        self.assertEqual(code, 0, err)
+
+    def test_recheck_counter_mismatch_returns_2(self):
+        # e.g. preview approved without --update-existing, then apply ran with it.
+        self.write_report(changes={"would_insert": 0, "would_update": 0, "would_retire": 0, "would_restore": 0})
+        recheck = self._recheck_file(would_insert=0, would_update=34, would_retire=0, would_restore=0)
+        code, err, _ = self.run_tool(recheck=recheck)
+        self.assertEqual(code, 2)
+        self.assertIn("would_update", err)
+
+    def test_recheck_missing_file_returns_1(self):
+        code, _, _ = self.run_tool(recheck=self.tmp / "nope-recheck.json")
+        self.assertEqual(code, 1)
+
+    def test_recheck_absent_keeps_backward_compatible_checks(self):
+        code, err, _ = self.run_tool()
+        self.assertEqual(code, 0, err)
 
 
 if __name__ == "__main__":
