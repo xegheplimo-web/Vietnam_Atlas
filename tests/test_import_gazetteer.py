@@ -12,7 +12,9 @@ import shutil
 import sqlite3
 import tempfile
 import unittest
+from datetime import date, timedelta
 from pathlib import Path
+from typing import ClassVar
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = REPO_ROOT / "data" / "gazetteer" / "raw"
@@ -101,6 +103,65 @@ class TestPureHelpers(unittest.TestCase):
         self.assertEqual(ig.classify_relation("Sắp xếp toàn bộ huyện Cồn Cỏ thành đặc khu Cồn Cỏ"), "merged_into")
         self.assertIsNone(ig.classify_relation("Giữ nguyên"))
         self.assertIsNone(ig.classify_relation(""))
+
+
+class TestDecreeMetadata(unittest.TestCase):
+    """T-E2c: DECREES.json (ngày hiệu lực) drives validity, not ban hành."""
+
+    DOCS: ClassVar[list] = [
+        {"document_id": "30/2026/QH16", "effective_on": "2026-04-30"},
+        {"document_id": "36/2026/QH16", "effective_on": "2026-09-01"},
+        {"document_id": "39/2026/QH16", "effective_on": "2026-09-20"},
+    ]
+
+    def test_decree_document_id(self):
+        self.assertEqual(ig.decree_document_id("39/2026/QH16 - 24/08/2026"), "39/2026/QH16")
+        self.assertEqual(ig.decree_document_id("36/2026/QH16 - 24/08/2026"), "36/2026/QH16")
+        self.assertEqual(ig.decree_document_id("Số: 388/NQ-UBTVQH16; Ngày: 04/08/2026"), "388/NQ-UBTVQH16")
+        self.assertEqual(ig.decree_document_id("202/2025/QH15 - 12/06/2025"), "202/2025/QH15")
+        self.assertEqual(ig.decree_document_id(""), "")
+
+    def test_load_decrees_missing_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = ig.load_decrees(Path(tmp) / "none.json")
+        self.assertEqual(data["documents"], [])
+        self.assertIsNone(data["reform_milestone"])
+
+    def test_load_decrees_tmp_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "DECREES.json"
+            p.write_text('{"documents": [{"document_id": "1/2026/QH16", "effective_on": "2026-05-01"}]}', encoding="utf-8")
+            data = ig.load_decrees(p)
+        self.assertEqual(data["documents"][0]["effective_on"], "2026-05-01")
+
+    def test_load_decrees_reads_committed_file(self):
+        data = ig.load_decrees()
+        ids = [d["document_id"] for d in data["documents"]]
+        self.assertEqual(ids, ["30/2026/QH16", "36/2026/QH16", "39/2026/QH16"])
+        self.assertEqual(data["reform_milestone"]["effective_on"], ig.REFORM_DATE)
+
+    def test_check_reform_milestone(self):
+        ig.check_reform_milestone(None)  # missing file -> ok
+        ig.check_reform_milestone({"effective_on": ig.REFORM_DATE})
+        with self.assertRaises(ValueError):
+            ig.check_reform_milestone({"effective_on": "2025-08-01"})
+
+    def test_find_decrees_and_effective_on(self):
+        self.assertEqual(ig.find_decrees("39/2026/QH16", self.DOCS)[0]["effective_on"], "2026-09-20")
+        self.assertEqual(ig.find_decrees("388/NQ-UBTVQH16", self.DOCS), [])
+        self.assertEqual(ig.find_decrees("", self.DOCS), [])
+        self.assertEqual(ig.decree_effective_on("36/2026/QH16", self.DOCS), "2026-09-01")
+        self.assertEqual(ig.decree_effective_on("388/NQ-UBTVQH16", self.DOCS), "")
+
+    def test_decree_valid_from_prefers_metadata(self):
+        self.assertEqual(ig.decree_valid_from("30/2026/QH16 - 24/04/2026", self.DOCS), "2026-04-30")
+        self.assertEqual(ig.decree_valid_from("36/2026/QH16 - 24/08/2026", self.DOCS), "2026-09-01")
+        self.assertEqual(ig.decree_valid_from("39/2026/QH16 - 24/08/2026", self.DOCS), "2026-09-20")
+        # unknown id -> historical issued-date parse (ban hành)
+        self.assertEqual(ig.decree_valid_from("Số: 388/NQ-UBTVQH16; Ngày: 04/08/2026", self.DOCS), "2026-08-04")
+        # non-2026 decree / empty cell -> reform date
+        self.assertEqual(ig.decree_valid_from("202/2025/QH15 - 12/06/2025", self.DOCS), ig.REFORM_DATE)
+        self.assertEqual(ig.decree_valid_from("", self.DOCS), ig.REFORM_DATE)
 
 
 class TestParsers(unittest.TestCase):
@@ -320,14 +381,21 @@ class TestBuildModelSynthetic(unittest.TestCase):
         inter = self.unit("province", "24", "2025-07-01")
         self.assertEqual(inter["name"], "Tỉnh Bắc Ninh")
         self.assertEqual(inter["unit_type"], "Tỉnh")
-        self.assertEqual(inter["valid_to"], "2026-08-23")
-        cur = self.unit("province", "24", "2026-08-24")
+        self.assertEqual(inter["valid_to"], "2026-09-19")
+        cur = self.unit("province", "24", "2026-09-20")
         self.assertEqual(cur["name"], "Thành phố Bắc Ninh")
         self.assertEqual(cur["unit_type"], "Thành phố Trung ương")
         self.assertIsNone(cur["valid_to"])
         rel = [r for r in self.model["relations"] if r["type"] == "type_changed" and self.model["units"][r["from"]]["level"] == "province"]
         self.assertEqual(len(rel), 1)
-        self.assertEqual(rel[0]["effective"], "2026-08-24")
+        self.assertEqual(rel[0]["effective"], "2026-09-20")
+
+    def test_decree_metadata_beats_issued_date(self):
+        # hiệu lực (DECREES.json) != ngày ban hành (cell): '39/2026/QH16 -
+        # 24/08/2026' must land on 2026-09-20, never on parse_decree_date's 2026-08-24.
+        cur = self.unit("province", "24", "2026-09-20")
+        self.assertEqual(cur["valid_from"], "2026-09-20")
+        self.assertNotEqual(cur["valid_from"], ig.parse_decree_date("39/2026/QH16 - 24/08/2026"))
 
     def test_ward_three_versions(self):
         old = self.unit("ward", "07294", "0001-01-01")
@@ -343,7 +411,7 @@ class TestBuildModelSynthetic(unittest.TestCase):
         self.assertEqual(inter["parent_key"], ("province", "24", "2025-07-01"))
         cur = self.unit("ward", "07294", "2026-09-20")
         self.assertEqual(cur["name"], "Phường Bố Hạ")
-        self.assertEqual(cur["parent_key"], ("province", "24", "2026-08-24"))
+        self.assertEqual(cur["parent_key"], ("province", "24", "2026-09-20"))
 
     def test_relations(self):
         types = sorted((self.model["units"][r["from"]]["name"], r["type"], self.model["units"][r["to"]]["name"]) for r in self.model["relations"])
@@ -368,7 +436,26 @@ class TestBuildModelSynthetic(unittest.TestCase):
         # version (regression: wards kept expired parents after QH16).
         cur = self.unit("ward", "09163", "2025-07-01")
         self.assertIsNone(cur["valid_to"])
-        self.assertEqual(cur["parent_key"], ("province", "24", "2026-08-24"))
+        self.assertEqual(cur["parent_key"], ("province", "24", "2026-09-20"))
+
+    def test_ward_fallback_branch_uses_decree_metadata(self):
+        # no file-7 row for 07294 -> the decree branch fires; with metadata for
+        # '388/NQ-UBTVQH16' the ward lands on hiệu lực, not ban hành.
+        docs = [{"document_id": "388/NQ-UBTVQH16", "effective_on": "2026-09-20"}]
+        raw = _synthetic_raw()
+        raw["doichieu"] = []
+        model = ig.build_model(raw, _report_stub(), decree_docs=docs)
+        cur = model["units"][("ward", "07294", "2026-09-20")]
+        self.assertEqual(cur["name"], "Phường Bố Hạ")
+
+    def test_ward_fallback_branch_without_metadata_parses_issued_date(self):
+        raw = _synthetic_raw()
+        raw["doichieu"] = []
+        model = ig.build_model(raw, _report_stub(), decree_docs=[])
+        cur = model["units"][("ward", "07294", "2026-08-04")]
+        self.assertEqual(cur["name"], "Phường Bố Hạ")
+        rel = [r for r in model["relations"] if r["type"] == "type_changed" and model["units"][r["from"]]["code"] == "07294"]
+        self.assertEqual(rel[0]["effective"], "2026-08-04")
 
     def test_typo_correction_redirects_alias_and_relation(self):
         corr = self.report["code_corrections"]
@@ -422,7 +509,9 @@ class TestRealImport(unittest.TestCase):
         self.assertEqual(self.q("SELECT COUNT(*) c FROM admin_relation WHERE from_unit_id IS NULL OR to_unit_id IS NULL")[0]["c"], 0)
 
     def test_acceptance_qh16_provinces(self):
-        for code, expected_vf in (("22", "2026-08-24"), ("24", "2026-08-24"), ("75", "2026-04-24")):
+        # Gate T-E2c: hiệu lực from DECREES.json, not the ban-hành date in the
+        # NSO cells: 75 -> 2026-04-30, 22 -> 2026-09-01, 24 -> 2026-09-20.
+        for code, expected_vf in (("22", "2026-09-01"), ("24", "2026-09-20"), ("75", "2026-04-30")):
             rows = self.q(
                 "SELECT name, unit_type, valid_from FROM admin_unit WHERE code=? AND level='province'"
                 " AND valid_from<='2026-10-16' AND (valid_to IS NULL OR valid_to>='2026-10-16')",
@@ -432,6 +521,54 @@ class TestRealImport(unittest.TestCase):
             self.assertEqual(rows[0]["unit_type"], "Thành phố Trung ương")
             self.assertEqual(rows[0]["valid_from"], expected_vf)
             self.assertTrue(rows[0]["name"].startswith("Thành phố "))
+            inter = self.q(
+                "SELECT unit_type, valid_from, valid_to FROM admin_unit WHERE code=? AND level='province' AND valid_from='2025-07-01'",
+                code,
+            )
+            self.assertEqual(len(inter), 1)
+            self.assertEqual(inter[0]["unit_type"], "Tỉnh")
+            self.assertEqual(inter[0]["valid_from"], "2025-07-01")
+            self.assertEqual(inter[0]["valid_to"], (date.fromisoformat(expected_vf) - timedelta(days=1)).isoformat())
+
+    def test_acceptance_qh16_province_as_of(self):
+        # as_of before the hiệu lực milestone resolves to the intermediate
+        # 'Tỉnh' version; on/after it resolves to the TP TW version.
+        for code, eff in (("75", "2026-04-30"), ("22", "2026-09-01"), ("24", "2026-09-20")):
+            before = self.q(
+                "SELECT unit_type FROM admin_unit WHERE code=? AND level='province' AND valid_from<=? AND (valid_to IS NULL OR valid_to>=?)",
+                code,
+                "2026-01-01",
+                "2026-01-01",
+            )
+            self.assertEqual(before[0]["unit_type"], "Tỉnh")
+            at = self.q(
+                "SELECT unit_type, valid_from FROM admin_unit WHERE code=? AND level='province'"
+                " AND valid_from<=? AND (valid_to IS NULL OR valid_to>=?)",
+                code,
+                eff,
+                eff,
+            )
+            self.assertEqual(at[0]["unit_type"], "Thành phố Trung ương")
+            self.assertEqual(at[0]["valid_from"], eff)
+            day_before = (date.fromisoformat(eff) - timedelta(days=1)).isoformat()
+            prev = self.q(
+                "SELECT unit_type FROM admin_unit WHERE code=? AND level='province' AND valid_from<=? AND (valid_to IS NULL OR valid_to>=?)",
+                code,
+                day_before,
+                day_before,
+            )
+            self.assertEqual(prev[0]["unit_type"], "Tỉnh")
+
+    def test_acceptance_qh16_province_relations(self):
+        # type_changed relations carry the same hiệu lực milestone.
+        for code, eff in (("75", "2026-04-30"), ("22", "2026-09-01"), ("24", "2026-09-20")):
+            rows = self.q(
+                """SELECT re.effective_date FROM admin_relation re
+                   JOIN admin_unit ou ON re.from_unit_id = ou.id
+                   WHERE ou.code=? AND ou.level='province' AND re.relation_type='type_changed'""",
+                code,
+            )
+            self.assertEqual([r["effective_date"] for r in rows], [eff])
 
     def test_acceptance_ward_00004(self):
         rows = self.q(

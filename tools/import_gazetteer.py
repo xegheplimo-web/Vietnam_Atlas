@@ -18,6 +18,9 @@ Model notes / known source-data quirks (all decisions kept to file evidence):
   * QH16/2026 provinces (22 Quảng Ninh, 24 Bắc Ninh, 75 Đồng Nai) and the 22
     NQ-UBTVQH16 xã->phường upgrades get an intermediate record (the 'Tỉnh'/'Xã'
     version evidenced by file 7's đối chiếu side) plus a type_changed relation.
+  * 2026 instruments: valid_from/valid_to/relation effective_date are taken
+    from data/gazetteer/DECREES.json (ngày HIỆU LỰC), never from the ngày ban
+    hành embedded in the NSO 'Nghị định' cells (hotfix T-E2c).
   * The 30/06/2025 ward file omits every Bắc Giang ward (192) and the district
     file omits all 10 Bắc Giang districts; they are rebuilt from file 1's old
     side (name, code, district, province are all present there).
@@ -64,6 +67,7 @@ RIGHTS_BASIS = "Dữ liệu công khai của cơ quan nhà nước; lưu bản g
 URL_MAIN_LIST = "https://danhmuchanhchinh.nso.gov.vn/Default.aspx"
 URL_DOI_CHIEU = "https://danhmuchanhchinh.nso.gov.vn/Doi_Chieu_Moi.aspx"
 URL_CONVERSION = "https://danhmuchanhchinh.nso.gov.vn/TAPTIN/BangChuyendoiĐVHCmoi_cu_final.xlsx"
+DECREES_FILE = Path(__file__).resolve().parents[1] / "data" / "gazetteer" / "DECREES.json"
 
 F_MAPPING = "BangChuyendoiĐVHCmoi_cu_final.xlsx"
 F_WARD_NEW = "Danh sách cấp xã ___16_10_2026.xls"
@@ -208,6 +212,63 @@ def parse_decree_date(text: str) -> str:
 def is_2026_decree(text: str) -> bool:
     """Nghị định issued under the post-reform national assembly (QH16 / NQ-UBTVQH16)."""
     return bool(re.search(r"/(QH|NQ-UBTVQH)16\b", text)) or "/2026/" in text
+
+
+def decree_document_id(text: str) -> str:
+    """Document id inside a nghị định cell: '39/2026/QH16 - 24/08/2026' -> '39/2026/QH16'."""
+    m = re.search(r"\d{1,4}/(?:\d{4}/)?(?:QH|NQ-UBTVQH)\d{2}", text)
+    return m.group(0) if m else ""
+
+
+def load_decrees(path: Path | None = None) -> dict:
+    """DECREES.json -> {'reform_milestone': {...}|None, 'documents': [...]}.
+
+    A missing file yields the empty structure: imports then keep running on
+    the historical issued-date parsing instead of failing.
+    """
+    p = path if path is not None else DECREES_FILE
+    if not p.exists():
+        return {"reform_milestone": None, "documents": []}
+    data = json.loads(p.read_text(encoding="utf-8"))  # NOSONAR(S8707)
+    return {"reform_milestone": data.get("reform_milestone"), "documents": data.get("documents", [])}
+
+
+def check_reform_milestone(milestone: dict | None) -> None:
+    """Fail loudly when DECREES.json's reform milestone disagrees with REFORM_DATE.
+
+    Every reform-era valid_from derives from REFORM_DATE; a wrong milestone in
+    the metadata file would silently shift all of them.
+    """
+    if not milestone:
+        return
+    eff = milestone.get("effective_on")
+    if eff is not None and eff != REFORM_DATE:
+        raise ValueError(f"DECREES.json reform_milestone.effective_on={eff!r} != REFORM_DATE {REFORM_DATE!r}")
+
+
+def find_decrees(doc_id: str, documents: list) -> list:
+    """Decree records with an exact document_id match ([] for '' or unknown ids)."""
+    if not doc_id:
+        return []
+    return [d for d in documents if d.get("document_id") == doc_id]
+
+
+def decree_effective_on(doc_id: str, documents: list) -> str:
+    """Ngày hiệu lực of a decree record; '' when the document id is unknown."""
+    hits = find_decrees(doc_id, documents)
+    return str(hits[0].get("effective_on", "")) if hits else ""
+
+
+def decree_valid_from(decree: str, documents: list) -> str:
+    """valid_from for a unit created/changed by `decree` (hiệu lực, not ban hành).
+
+    DECREES.json is authoritative when the decree id is known; unknown ids fall
+    back to the historical issued-date parse so pre-metadata behavior is kept.
+    """
+    eff = decree_effective_on(decree_document_id(decree), documents)
+    if eff:
+        return eff
+    return parse_decree_date(decree) if is_2026_decree(decree) else REFORM_DATE
 
 
 def classify_relation(note: str) -> str | None:
@@ -399,9 +460,14 @@ def _unit(code, name, level, unit_type, valid_from, valid_to, source_key, parent
     }
 
 
-def build_model(raw: dict, report: dict):
+def build_model(raw: dict, report: dict, decree_docs: list | None = None):
     """Turn parsed sheets into unit/alias/relation lists. `raw` keys per SOURCES;
-    a key may be None only under --allow-partial."""
+    a key may be None only under `--allow-partial`.
+
+    `decree_docs`: decree records from DECREES.json; None loads the committed
+    file. Every validity branch below resolves valid_from via
+    decree_valid_from (hiệu lực) when metadata is available.
+    """
     units = {}
     aliases = []
     relations = []
@@ -422,6 +488,8 @@ def build_model(raw: dict, report: dict):
     ward_new = raw.get("ward_new") or []
     mapping = raw.get("mapping") or {"mappings": [], "dividers": 0, "partial": []}
     doichieu = raw.get("doichieu") or []
+    if decree_docs is None:
+        decree_docs = load_decrees()["documents"]
 
     # ---------------- provinces ------------------------------------------------
     old_prov_key = {}
@@ -446,7 +514,7 @@ def build_model(raw: dict, report: dict):
     # the prior 'Tỉnh' name/type is evidenced by file 7's đối chiếu columns.
     for r in prov_new:
         name, utype, decree = r["cells"][1], r["cells"][3], r["cells"][4]
-        vf = parse_decree_date(decree) if is_2026_decree(decree) else REFORM_DATE
+        vf = decree_valid_from(decree, decree_docs)
         if vf > REFORM_DATE:
             inter_name = next(
                 (r7["dc_prov_name"] for r7 in doichieu if r7["prov_code"] == r["code"] and r7["dc_prov_name"] != r7["prov_name"]),
@@ -526,10 +594,8 @@ def build_model(raw: dict, report: dict):
         dc = dc_by_code.get(r["code"])
         if dc:
             vf = dc["effective"]
-        elif is_2026_decree(decree):
-            vf = parse_decree_date(decree) or REFORM_DATE
         else:
-            vf = REFORM_DATE
+            vf = decree_valid_from(decree, decree_docs)
         ikey = None
         # intermediate record: file 7 shows a different đối-chiếu name for the
         # same code (the xã that preceded a 2026 phường upgrade)
@@ -936,6 +1002,8 @@ def import_gazetteer(raw_dir: Path, db_path: Path, report_path: Path | None, all
         "sources": {},
         "counts": {},
     }
+    decrees = load_decrees()
+    check_reform_milestone(decrees["reform_milestone"])
     raw: dict = {}
     for key, meta in SOURCES.items():
         path = raw_dir / meta["file"]
@@ -982,7 +1050,7 @@ def import_gazetteer(raw_dir: Path, db_path: Path, report_path: Path | None, all
         if raw.get(key) is not None and not raw[key]:
             raise ValueError(f"{SOURCES[key]['file']}: no data rows parsed")
 
-    model = build_model(raw, report)
+    model = build_model(raw, report, decrees["documents"])
     counts = {"units": {}, "relations": {}, "aliases": {}}
     for u in model["units"].values():
         counts["units"][f"{u['level']}|{u['valid_from'][:4]}"] = counts["units"].get(f"{u['level']}|{u['valid_from'][:4]}", 0) + 1
