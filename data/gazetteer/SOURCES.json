@@ -1,0 +1,48 @@
+{
+  "source": "NSO — Cục Thống kê / danhmuchanhchinh.nso.gov.vn (Đơn vị hành chính)",
+  "license_note": "Dữ liệu công khai của cơ quan nhà nước; lưu bản gốc cho truy vết. Kiểm tra điều khoản tái phân phối trước khi công bố lại.",
+  "retrieved_at_local": "2026-10-16 (Asia/Ho_Chi_Minh)",
+  "retrieved_by": "Hermes lead-orchestrator (browser export UI)",
+  "files": [
+    {
+      "file": "BangChuyendoiĐVHCmoi_cu_final.xlsx",
+      "bytes": 1146952,
+      "sha256": "213966723785859dedd7c88965d6f12f8c3c508c91796e003804cf60a1054fc2"
+    },
+    {
+      "file": "Danh sách cấp huyện __30_06_2025.xls",
+      "bytes": 143396,
+      "sha256": "a79e1069131b98ad771b03dbd35a76d3f0ffe1420891669cd8b4d1f189cd4c7f"
+    },
+    {
+      "file": "Danh sách cấp tỉnh __16_10_2026.xls",
+      "bytes": 9948,
+      "sha256": "adf480049ef150fee004cb0a1929be6825654dbb9966c0bfefe587257676f271"
+    },
+    {
+      "file": "Danh sách cấp tỉnh __30_06_2025.xls",
+      "bytes": 14345,
+      "sha256": "f5ba8be9ef26f12175c1879b7839452ccfd8c122f85088655300d8a96bdc3ad8"
+    },
+    {
+      "file": "Danh sách cấp xã ___16_10_2026.xls",
+      "bytes": 866784,
+      "sha256": "d4a8ece8c02334bd428b661d835357c6736ad2646ac32f473707b0842fe6895a"
+    },
+    {
+      "file": "Danh sách cấp xã ___30_06_2025.xls",
+      "bytes": 2735267,
+      "sha256": "1dfd2b282cc7f73a51a6b24dd8ba0053fef7f21669b0ecd819ff3dcf42eab34b"
+    },
+    {
+      "file": "Đối chiếu đơn vị hành chính cấp Xã _ 16_10_2026 và 31_10_2025 .xls",
+      "bytes": 2361750,
+      "sha256": "976f0aa4f40c97189dec7adc1bde0d6fa0058496b8912df9dba1ab94c9417f61"
+    }
+  ],
+  "pages": {
+    "main_list": "https://danhmuchanhchinh.nso.gov.vn/Default.aspx (Cấp=Tỉnh|Huyện|Xã, Đến ngày=dd/mm/yyyy, Xuất Excel)",
+    "doichieu": "https://danhmuchanhchinh.nso.gov.vn/Doi_Chieu_Moi.aspx (Ngày gốc 16/10/2026 vs Ngày đối chiếu 31/10/2025, Cấp=Xã, Excel)",
+    "conversion_file": "https://danhmuchanhchinh.nso.gov.vn/TAPTIN/BangChuyendoiĐVHCmoi_cu_final.xlsx"
+  }
+}
