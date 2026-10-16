@@ -4,6 +4,14 @@
 An `-Apply` run must be bound to a preview report a human already reviewed:
 the PBF on disk and the latest full staging snapshot must still match what the
 approved report recorded. Any drift means the report is stale — refuse to write.
+
+Round E hardening: the four change counters alone cannot bind an apply to the
+change set a human approved (two different change sets can share all four
+counters). When a pre-apply `--recheck` is supplied, this guard also requires and
+compares the change manifests (see tools/change_manifest.py): same
+`manifest_hash`, same context (`snapshot_sha`/`schema_version`/`update_existing`/
+`apply_lifecycle`). A mismatch names the first differing source_id and fails
+closed.
 """
 
 from __future__ import annotations
@@ -17,9 +25,16 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+TOOLS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(TOOLS_DIR))
+
+from change_manifest import CONTEXT_KEYS, first_difference, validate_manifest  # noqa: E402
+
 SCHEMA = 1
 # Change counters re-checked against the approved report right before apply.
 RECHECK_KEYS = ("would_insert", "would_update", "would_retire", "would_restore")
+# Tên sidecar manifest recheck mặc định trong cùng thư mục với recheck.json.
+RECHECK_MANIFEST_NAME = "change-manifest-recheck.json"
 
 
 def read_text_any_bom(path) -> str:
@@ -80,6 +95,82 @@ def check_recheck(report, recheck_path: Path) -> int:
             )
             return 2
     return 0
+
+
+def default_manifest_path(report_path: Path) -> Path | None:
+    """Sidecar manifest của report đã duyệt: `reports/update-<stamp>.json` -> `reports/change-manifest-<stamp>.json`."""
+    name = report_path.name
+    if not (name.startswith("update-") and name.endswith(".json")):
+        return None
+    stamp = name[len("update-") : -len(".json")]
+    if not stamp:
+        return None
+    return report_path.with_name(f"change-manifest-{stamp}.json")
+
+
+def default_recheck_manifest_path(recheck_path: Path) -> Path:
+    """Sidecar manifest của lần recheck: cùng thư mục, tên `change-manifest-recheck.json`."""
+    return recheck_path.with_name(RECHECK_MANIFEST_NAME)
+
+
+def load_manifest(path: Path, label: str) -> tuple[dict | None, int]:
+    """Load + structurally validate a manifest sidecar; (manifest, 0) or (None, exit code).
+
+    Fail-closed: a missing file, unparseable JSON or any structural problem
+    (missing key, wrong schema, tampered entry/manifest hash) is a refusal, never
+    a warning.
+    """
+    try:
+        manifest = json.loads(read_text_any_bom(path))
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: không đọc được manifest {label} {path}: {exc}", file=sys.stderr)
+        return None, 1
+    problem = validate_manifest(manifest)
+    if problem:
+        print(f"ERROR: manifest {label} {path} không hợp lệ: {problem}", file=sys.stderr)
+        return None, 1
+    return manifest, 0
+
+
+def check_manifest(report, approved_path: Path, recheck_path: Path) -> tuple[int, str | None]:
+    """Bind the apply to the exact change set that was approved (not just counters).
+
+    Returns `(exit code, approved manifest_hash)`. Exit 1 = manifest unusable
+    (missing/unreadable/invalid), 2 = manifest drift (context or change set),
+    0 = the recheck change set re-hashes to the approved fingerprint.
+    """
+    approved, code = load_manifest(approved_path, "đã duyệt")
+    if code:
+        return code, None
+    current, code = load_manifest(recheck_path, "recheck")
+    if code:
+        return code, None
+    for key in CONTEXT_KEYS:
+        if approved.get(key) != current.get(key):
+            print(
+                f"LECH MANIFEST CONTEXT: {key} recheck {current.get(key)!r} != manifest đã duyệt {approved.get(key)!r} "
+                "(snapshot/options/schema Atlas đã đổi kể từ lúc duyệt — chạy lại preview, duyệt lại report rồi mới apply).",
+                file=sys.stderr,
+            )
+            return 2, None
+    rep_file_sha = ((report.get("staging") or {}).get("latest_snapshot") or {}).get("file_sha256")
+    if rep_file_sha and approved.get("snapshot_sha") != rep_file_sha:
+        print(
+            f"LECH MANIFEST SNAPSHOT: manifest đã duyệt snapshot_sha={approved.get('snapshot_sha')!r} != "
+            f"report.staging.latest_snapshot.file_sha256={rep_file_sha!r}.",
+            file=sys.stderr,
+        )
+        return 2, None
+    if approved.get("manifest_hash") == current.get("manifest_hash"):
+        return 0, approved.get("manifest_hash")
+    diff = first_difference(approved.get("entries") or [], current.get("entries") or [])
+    print(
+        f"LECH MANIFEST: tập thay đổi khác report đã duyệt (manifest_hash {current.get('manifest_hash')} != "
+        f"{approved.get('manifest_hash')}). Khác đầu tiên: {diff or 'không xác định'}. "
+        "Chạy lại preview, duyệt lại report rồi mới apply.",
+        file=sys.stderr,
+    )
+    return 2, None
 
 
 def read_report(path: Path) -> tuple[dict | None, int]:
@@ -166,6 +257,18 @@ def main(argv=None):
         default=None,
         help="fresh dry-run preview JSON captured right before apply; its change counters must equal the approved report's",
     )
+    p.add_argument(
+        "--manifest",
+        type=Path,
+        default=None,
+        help="manifest thay đổi đã duyệt; mặc định suy từ --report (reports/change-manifest-<stamp>.json)",
+    )
+    p.add_argument(
+        "--recheck-manifest",
+        type=Path,
+        default=None,
+        help=f"manifest do lần recheck sinh; mặc định <thư mục recheck>/{RECHECK_MANIFEST_NAME}",
+    )
     a = p.parse_args(argv)
 
     report, code = read_report(a.report)
@@ -182,13 +285,30 @@ def main(argv=None):
         return code
 
     # Bind the apply to the APPROVED preview: re-run the current preview and
-    # compare its change counters with the approved report (drift fails closed).
+    # compare its change counters with the approved report (drift fails closed),
+    # then re-hash the change manifest so the exact change set must match too.
+    manifest_sha = None
     if a.recheck is not None:
         code = check_recheck(report, a.recheck)
         if code:
             return code
+        approved_path = a.manifest or default_manifest_path(a.report)
+        if approved_path is None:
+            print(
+                f"ERROR: không suy được manifest đã duyệt từ tên report {a.report.name!r}; truyền --manifest <path> "
+                "(report phải tên reports/update-<stamp>.json để khớp reports/change-manifest-<stamp>.json).",
+                file=sys.stderr,
+            )
+            return 1
+        recheck_manifest = a.recheck_manifest or default_recheck_manifest_path(a.recheck)
+        code, manifest_sha = check_manifest(report, approved_path, recheck_manifest)
+        if code:
+            return code
 
-    print(json.dumps({"ok": True, "pbf_sha256": actual_sha, "snapshot": latest}, indent=2, ensure_ascii=False))
+    out = {"ok": True, "pbf_sha256": actual_sha, "snapshot": latest}
+    if manifest_sha is not None:
+        out["manifest_hash"] = manifest_sha
+    print(json.dumps(out, indent=2, ensure_ascii=False))
     return 0
 
 

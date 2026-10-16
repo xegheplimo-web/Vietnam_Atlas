@@ -71,16 +71,21 @@ $syncArgs = @('tools/sync_osm_into_atlas.py', '--osm-db', 'data/osm_vietnam.sqli
 if ($Limit -gt 0) { $syncArgs += @('--limit', "$Limit") }
 if ($UpdateExisting) { $syncArgs += '--update-existing' }
 Write-Host 'Preview changes to Atlas:'
-& $cmd @prefix @syncArgs | Tee-Object -FilePath "$rawDir/preview.json"
+# Manifest fingerprint: sidecar cung stamp voi reports/update-$ts.json, de verify_approval
+# tai tinh dung TAP thay doi da duyet (khong chi 4 counter). Console JSON khong doi.
+$previewArgs = $syncArgs + @('--manifest', "reports/change-manifest-$ts.json")
+& $cmd @prefix @previewArgs | Tee-Object -FilePath "$rawDir/preview.json"
 if ($LASTEXITCODE -ne 0) { throw 'Dry-run that bai; khong ghi database.' }
 $reportInput = "$rawDir/preview.json"
 if ($Apply) {
   # Recheck: chay lai dung preview hien tai (cung options) truoc khi ghi; verify_approval
-  # doi chieu voi report da duyet => bat ca doi options lan Atlas/staging troi ke tu luc duyet.
-  & $cmd @prefix @syncArgs | Tee-Object -FilePath "$rawDir/recheck.json"
+  # doi chieu voi report da duyet => bat ca doi options lan Atlas/staging troi ke tu luc duyet,
+  # va doi chieu manifest_hash cua tap thay doi (lech 1 source_id cung bi tu choi).
+  $recheckArgs = $syncArgs + @('--manifest', "$rawDir/change-manifest-recheck.json")
+  & $cmd @prefix @recheckArgs | Tee-Object -FilePath "$rawDir/recheck.json"
   if ($LASTEXITCODE -ne 0) { throw 'Recheck preview that bai; khong ghi database.' }
-  & $cmd @prefix tools/verify_approval.py --report $ApprovedReport --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3 --recheck "$rawDir/recheck.json"
-  if ($LASTEXITCODE -ne 0) { throw 'Report duyet khong con khop PBF/snapshot/ket qua preview hien tai; chay lai preview va duyet lai report moi.' }
+  & $cmd @prefix tools/verify_approval.py --report $ApprovedReport --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3 --recheck "$rawDir/recheck.json" --recheck-manifest "$rawDir/change-manifest-recheck.json"
+  if ($LASTEXITCODE -ne 0) { throw 'Report duyet khong con khop PBF/snapshot/ket qua preview/manifest hien tai; chay lai preview va duyet lai report moi.' }
   Write-Host 'Apply: auto-backup atlas.sqlite3 before write' -ForegroundColor Yellow
   $applyArgs = $syncArgs + @('--apply')
   & $cmd @prefix @applyArgs | Tee-Object -FilePath "$rawDir/apply.json"

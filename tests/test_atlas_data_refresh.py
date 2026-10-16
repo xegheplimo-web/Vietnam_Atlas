@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT))
 
+import change_manifest
 import export_osm_csv_gz as exporter
 import fetch_vn_geofabrik as downloader
 import import_authorized_registry as reg
@@ -488,6 +489,39 @@ class RefreshTests(unittest.TestCase):
         again = sync.sync(self.osm_db, self.atlas_db, apply=True, coverage=True)
         self.assertEqual(again["mode"], "APPLY_NO_CHANGES")
         self.assertEqual(again["coverage"]["cells_with_data"], 1)
+
+    def test_sync_emits_change_manifest_sidecar(self):
+        """--manifest ghi sidecar fingerprint từng source_id; console JSON không đổi."""
+        osm.create_snapshot(self.xml, self.osm_db)
+        manifest = self.d / "nested" / "change-manifest.json"
+        result = sync.sync(self.osm_db, self.atlas_db, manifest_path=manifest)
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        self.assertIsNone(change_manifest.validate_manifest(payload))
+        self.assertEqual(payload["entry_count"], result["would_insert"])
+        self.assertEqual(payload["entry_count"], 4)
+        self.assertFalse(payload["update_existing"])
+        self.assertFalse(payload["apply_lifecycle"])
+        self.assertEqual(payload["manifest_hash"], change_manifest.manifest_hash(payload["entries"]))
+        self.assertEqual({e["action"] for e in payload["entries"]}, {"insert"})
+        source_ids = [e["source_id"] for e in payload["entries"]]
+        self.assertEqual(source_ids, sorted(source_ids))
+        # Atlas chưa tồn tại -> fingerprint schema "absent" (giá trị ổn định, vẫn so sánh được).
+        self.assertEqual(payload["schema_version"], "absent")
+        with closing(sqlite3.connect(self.osm_db)) as con:
+            expected_sha = con.execute("SELECT file_sha256 FROM ingestion_snapshots ORDER BY imported_at DESC, rowid DESC LIMIT 1").fetchone()[0]
+        self.assertEqual(payload["snapshot_sha"], expected_sha)
+        # Cùng input -> cùng manifest_hash (hash ổn định, không phụ thuộc thứ tự xử lý).
+        again = self.d / "change-manifest-2.json"
+        sync.sync(self.osm_db, self.atlas_db, manifest_path=again)
+        self.assertEqual(json.loads(again.read_text(encoding="utf-8"))["manifest_hash"], payload["manifest_hash"])
+        # Sau apply không còn thay đổi -> manifest rỗng; schema Atlas giờ có fingerprint DDL.
+        sync.sync(self.osm_db, self.atlas_db, apply=True)
+        empty = self.d / "change-manifest-3.json"
+        sync.sync(self.osm_db, self.atlas_db, update_existing=True, manifest_path=empty)
+        empty_payload = json.loads(empty.read_text(encoding="utf-8"))
+        self.assertEqual(empty_payload["entry_count"], 0)
+        self.assertTrue(empty_payload["update_existing"])
+        self.assertTrue(empty_payload["schema_version"].startswith("ddl-sha256:"))
 
 
 if __name__ == "__main__":
