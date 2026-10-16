@@ -341,6 +341,14 @@ def _name_tokens(name: str) -> set:
 # ------------------------------------------------------------------ file input
 
 
+def find_manifest(raw_dir: Path) -> Path | None:
+    """Locate the sha256 manifest beside the raw files or in the committed spot."""
+    for cand in (raw_dir / "SOURCES.json", raw_dir.parent / "SOURCES.json"):
+        if cand.exists():
+            return cand
+    return None
+
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -426,6 +434,7 @@ def build_model(raw: dict, report: dict):
 
     prov_timeline = {}  # code -> [(valid_from, valid_to, key)]
     prov_upgrades = {}  # code -> QH16 effective date
+    prov_current = {}  # code -> key of the latest (open-ended) version
 
     def prov_at(code, on_date):
         for vf, vt, key in sorted(prov_timeline.get(code, []), key=lambda t: t[0]):
@@ -448,6 +457,7 @@ def build_model(raw: dict, report: dict):
             prov_upgrades[r["code"]] = (ikey, vf)
         key = add_unit(_unit(r["code"], name, "province", utype, vf, None, "prov_new"))
         prov_timeline.setdefault(r["code"], []).append((vf, None, key))
+        prov_current[r["code"]] = key
 
     for code, (ikey, vf) in prov_upgrades.items():
         cur = prov_at(code, vf)
@@ -542,7 +552,7 @@ def build_model(raw: dict, report: dict):
                         prov_at(mtp, REFORM_DATE),
                     )
                 )
-        pkey = prov_at(mtp, vf)
+        pkey = prov_current.get(mtp) or prov_at(mtp, vf)
         if pkey is None:
             ambiguous.append({"kind": "new_ward_parent_unresolved", "code": r["code"], "name": name, "ma_tp": mtp})
         key = add_unit(_unit(r["code"], name, "ward", utype, vf, None, "ward_new", pkey))
@@ -568,7 +578,7 @@ def build_model(raw: dict, report: dict):
     for m in mapping["mappings"]:
         f1_old_code_use[m["old_code"]] = f1_old_code_use.get(m["old_code"], 0) + 1
 
-    def resolve_old_unit(m):
+    def resolve_old_unit(m, log: bool = True):
         """file-1 old side -> unit key; handles the two code-typo rows."""
         oc = m["old_code"]
         if not oc:
@@ -586,28 +596,30 @@ def build_model(raw: dict, report: dict):
         cands = f6_by_dist_name.get((dc, name_norm(m["old_name"])), [])
         cands = [c for c in cands if f1_old_code_use.get(c, 0) == 0]
         if len(cands) == 1:
-            report["code_corrections"].append(
+            if log:
+                report["code_corrections"].append(
+                    {
+                        "kind": "old_code_typo_resolved",
+                        "file_code": oc,
+                        "file_name": m["old_name"],
+                        "resolved_code": cands[0],
+                        "resolved_name": units[old_ward_key[cands[0]]]["name"],
+                        "row": m["row"],
+                    }
+                )
+            return old_ward_key[cands[0]]
+        if log:
+            ambiguous.append(
                 {
-                    "kind": "old_code_typo_resolved",
+                    "kind": "old_code_name_conflict",
                     "file_code": oc,
                     "file_name": m["old_name"],
-                    "resolved_code": cands[0],
-                    "resolved_name": units[old_ward_key[cands[0]]]["name"],
+                    "code_name": f6_name,
+                    "district": m["old_district"],
                     "row": m["row"],
+                    "decision": "kept code match" if not cands else "kept code match; name candidate already mapped elsewhere",
                 }
             )
-            return old_ward_key[cands[0]]
-        ambiguous.append(
-            {
-                "kind": "old_code_name_conflict",
-                "file_code": oc,
-                "file_name": m["old_name"],
-                "code_name": f6_name,
-                "district": m["old_district"],
-                "row": m["row"],
-                "decision": "kept code match" if not cands else "kept code match; name candidate already mapped elsewhere",
-            }
-        )
         return unit
 
     rel_seen = set()
@@ -775,7 +787,7 @@ def build_model(raw: dict, report: dict):
     # (orthographic variants collapse to the same alias_norm and are skipped)
     seen_alias = set()
     for m in mapping["mappings"]:
-        ok = old_ward_key.get(m["old_code"])
+        ok = resolve_old_unit(m, log=False)
         if ok and name_norm(m["old_name"]) != name_norm(units[ok]["name"]):
             sig = (ok, name_norm(m["old_name"]), "old_name")
             if sig not in seen_alias:
@@ -798,7 +810,7 @@ def build_model(raw: dict, report: dict):
         if not tgt:
             continue
         for hit in re.finditer(r"[Đđ]ổi tên(?:\s+từ)?\s+", r["note"] or ""):
-            rest = (r["note"] or "")[hit.end():]
+            rest = (r["note"] or "")[hit.end() :]
             cut = rest.find(" thành ")
             if cut <= 0:
                 continue
@@ -937,8 +949,9 @@ def import_gazetteer(raw_dir: Path, db_path: Path, report_path: Path | None, all
         entry = {"file": meta["file"], "url": meta["url"], "as_of": meta["as_of"], "sha256": sha, "status": "ok"}
         report["sources"][key] = entry
 
-    sources_path = raw_dir / "SOURCES.json"
-    if sources_path.exists():
+    sources_path = find_manifest(raw_dir)
+    if sources_path is not None:
+        report["sources_manifest"] = str(sources_path)
         expected = {f["file"]: f["sha256"] for f in json.loads(sources_path.read_text(encoding="utf-8"))["files"]}
         for entry in report["sources"].values():
             exp = expected.get(entry["file"])

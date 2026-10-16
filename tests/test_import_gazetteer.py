@@ -54,6 +54,17 @@ class TestPureHelpers(unittest.TestCase):
         self.assertEqual(ig.short_name("Quận 1"), "1")
         self.assertEqual(ig.short_name("Bão Đảo"), "")
 
+    def test_find_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = root / "raw"
+            raw.mkdir()
+            self.assertIsNone(ig.find_manifest(raw))
+            (root / "SOURCES.json").write_text("{}", encoding="utf-8")
+            self.assertEqual(ig.find_manifest(raw), root / "SOURCES.json")
+            (raw / "SOURCES.json").write_text("{}", encoding="utf-8")
+            self.assertEqual(ig.find_manifest(raw), raw / "SOURCES.json")  # beside-raw wins
+
     def test_unit_type_from_name(self):
         self.assertEqual(ig.unit_type_from_name("Thị Xã Chũ"), "Thị xã")
         self.assertEqual(ig.unit_type_from_name("Thị trấn Vôi"), "Thị trấn")
@@ -188,16 +199,28 @@ class TestParsers(unittest.TestCase):
 def _synthetic_raw():
     """A minimal fabricated dataset covering QH16 upgrade + Bắc Giang-style rebuild."""
     return {
-        "prov_old": [{"code": "24", "cells": ["24", "Tỉnh Bắc Giang", "", "Tỉnh", ""]}],
+        "prov_old": [
+            {"code": "24", "cells": ["24", "Tỉnh Bắc Giang", "", "Tỉnh", ""]},
+            {"code": "04", "cells": ["04", "Tỉnh Cao Bằng", "", "Tỉnh", ""]},
+        ],
         "prov_new": [
             {"code": "24", "cells": ["24", "Thành phố Bắc Ninh", "", "Thành phố Trung ương", "39/2026/QH16 - 24/08/2026"]},
             {"code": "01", "cells": ["01", "Thành phố Hà Nội", "", "Thành phố Trung ương", ""]},
         ],
-        "dist_old": [{"code": "256", "cells": ["256", "Thành phố Bắc Ninh", "Bac Ninh City", "Thành phố", "", "24", "Tỉnh Bắc Ninh"]}],
-        "ward_old": [{"code": "09163", "cells": ["09163", "Phường Vũ Ninh", "", "Phường", "", "27", "256", "Thành phố Bắc Ninh", "Tỉnh Bắc Ninh"]}],
+        "dist_old": [
+            {"code": "256", "cells": ["256", "Thành phố Bắc Ninh", "Bac Ninh City", "Thành phố", "", "24", "Tỉnh Bắc Ninh"]},
+            {"code": "049", "cells": ["049", "Huyện Quảng Hòa", "", "Huyện", "", "04", "Tỉnh Cao Bằng"]},
+        ],
+        "ward_old": [
+            {"code": "09163", "cells": ["09163", "Phường Vũ Ninh", "", "Phường", "", "27", "256", "Thành phố Bắc Ninh", "Tỉnh Bắc Ninh"]},
+            {"code": "01615", "cells": ["01615", "Xã Hồng Quang", "", "Xã", "", "04", "049", "Huyện Quảng Hòa", "Tỉnh Cao Bằng"]},
+            {"code": "01651", "cells": ["01651", "Xã Mỹ Hưng", "", "Xã", "", "04", "049", "Huyện Quảng Hòa", "Tỉnh Cao Bằng"]},
+        ],
         "ward_new": [
             {"code": "07294", "cells": ["07294", "Phường Bố Hạ", "", "Phường", "Số: 388/NQ-UBTVQH16; Ngày: 04/08/2026", "24", "Thành phố Bắc Ninh"]},
             {"code": "00004", "cells": ["00004", "Phường Ba Đình", "", "Phường", "Số: 1656/NQ-UBTVQH15; Ngày: 16/06/2025", "01", "Thành phố Hà Nội"]},
+            {"code": "01615", "cells": ["01615", "Xã Bế Văn Đàn", "", "Xã", "", "04", "Tỉnh Cao Bằng"]},
+            {"code": "09163", "cells": ["09163", "Phường Vũ Ninh", "", "Phường", "", "24", "Thành phố Bắc Ninh"]},
         ],
         "mapping": {
             "dividers": 1,
@@ -224,6 +247,17 @@ def _synthetic_raw():
                     "note": "Đổi tên",
                     "old_district": "Quận Ba Đình (001)",
                     "old_prov": "Thành phố Hà Nội (01)",
+                },
+                {
+                    "row": 6,
+                    "new_prov": "Tỉnh Cao Bằng (04)",
+                    "new_name": "Xã Bế Văn Đàn",
+                    "new_code": "01615",
+                    "old_name": "Xã Mỹ Hưng",
+                    "old_code": "01615",
+                    "note": "Nhập toàn bộ",
+                    "old_district": "Huyện Quảng Hòa (049)",
+                    "old_prov": "Tỉnh Cao Bằng (04)",
                 },
             ],
         },
@@ -328,6 +362,26 @@ class TestBuildModelSynthetic(unittest.TestCase):
         self.assertIn((("ward", "00004", "2025-07-01"), "ba dinh", "short_name"), alias_norms)
         self.assertIn((("district", "256", "0001-01-01"), "bac ninh city", "english"), alias_norms)
 
+    def test_reform_ward_parent_tracks_province_upgrade(self):
+        # A ward surviving the 2026 province upgrade unchanged must point at the
+        # CURRENT province version (TP TW, open-ended) — not the expired 'Tỉnh'
+        # version (regression: wards kept expired parents after QH16).
+        cur = self.unit("ward", "09163", "2025-07-01")
+        self.assertIsNone(cur["valid_to"])
+        self.assertEqual(cur["parent_key"], ("province", "24", "2026-08-24"))
+
+    def test_typo_correction_redirects_alias_and_relation(self):
+        corr = self.report["code_corrections"]
+        self.assertEqual(len(corr), 1)
+        self.assertEqual(corr[0]["file_code"], "01615")
+        self.assertEqual(corr[0]["resolved_code"], "01651")
+        # the alias pass follows the same correction: no 'Xã Mỹ Hưng' old_name
+        # smeared onto the wrong ward 01615 (Xã Hồng Quang)
+        pairs = {(a["unit"], a["alias_norm"], a["type"]) for a in self.model["aliases"]}
+        self.assertNotIn((("ward", "01615", "0001-01-01"), "my hung", "old_name"), pairs)
+        rels = {(self.model["units"][r["from"]]["name"], r["type"], self.model["units"][r["to"]]["name"]) for r in self.model["relations"]}
+        self.assertIn(("Xã Mỹ Hưng", "merged_into", "Xã Bế Văn Đàn"), rels)
+
 
 @unittest.skipUnless(RAW_DIR.is_dir(), "raw NSO files not present (dev machine only)")
 class TestRealImport(unittest.TestCase):
@@ -398,6 +452,29 @@ class TestRealImport(unittest.TestCase):
             "SELECT DISTINCT u.code FROM admin_alias a JOIN admin_unit u ON a.unit_id=u.id WHERE a.alias_norm='quang ninh' AND u.level='province'"
         )
         self.assertEqual([r["code"] for r in qn], ["22"])
+
+    def test_current_wards_point_at_current_province_version(self):
+        # regression: after the 2026 TP TW upgrades, current wards in 22/24/75
+        # must not keep an expired 'Tỉnh' province version as parent.
+        bad = self.q(
+            """SELECT COUNT(*) c FROM admin_unit w JOIN admin_unit p ON p.id = w.parent_id
+               WHERE w.level='ward' AND w.valid_to IS NULL AND p.level='province' AND p.valid_to IS NOT NULL"""
+        )[0]["c"]
+        self.assertEqual(bad, 0)
+        good = self.q(
+            """SELECT COUNT(*) c FROM admin_unit w JOIN admin_unit p ON p.id = w.parent_id
+               WHERE w.level='ward' AND w.valid_to IS NULL AND p.level='province'"""
+        )[0]["c"]
+        self.assertGreater(good, 3000)
+
+    def test_typo_correction_does_not_smear_aliases(self):
+        # regression: the two corrected old codes must not carry the other
+        # ward's old_name alias ('Xã Mỹ Hưng' on 01615, 'Xã Phú Thịnh' on 02485)
+        rows = self.q(
+            """SELECT u.code FROM admin_alias a JOIN admin_unit u ON u.id = a.unit_id
+               WHERE u.code IN ('01615','02485') AND a.alias_norm IN ('my hung','phu thinh') AND a.alias_type = 'old_name'"""
+        )
+        self.assertEqual(rows, [])
 
     def test_idempotent_reimport(self):
         before = {t: self.q(f"SELECT COUNT(*) c FROM {t}")[0]["c"] for t in ("admin_unit", "admin_alias", "admin_relation")}
