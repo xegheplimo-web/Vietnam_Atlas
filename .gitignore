@@ -11,3 +11,5 @@ storage/
 .serena/
 .devin/
 reports/
+_prompts/
+data/snapshots/

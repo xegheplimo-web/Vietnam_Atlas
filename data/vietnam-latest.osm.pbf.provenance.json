@@ -1,10 +1,10 @@
 {
   "source_url": "https://download.geofabrik.de/asia/vietnam-latest.osm.pbf",
-  "content_length": 330248138,
-  "last_modified": "Fri, 09 Oct 2026 22:46:01 GMT",
-  "etag": "\"13af2fca-65d701cd97cad\"",
-  "downloaded_utc": "2026-10-11T01:10:25.554691+00:00",
-  "size_bytes": 330248138,
-  "sha256": "2fbd2ee6b4dc151eecf04fa6823cddf584b47423e190118b10fce8b6115e9d8a",
+  "content_length": 330695812,
+  "last_modified": "Thu, 15 Oct 2026 23:41:49 GMT",
+  "etag": "\"13b60484-65de99770433a\"",
+  "downloaded_utc": "2026-10-16T00:24:14.391572+00:00",
+  "size_bytes": 330695812,
+  "sha256": "c81183a9634e3903e4e19a49dc3f93db9ad5bf622752ee2a8db49a37498bbd96",
   "status": "downloaded"
 }
