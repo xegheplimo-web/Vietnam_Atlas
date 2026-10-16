@@ -40,9 +40,7 @@ def load_current_provinces() -> dict[str, dict]:
     mapping: dict[str, dict] = {}
     with sqlite3.connect(str(GAZETTEER)) as con:
         con.row_factory = sqlite3.Row
-        for row in con.execute(
-            "SELECT code, name, unit_type, valid_from FROM admin_unit WHERE level='province' AND valid_to IS NULL"
-        ):
+        for row in con.execute("SELECT code, name, unit_type, valid_from FROM admin_unit WHERE level='province' AND valid_to IS NULL"):
             bare = _bare_name(row["name"])
             if bare in mapping:
                 raise SystemExit(f"Nghi ngờ gazetteer: 2 đơn vị cấp tỉnh cùng tên {bare!r}")
@@ -78,9 +76,7 @@ def expected_metadata() -> dict[str, dict]:
             "type_source": qh16.get((row["code"], row["valid_from"])) or reform_doc,
         }
         if reform_date and meta["type_source"] == reform_doc and meta["type_effective_from"] != reform_date:
-            raise SystemExit(
-                f"Mốc không trùng reform_milestone cho {bare!r}: {meta['type_effective_from']} != {reform_date}"
-            )
+            raise SystemExit(f"Mốc không trùng reform_milestone cho {bare!r}: {meta['type_effective_from']} != {reform_date}")
         out[bare] = meta
     return out
 

@@ -67,9 +67,7 @@ def plan_changes(atlas_db: Path, osm_map: dict[str, str]) -> tuple[list[tuple[st
                 missing += 1
                 continue
             new_addr = compose_address(json.loads(raw))
-            want_text = build_search_text(
-                {**{k: row[k] for k in ("name", "category", "province", "phone", "notes")}, "address": new_addr}
-            )
+            want_text = build_search_text({**{k: row[k] for k in ("name", "category", "province", "phone", "notes")}, "address": new_addr})
             if new_addr == (row["address"] or "") and want_text == (row["search_text"] or ""):
                 unchanged += 1
                 continue
@@ -123,9 +121,7 @@ def main() -> int:
         now = utcnow()
         for place_id, _old, new in changes:
             row = con.execute("SELECT name, category, province, phone, notes FROM places WHERE id=?", (place_id,)).fetchone()
-            search_text = build_search_text(
-                {**{k: row[k] for k in ("name", "category", "province", "phone", "notes")}, "address": new}
-            )
+            search_text = build_search_text({**{k: row[k] for k in ("name", "category", "province", "phone", "notes")}, "address": new})
             con.execute(
                 "UPDATE places SET address=?, search_text=?, updated_at=? WHERE id=?",
                 (new, search_text, now, place_id),
