@@ -1,0 +1,101 @@
+[
+  {
+    "osm_type": "node",
+    "osm_id": 5788934070,
+    "name": "Tượng Trần Hưng Đạo",
+    "lat": 11.4288134,
+    "lon": 114.3323476,
+    "evidence_url": "https://www.openstreetmap.org/node/5788934070",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "node",
+    "osm_id": 14041819017,
+    "name": "Âu tàu An Bang",
+    "lat": 7.8940805,
+    "lon": 112.9205174,
+    "evidence_url": "https://www.openstreetmap.org/node/14041819017",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 610144901,
+    "name": "Nhà văn hóa Trường Sa",
+    "lat": 11.428161,
+    "lon": 114.3317612,
+    "evidence_url": "https://www.openstreetmap.org/way/610144901",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 610144920,
+    "name": "Chùa Song Tử Tây",
+    "lat": 11.427257,
+    "lon": 114.3300133,
+    "evidence_url": "https://www.openstreetmap.org/way/610144920",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 611435476,
+    "name": "Sân vận động Song Tử Tây",
+    "lat": 11.4292376,
+    "lon": 114.3317277,
+    "evidence_url": "https://www.openstreetmap.org/way/611435476",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 614046133,
+    "name": "Bệnh xá Đảo Song Tử Tây",
+    "lat": 11.4284252,
+    "lon": 114.3309778,
+    "evidence_url": "https://www.openstreetmap.org/way/614046133",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "relation",
+    "osm_id": 10074917,
+    "name": "Trường Song Tử Tây",
+    "lat": 11.4269272,
+    "lon": 114.3311066,
+    "evidence_url": "https://www.openstreetmap.org/relation/10074917",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 1092772454,
+    "name": "Chùa Trường Sa Đông",
+    "lat": 8.9310012,
+    "lon": 112.3532877,
+    "evidence_url": "https://www.openstreetmap.org/way/1092772454",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 1094011834,
+    "name": "Chùa Đá Tây A",
+    "lat": 8.8660848,
+    "lon": 112.256221,
+    "evidence_url": "https://www.openstreetmap.org/way/1094011834",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 1190320960,
+    "name": "Trung tâm dịch vụ hậu cần nghề cá đảo Đá Tây A",
+    "lat": 8.8668375,
+    "lon": 112.2561734,
+    "evidence_url": "https://www.openstreetmap.org/way/1190320960",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  },
+  {
+    "osm_type": "way",
+    "osm_id": 1414619753,
+    "name": "Âu tàu Đá Nam",
+    "lat": 11.3800008,
+    "lon": 114.3031527,
+    "evidence_url": "https://www.openstreetmap.org/way/1414619753",
+    "note": "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+  }
+]
