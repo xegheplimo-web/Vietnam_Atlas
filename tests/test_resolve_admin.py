@@ -18,12 +18,14 @@ import sqlite3
 import sys
 import tempfile
 import threading
+import unicodedata
 import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import urlopen
 
+from server import app as sapp
 from server.app import make_handler
 from server.store import connect, init_db, list_places, save_place, session
 
@@ -137,6 +139,13 @@ class TestTokenizeClassify(unittest.TestCase):
         t = self.toks("phở Việt Trì")
         self.assertEqual((t[1]["start"], t[2]["end"]), (4, 12))
 
+    def test_nfd_offsets_track_original(self):
+        # NFD-decomposed input (macOS-style): offsets must index the ORIGINAL string.
+        nfd = unicodedata.normalize("NFD", "phở Việt Trì")
+        t = self.toks(nfd)
+        self.assertEqual([x["norm"] for x in t], ["pho", "viet", "tri"])
+        self.assertEqual(nfd[t[1]["start"] : t[2]["end"]], unicodedata.normalize("NFD", "Việt Trì"))
+
 
 class TestSyntheticResolve(unittest.TestCase):
     @classmethod
@@ -164,6 +173,14 @@ class TestSyntheticResolve(unittest.TestCase):
         self.assertEqual(r.candidates[1].name, "Quận Gamma")  # historical, never top
         self.assertFalse(r.candidates[1].is_current)
 
+    def test_nfd_query_resolves_with_original_slice(self):
+        nfd = unicodedata.normalize("NFD", "quán ăn phường Gamma")
+        r = self.res(nfd)
+        self.assertEqual(r.status, "resolved")
+        self.assertEqual(r.candidates[0].code, "90100")
+        self.assertEqual(r.toponym, nfd[r.toponym_span[0] : r.toponym_span[1]])
+        self.assertEqual(ra.name_norm(r.toponym), ra.name_norm("phường Gamma"))
+
     def test_ambiguous_same_name_wards_never_autopicked(self):
         r = self.res("xã Song A")
         self.assertEqual(r.status, "ambiguous")
@@ -178,7 +195,7 @@ class TestSyntheticResolve(unittest.TestCase):
         top = r.candidates[0]
         self.assertEqual(top.name, "Tỉnh Alpha")
         self.assertEqual(top.valid_to, "2025-06-30")
-        self.assertEqual(top.chain_current, {"code": "91", "name": "Tỉnh Beta", "level": "province"})
+        self.assertEqual(top.chain_current, {"code": "91", "name": "Tỉnh Beta", "level": "province", "province_code": "91"})
         self.assertIn("merged_into", top.chain_note)
 
     def test_relation_chain_for_expired_ward(self):
@@ -282,7 +299,7 @@ class TestAcceptanceGates(unittest.TestCase):
         top = self.top(r)
         self.assertEqual((top.name, top.code, top.level), ("Tỉnh Bắc Giang", "24", "province"))
         self.assertEqual(top.valid_to, "2025-06-30")
-        self.assertEqual(top.chain_current, {"code": "24", "name": "Thành phố Bắc Ninh", "level": "province"})
+        self.assertEqual(top.chain_current, {"code": "24", "name": "Thành phố Bắc Ninh", "level": "province", "province_code": "24"})
         codes = {c.code for c in r.candidates}
         self.assertIn("07210", codes)  # Phường Bắc Giang (current) as a subordinate candidate
 
@@ -347,7 +364,19 @@ class TestAdminEndpoints(unittest.TestCase):
             p1, _ = save_place(c, {"name": "Cà Phê Alpha", "lat": 21.0, "lon": 105.0, "source": "test", "source_id": "adm-a1"})
             c.execute("UPDATE places SET province_code='90' WHERE id=?", (p0["id"],))
             c.execute("UPDATE places SET province_code='91' WHERE id=?", (p1["id"],))
+            beta_ids = set()
+            for i in range(2):
+                p, _ = save_place(c, {"name": f"Tiệm Beta {i}", "lat": 21.0, "lon": 105.0, "source": "test", "source_id": f"adm-b{i}"})
+                c.execute("UPDATE places SET province_code='91' WHERE id=?", (p["id"],))
+                beta_ids.add(p["id"])
+            pk, _ = save_place(c, {"name": "Tiệm Beta Khuyết", "lat": 21.0, "lon": 105.0, "source": "test", "source_id": "adm-bk"})
+            c.execute("UPDATE places SET province_code=NULL WHERE id=?", (pk["id"],))
+            px, _ = save_place(c, {"name": "Tiệm Beta Xa", "lat": 21.0, "lon": 105.0, "source": "test", "source_id": "adm-bx"})
+            c.execute("UPDATE places SET province_code='92' WHERE id=?", (px["id"],))
             cls.ids = (p0["id"], p1["id"])
+            cls.beta_ids = beta_ids
+            cls.beta_null = pk["id"]
+            cls.beta_other = px["id"]
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(cls.atlas, gazetteer_db=cls.gaz))
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -376,14 +405,38 @@ class TestAdminEndpoints(unittest.TestCase):
             urlopen(self.base + "/api/admin/resolve?q=x&as_of=01-05-2025", timeout=10)
         self.assertEqual(cm.exception.code, 400)
 
-    def test_places_admin_flag_narrows_with_evidence(self):
+    def test_places_admin_narrows_to_successor_province(self):
+        # 'alpha' resolves to historical Tỉnh Alpha (code 90) whose current successor is
+        # Tỉnh Beta (91): POIs under the successor generation must be KEPT — narrowing
+        # against the stale code would drop every row (codex P1 / devin BUG 0001).
         data = self.get("/api/places?search=alpha&admin=1")
-        self.assertEqual(len(data["items"]), 1)
+        self.assertEqual([i["id"] for i in data["items"]], [self.ids[1]])
         item = data["items"][0]
-        self.assertEqual(item["id"], self.ids[0])
         self.assertEqual(item["admin"]["confidence"], "resolved")
         self.assertEqual(item["admin"]["code"], "90")
         self.assertTrue(item["admin"]["filtered"])
+        self.assertEqual(data["total"], 1)
+
+    def test_places_admin_total_is_pre_pagination(self):
+        # Kept rows = 2 x code 91 + 1 NULL; the 92-coded row is dropped. `total` must be
+        # the DB-side count of the narrowed WHERE clause, not a page length, and pages
+        # must stay disjoint/complete (codex P1 / devin BUG 0002).
+        page1 = self.get("/api/places?search=beta&admin=1&limit=2&offset=0")
+        page2 = self.get("/api/places?search=beta&admin=1&limit=2&offset=2")
+        self.assertEqual(page1["total"], 3)
+        self.assertEqual(page2["total"], 3)
+        self.assertEqual(len(page1["items"]), 2)
+        self.assertEqual(len(page2["items"]), 1)
+        items = page1["items"] + page2["items"]
+        self.assertEqual({i["id"] for i in items}, self.beta_ids | {self.beta_null})
+        for i in items:
+            self.assertEqual(i["admin"]["filtered"], i["id"] in self.beta_ids)
+
+    def test_admin_narrow_code_maps_history_to_current_successor(self):
+        res = ra.resolve("nhà hàng tỉnh Alpha cũ", db_path=self.gaz)
+        self.assertEqual(res.candidates[0].chain_current["province_code"], "91")
+        self.assertEqual([c["province_code"] for c in res.candidates[0].chain_currents], ["91"])
+        self.assertEqual(sapp._admin_narrow_code(res), "91")
 
     def test_places_without_admin_flag_is_byte_identical(self):
         base = self.get("/api/places?search=alpha")
@@ -391,6 +444,114 @@ class TestAdminEndpoints(unittest.TestCase):
         self.assertEqual(base, admin_off)
         for item in base["items"]:
             self.assertNotIn("admin", item)
+
+
+class TestSplitChainSuccessors(unittest.TestCase):
+    """A former unit feeding TWO current units lists every successor (devin BUG 0004)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        cls.db = Path(cls._tmp.name) / "gaz.sqlite3"
+        _mini_gazetteer(cls.db)
+        con = sqlite3.connect(str(cls.db))
+        cur = con.execute(
+            "INSERT INTO admin_unit (authority, code, name, name_norm, level, unit_type, parent_id, valid_from, valid_to, source_id)"
+            " VALUES ('NSO','95000','Xã Tách Đôi',?,'ward','Xã',NULL,'0001-01-01','2025-06-30',1)",
+            (ig.name_norm("Xã Tách Đôi"),),
+        )
+        src = cur.lastrowid
+        for to_code in ("90100", "92201"):
+            to = con.execute("SELECT id FROM admin_unit WHERE code=? AND valid_from='2025-07-01'", (to_code,)).fetchone()[0]
+            con.execute(
+                "INSERT INTO admin_relation (from_unit_id, to_unit_id, relation_type, effective_date, source_id) VALUES (?,?,?,?,1)",
+                (src, to, "split_into", "2025-07-01"),
+            )
+        con.commit()
+        con.close()
+        bfts.build_admin_fts(cls.db)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def test_split_successors_all_listed_and_narrow_skipped(self):
+        r = ra.resolve("quán ăn xã tách đôi cũ", db_path=self.db)
+        self.assertEqual(r.status, "resolved")
+        top = r.candidates[0]
+        self.assertEqual(top.code, "95000")
+        self.assertFalse(top.is_current)
+        self.assertEqual({c["code"] for c in top.chain_currents}, {"90100", "92201"})
+        self.assertEqual({c["province_code"] for c in top.chain_currents}, {"91", "92"})
+        self.assertEqual(top.chain_current, top.chain_currents[0])
+        self.assertTrue(top.chain_note.startswith("phân nhánh"))
+        self.assertIsNone(sapp._admin_narrow_code(r))  # successors split across 2 provinces: no guessing
+
+
+class TestAdminNarrowStore(unittest.TestCase):
+    """list_places narrowing is a WHERE clause applied before count/pagination."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        cls.atlas = Path(cls._tmp.name) / "atlas.sqlite3"
+        init_db(cls.atlas)
+        with session(cls.atlas) as c:
+            cls.ids = []
+            for name, code in (
+                ("Tiệm Beta 1", "91"),
+                ("Tiệm Beta 2", "91"),
+                ("Tiệm Beta Khuyết", None),
+                ("Tiệm Beta Xa", "92"),
+            ):
+                p, _ = save_place(c, {"name": name, "lat": 21.0, "lon": 105.0, "source": "t", "source_id": "adm-" + name})
+                c.execute("UPDATE places SET province_code=? WHERE id=?", (code, p["id"]))
+                cls.ids.append(p["id"])
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def test_narrow_counts_pre_pagination_and_keeps_null(self):
+        with session(self.atlas) as c:
+            page, total = list_places(c, "beta", limit=2, offset=0, admin_province_code="91")
+            self.assertEqual((total, len(page)), (3, 2))
+            page2, total2 = list_places(c, "beta", limit=2, offset=2, admin_province_code="91")
+            self.assertEqual(total2, 3)
+            ids = {r["id"] for r in page} | {r["id"] for r in page2}
+            self.assertEqual(ids, {self.ids[0], self.ids[1], self.ids[2]})
+            self.assertNotIn(self.ids[3], ids)
+
+
+class TestBuildFtsIdempotent(unittest.TestCase):
+    """Fingerprint idempotency: noop on unchanged content, rebuild on same-count rename."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        cls.db = Path(cls._tmp.name) / "gaz.sqlite3"
+        _mini_gazetteer(cls.db)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def test_noop_rebuild_same_count_change_and_zero_alias(self):
+        self.assertEqual(bfts.build_admin_fts(self.db)["status"], "noop")
+        con = sqlite3.connect(str(self.db))
+        con.execute("UPDATE admin_unit SET name = name || ' X', name_norm = name_norm || ' x' WHERE code = '90100'")
+        con.commit()
+        con.close()
+        # Same row counts, different content -> must rebuild (devin BUG 0003).
+        self.assertEqual(bfts.build_admin_fts(self.db)["status"], "rebuilt")
+        self.assertEqual(bfts.build_admin_fts(self.db)["status"], "noop")
+        con = sqlite3.connect(str(self.db))
+        con.execute("DELETE FROM admin_alias")
+        con.commit()
+        con.close()
+        self.assertEqual(bfts.build_admin_fts(self.db)["status"], "rebuilt")
+        # Zero alias rows is a STABLE state, not a permanent count mismatch (devin BUG 0005).
+        self.assertEqual(bfts.build_admin_fts(self.db)["status"], "noop")
 
 
 if __name__ == "__main__":

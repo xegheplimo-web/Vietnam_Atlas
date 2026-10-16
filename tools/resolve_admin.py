@@ -86,7 +86,10 @@ def _load_name_norm():
 
 name_norm = _load_name_norm()
 
-_WORD = re.compile(r"[\w]+")
+# Word chars + combining diacritical marks (U+0300-U+036F): NFD-decomposed
+# Vietnamese input (e.g. 'ơ' = 'o' + U+031B) must stay inside one token so
+# toponym spans slice the ORIGINAL text exactly.
+_WORD = re.compile(r"[\w\u0300-\u036F]+")
 MAX_SPAN = 5
 MAX_CANDIDATES = 15
 
@@ -158,6 +161,7 @@ class Candidate:
     score: float
     province_code: str | None
     chain_current: dict | None
+    chain_currents: list | None  # ALL current successors (split branches included)
     chain_note: str | None
 
 
@@ -185,9 +189,17 @@ class ResolveResult:
 
 
 def _tokenize(query: str) -> list:
-    """Query -> tokens [{raw, norm, start, end, cls}]; offsets into the lowered NFC string."""
-    text = unicodedata.normalize("NFC", str(query or "")).lower()
-    return [{"raw": m.group(0), "norm": name_norm(m.group(0)), "start": m.start(), "end": m.end(), "cls": "content"} for m in _WORD.finditer(text)]
+    """Query -> tokens [{raw, norm, start, end, cls}]; offsets into the ORIGINAL string.
+
+    NFC is applied per token only for classification (`raw`); offsets always index
+    the original (possibly NFD-decomposed) query so toponym spans slice it exactly.
+    """
+    text = str(query or "")
+    tokens = []
+    for m in _WORD.finditer(text):
+        raw = unicodedata.normalize("NFC", m.group(0)).lower()  # NFC only for classification
+        tokens.append({"raw": raw, "norm": name_norm(m.group(0)), "start": m.start(), "end": m.end(), "cls": "content"})
+    return tokens
 
 
 def _classify(tokens: list) -> None:
@@ -397,52 +409,88 @@ def _same_code_lineage(con, level: str, code: str) -> list:
 
 
 def _follow_relations(con, unit_id: int):
-    """BFS to a current unit; edges ordered type_changed > renamed_to > merged_into > ..."""
-    seen, queue, steps = {unit_id}, [unit_id], []
-    while queue and len(steps) < 8:
-        edges = list(
-            con.execute(
-                "SELECT to_unit_id, relation_type, effective_date FROM admin_relation WHERE from_unit_id = ?",
-                (queue.pop(0),),
+    """BFS over admin_relation collecting EVERY current successor (split branches included).
+
+    Returns (currents, steps): `currents` = all uniquely reachable units with
+    valid_to IS NULL (a former unit can feed several current units via
+    split_into/partially_into — following only the first branch would drop the
+    others); `steps` = the first (highest-priority) path, for the note.
+    Edge priority: type_changed > renamed_to > merged_into > split_into > ...;
+    depth capped at 8.
+    """
+    seen = {unit_id}
+    queue = [unit_id]
+    nodes_steps: dict = {unit_id: []}
+    currents: list = []
+    first_steps: list = []
+    depth = 0
+    while queue and depth < 8:
+        depth += 1
+        nxt = []
+        for cur_id in queue:
+            edges = list(
+                con.execute(
+                    "SELECT to_unit_id, relation_type FROM admin_relation WHERE from_unit_id = ?",
+                    (cur_id,),
+                )
             )
-        )
-        edges.sort(key=lambda e: RELATION_PRIORITY.index(e["relation_type"]) if e["relation_type"] in RELATION_PRIORITY else 9)
-        nxt = None
-        for e in edges:
-            if e["to_unit_id"] not in seen:
-                nxt = e
-                break
-        if nxt is None:
-            continue
-        row = con.execute("SELECT * FROM admin_unit WHERE id = ?", (nxt["to_unit_id"],)).fetchone()
-        if row is None:
-            continue
-        seen.add(row["id"])
-        steps.append((nxt["relation_type"], row))
-        if row["valid_to"] is None:
-            return row, steps
-        queue.append(row["id"])
-    return None, steps
+            edges.sort(key=lambda e: RELATION_PRIORITY.index(e["relation_type"]) if e["relation_type"] in RELATION_PRIORITY else 9)
+            for e in edges:
+                if e["to_unit_id"] in seen:
+                    continue
+                seen.add(e["to_unit_id"])
+                row = con.execute("SELECT * FROM admin_unit WHERE id = ?", (e["to_unit_id"],)).fetchone()
+                if row is None:
+                    continue
+                steps_here = [*nodes_steps.get(cur_id, []), (e["relation_type"], row)]
+                if not first_steps:
+                    first_steps = steps_here
+                if row["valid_to"] is None:
+                    currents.append(row)
+                else:
+                    nodes_steps[row["id"]] = steps_here
+                    nxt.append(row["id"])
+        queue = nxt
+    return currents, first_steps
 
 
-def _chain(con, unit) -> tuple:
-    """(chain_current {code,name,level}|None, chain_note str|None) for one candidate unit."""
+def _chain_dict(con, row, province_code_of_row: str | None) -> dict:
+    """Chain entry for one successor row; province_code lets callers narrow by a
+    single CURRENT-generation province even when the candidate itself is old."""
+    return {
+        "code": row["code"],
+        "name": row["name"],
+        "level": row["level"],
+        "province_code": row["code"] if row["level"] == "province" else province_code_of_row,
+    }
+
+
+def _chain(con, unit, self_province_code) -> tuple:
+    """(chain_current dict|None, chain_currents list, chain_note str|None) for one candidate unit."""
     if unit["valid_to"] is None:
+        me = _chain_dict(con, unit, self_province_code)
         lineage = _same_code_lineage(con, unit["level"], unit["code"])
         if len(lineage) > 1:
             note = " → ".join(f"{r['name']} ({r['valid_from']}→{r['valid_to'] or 'nay'})" for r in lineage)
-            return {"code": unit["code"], "name": unit["name"], "level": unit["level"]}, f"mã {unit['code']}: {note}"
-        return {"code": unit["code"], "name": unit["name"], "level": unit["level"]}, None
-    current, steps = _follow_relations(con, unit["id"])
-    if current is not None:
+            return me, [me], f"mã {unit['code']}: {note}"
+        return me, [me], None
+    currents, steps = _follow_relations(con, unit["id"])
+    if currents:
+        units = _unit_rows(con, [r["id"] for r in currents])
+        dicts = [_chain_dict(con, r, None if r["level"] == "province" else _province_code(con, units, r["id"])) for r in currents]
         note = " → ".join([unit["name"], *[f"{t} → {r['name']} (từ {r['valid_from']})" for t, r in steps]])
-        return {"code": current["code"], "name": current["name"], "level": current["level"]}, note
+        if len(dicts) > 1:
+            note = "phân nhánh: " + " + ".join(f"{d['name']} ({d['code']})" for d in dicts) + " | " + note
+        return dicts[0], dicts, note
     lineage = _same_code_lineage(con, unit["level"], unit["code"])
     current = next((r for r in lineage if r["valid_to"] is None), None)
     if current is not None and current["id"] != unit["id"]:
         note = " → ".join(f"{r['name']} ({r['valid_from']}→{r['valid_to'] or 'nay'})" for r in lineage)
-        return {"code": current["code"], "name": current["name"], "level": current["level"]}, f"kế thừa mã {unit['code']}: {note}"
-    return None, None
+        d = _chain_dict(
+            con, current, None if current["level"] == "province" else _province_code(con, _unit_rows(con, [current["id"]]), current["id"])
+        )
+        return d, [d], f"kế thừa mã {unit['code']}: {note}"
+    return None, [], None
 
 
 # -------------------------------------------------------------------- resolve
@@ -567,7 +615,7 @@ def resolve(query: str, *, db_path=None, as_of: str | None = None, level: str | 
         for c in shown:
             u = c["u"]
             current = u["valid_from"] <= as_of <= (u["valid_to"] or "9999") if as_of else u["valid_to"] is None
-            chain_cur, chain_note = _chain(con, u)
+            chain_cur, chain_list, chain_note = _chain(con, u, c["pcode"])
             out.append(
                 Candidate(
                     unit_id=u["id"],
@@ -582,6 +630,7 @@ def resolve(query: str, *, db_path=None, as_of: str | None = None, level: str | 
                     score=round(c["score"], 2),
                     province_code=c["pcode"],
                     chain_current=chain_cur,
+                    chain_currents=chain_list,
                     chain_note=chain_note,
                 )
             )
@@ -605,6 +654,8 @@ def _print_human(result: ResolveResult) -> None:
         print(f"  {c.score:7.1f}  {c.name} [{c.level}/{c.unit_type}] code={c.code} {cur} via={c.match_kind} prov={c.province_code}")
         if c.chain_current:
             print(f"           chain-> {c.chain_current['name']} ({c.chain_current['code']}) {c.chain_note or ''}")
+            for extra in (c.chain_currents or [])[1:]:
+                print(f"           chain+ {extra['name']} ({extra['code']})")
 
 
 def main(argv=None):

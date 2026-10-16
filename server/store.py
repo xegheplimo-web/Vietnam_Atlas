@@ -650,7 +650,7 @@ def _province_clause(con, province, where, args):
         args.append(province)
 
 
-def list_places(con, search="", province="", bbox=None, limit=500, offset=0, category="", near=None):
+def list_places(con, search="", province="", bbox=None, limit=500, offset=0, category="", near=None, admin_province_code=""):
     where = []
     args = []
     join = ""
@@ -658,6 +658,12 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0, cat
     scope = None
     if province:
         _province_clause(con, province, where, args)
+    if admin_province_code:
+        # Resolver narrowing (opt-in via /api/places?admin=1) applied BEFORE count and
+        # pagination so totals/pages stay consistent: keep rows whose recorded province
+        # matches plus rows WITHOUT geo evidence; drop only contradicting codes.
+        where.append("(places.province_code = ? OR places.province_code IS NULL OR places.province_code = '')")
+        args.append(admin_province_code)
     if category:
         _category_clause(category, where, args)
     if search:

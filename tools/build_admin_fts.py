@@ -13,11 +13,14 @@ code/level/validity) + one 'alias' row per admin_alias joined to its unit
 (text=alias, text_norm=alias_norm, the PARENT unit's code/level/validity — a
 candidate's validity is the unit's, not the alias's).
 
-Idempotent behaviour (chosen semantics): without --rebuild the tool compares the
-FTS row counts with the live table counts and is a no-op when they already
-match; any drift (or --rebuild) drops and repopulates the table. IMPORTANT: the
-importer drops and recreates the whole database, so after every re-run of
-import_gazetteer.py this tool MUST be run again.
+Idempotent behaviour (chosen semantics): without --rebuild the tool compares a
+CONTENT fingerprint (sha256 over the source rows the index derives from, kept in
+admin_fts_meta) and is a no-op when it already matches — row counts alone would
+miss a same-count reimport that renamed a unit, and would also mis-compare when
+one kind has zero rows (an empty admin_alias has no GROUP BY row). Any change (or
+--rebuild) drops and repopulates the table. IMPORTANT: the importer drops and
+recreates the whole database, so after every re-run of import_gazetteer.py this
+tool MUST be run again.
 
 Usage:
     py -3 tools/build_admin_fts.py --db data/gazetteer.sqlite3 [--rebuild]
@@ -26,6 +29,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sqlite3
 import sys
@@ -52,6 +56,28 @@ FROM admin_alias a JOIN admin_unit u ON u.id = a.unit_id
 """
 
 
+META_DDL = "CREATE TABLE IF NOT EXISTS admin_fts_meta (key TEXT PRIMARY KEY, value TEXT)"
+
+
+def content_fingerprint(con) -> str:
+    """sha256 over the source rows the index derives from (ids, codes, names, norms, validity)."""
+    h = hashlib.sha256()
+    for r in con.execute("SELECT id, code, level, unit_type, name_norm, valid_from, coalesce(valid_to, '') FROM admin_unit ORDER BY id"):
+        h.update(("U|" + "|".join(str(x) for x in r) + "\n").encode("utf-8"))
+    for r in con.execute("SELECT unit_id, alias_norm, valid_from, coalesce(valid_to, '') FROM admin_alias ORDER BY unit_id, alias_norm, valid_from"):
+        h.update(("A|" + "|".join(str(x) for x in r) + "\n").encode("utf-8"))
+    return h.hexdigest()
+
+
+def stored_fingerprint(con):
+    """Fingerprint recorded by the last build; None when the meta table/row is absent."""
+    try:
+        row = con.execute("SELECT value FROM admin_fts_meta WHERE key = 'fingerprint'").fetchone()
+    except sqlite3.OperationalError:
+        return None
+    return row[0] if row else None
+
+
 def expected_counts(con) -> dict:
     """Rows the index must hold: one per admin_unit plus one per admin_alias."""
     return {
@@ -62,6 +88,12 @@ def expected_counts(con) -> dict:
 
 def fts_counts(con) -> dict:
     return {row[0]: row[1] for row in con.execute("SELECT kind, COUNT(*) FROM admin_fts GROUP BY kind")}
+
+
+def counts_match(con, expected) -> bool:
+    """True when admin_fts holds exactly `expected` rows per kind (a missing kind counts as 0)."""
+    fts = fts_counts(con)
+    return set(fts).issubset(expected) and all(fts.get(k, 0) == v for k, v in expected.items())
 
 
 def has_fts(con) -> bool:
@@ -80,7 +112,10 @@ def build_admin_fts(db_path: Path, rebuild: bool = False) -> dict:
         con.execute("PRAGMA foreign_keys=ON")
         con.execute("BEGIN IMMEDIATE")
         expected = expected_counts(con)
-        if has_fts(con) and not rebuild and fts_counts(con) == expected:
+        fingerprint = content_fingerprint(con)
+        # Noop only when BOTH the source content matches the last build AND the index
+        # itself still holds the right row counts (a manually trimmed index self-heals).
+        if has_fts(con) and not rebuild and stored_fingerprint(con) == fingerprint and counts_match(con, expected):
             con.commit()
             return {"status": "noop", "counts": expected}
         existed = has_fts(con)
@@ -88,6 +123,8 @@ def build_admin_fts(db_path: Path, rebuild: bool = False) -> dict:
         con.execute(FTS_DDL)
         con.execute(UNIT_ROWS)
         con.execute(ALIAS_ROWS)
+        con.execute(META_DDL)
+        con.execute("INSERT OR REPLACE INTO admin_fts_meta (key, value) VALUES ('fingerprint', ?)", (fingerprint,))
         violations = con.execute("PRAGMA foreign_key_check").fetchall()
         if violations:
             raise ValueError(f"foreign_key_check failed: {violations[:5]}")

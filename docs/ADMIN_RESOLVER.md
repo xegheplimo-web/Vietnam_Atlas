@@ -13,8 +13,11 @@ py -3 tools/build_admin_fts.py --db data/gazetteer.sqlite3 [--rebuild]
 
 - Creates `admin_fts` (units + aliases), one row per `admin_unit` (`kind='unit'`) and
   one per `admin_alias` (`kind='alias'`).
-- Idempotent: a complete index is a no-op; an incomplete one self-heals (rebuild).
-  `--rebuild` forces a full reload.
+- Idempotent: a **content fingerprint** (sha256 over the source rows, stored in
+  `admin_fts_meta`) plus per-kind row counts decide the no-op — a same-count reimport
+  that renamed a unit still rebuilds, and an empty alias table is a stable (not
+  always-rebuild) state. An incomplete index self-heals. `--rebuild` forces a full
+  reload.
 - **Must be rerun after `tools/import_gazetteer.py`** — the importer drops and
   recreates the database file, which drops `admin_fts`.
 
@@ -26,9 +29,12 @@ py -3 tools/resolve_admin.py --db data/gazetteer.sqlite3 "quán ăn phường Ho
 
 `resolve(query, *, db_path=None, as_of=None, level=None, province_code=None)` returns a
 `ResolveResult`: `status` (`resolved` | `ambiguous` | `unresolved`), `toponym` +
-`toponym_span`, `hint` (level + historical flag from `cũ`/`cựu`/`trước đây`),
-`candidates` (code, name, level, validity range, `is_current`, `match_kind`, score,
-`province_code`, `chain_current`/`chain_note`), and `reason` on failure.
+`toponym_span` (exact char offsets into the ORIGINAL query — NFD-decomposed input
+resolves with intact spans), `hint` (level + historical flag from
+`cũ`/`cựu`/`trước đây`), `candidates` (code, name, level, validity range,
+`is_current`, `match_kind`, score, `province_code`, `chain_current` (primary
+successor), `chain_currents` (ALL current successors — split lineages list every
+branch), `chain_note`), and `reason` on failure.
 
 Ranking: `exact` > `alias_exact` > `alias_norm` > `token_subset`; current units beat
 expired ones unless `historical` or `--as-of` says otherwise. Two or more equally
@@ -40,11 +46,15 @@ gazetteer data → `unresolved` / `toponym_without_data`.
 - `GET /api/admin/resolve?q=...&as_of=YYYY-MM-DD` → JSON `ResolveResult` (503 when the
   gazetteer DB is unavailable).
 - `GET /api/places?search=...&admin=1` → opt-in annotation. Each item gains
-  `"admin": {"code", "name", "level", "confidence", "filtered"}`. When the resolver is
-  `resolved` and the top candidate carries a `province_code`, places with a
-  *contradictory* recorded `province_code` are dropped; places without province
-  evidence are kept and marked (`filtered: false`). Without `admin=1` the response is
-  byte-identical to before.
+  `"admin": {"code", "name", "level", "confidence", "filtered"}`. Narrowing is applied
+  as a WHERE clause **before count/pagination** (totals and pages stay consistent):
+  when the resolver is `resolved` and a single CURRENT-generation province code is
+  evidenced — the top candidate's own province (current unit) or the single province
+  shared by ALL its successors (historical unit, e.g. Bắc Giang-24 → Bắc Ninh-24) —
+  places with a *contradictory* recorded `province_code` are dropped; places without
+  province evidence are kept and marked (`filtered: false`). Ambiguous histories
+  (successors split across provinces) and unresolved toponyms never narrow. Without
+  `admin=1` the response is byte-identical to before.
 
 ## Gate queries (verified against `data/gazetteer.sqlite3`)
 

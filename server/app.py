@@ -134,29 +134,48 @@ def _admin_resolver():
     return _resolver_cache["mod"]
 
 
-def _admin_annotate(items, total, search, gazetteer_db):
-    """Attach an 'admin' block to each place item; narrow to the resolved province when evidenced.
+def _admin_resolve(search, gazetteer_db):
+    """Resolve the query's admin toponym; None (degraded) when the gazetteer is unavailable."""
+    try:
+        return _admin_resolver().resolve(search, db_path=gazetteer_db)
+    except (OSError, sqlite3.Error):
+        return None
+
+
+def _admin_narrow_code(res):
+    """Province code (current generation) to narrow places by, or None when unproven.
+
+    - Current top candidate: its own province code.
+    - Historical candidate: only when every listed successor maps to a SINGLE
+      current province code — merged provinces (Bình Dương → HCM-79) must keep
+      matching POIs recorded under the successor's code instead of silently
+      dropping them (review: codex P1 / devin BUG 0001).
+    - Split successors in different provinces, or no chain: no narrowing.
+    """
+    if res is None or res.status != "resolved" or not res.candidates:
+        return None
+    top = res.candidates[0]
+    if top.is_current:
+        return top.province_code or None
+    codes = {(c.get("province_code") or "") for c in (top.chain_currents or [])}
+    codes.discard("")
+    return codes.pop() if len(codes) == 1 else None
+
+
+def _admin_annotate(items, res, narrow_code):
+    """Attach an 'admin' block to every item; NO dropping here.
 
     Opt-in via /api/places?admin=1 — with the flag off the response is byte-identical
-    to the legacy path. Narrowing applies only on status 'resolved' with a province
-    code: places whose recorded province_code contradicts it are dropped, places
-    without geo evidence (province_code NULL) are kept and flagged filtered=false —
-    nothing is dropped or relabelled on guesswork. A resolver failure (missing
+    to the legacy path. The actual narrowing already ran inside list_places as a
+    WHERE clause (pre-pagination, so `total` stays truthful); this only flags each
+    row: filtered=true when its recorded province equals the narrowing code,
+    filtered=false for rows without geo evidence. A resolver failure (missing
     gazetteer, no admin_fts) degrades every item to confidence 'unresolved'.
     """
-    try:
-        res = _admin_resolver().resolve(search, db_path=gazetteer_db)
-    except (OSError, sqlite3.Error):
-        res = None
     status = res.status if res is not None else "unresolved"
     top = res.candidates[0] if res is not None and res.candidates else None
-    narrowing = res is not None and res.status == "resolved" and top is not None and bool(top.province_code)
-    kept = []
     for item in items:
-        evidence = item.get("province_code")
-        matched = bool(narrowing and evidence == top.province_code)
-        if narrowing and evidence and not matched:
-            continue
+        matched = bool(narrow_code and item.get("province_code") == narrow_code)
         item["admin"] = {
             "code": top.code if top else None,
             "name": top.name if top else None,
@@ -164,8 +183,6 @@ def _admin_annotate(items, total, search, gazetteer_db):
             "confidence": status,
             "filtered": matched,
         }
-        kept.append(item)
-    return kept, (len(kept) if narrowing else total)
 
 
 def make_handler(db_path=DEFAULT_DB, web_dir=None, token="", gazetteer_db=None):
@@ -302,10 +319,18 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token="", gazetteer_db=None):
                         return self.respond(200, fc, "application/geo+json; charset=utf-8", "vietnam-atlas.geojson")
                     lim = min(max(int((params.get("limit") or ["500"])[0]), 1), 1000)
                     offset = max(int((params.get("offset") or ["0"])[0]), 0)
+                    admin_active = (params.get("admin") or [""])[0] == "1" and bool(search)
+                    admin_res = None
+                    narrow_code = None
+                    if admin_active:
+                        admin_res = _admin_resolve(search, gazetteer_db)
+                        narrow_code = _admin_narrow_code(admin_res)
                     with session(db_path) as c:
-                        items, total = list_places(c, search, province, bbox, lim, offset, category=category, near=near)
-                    if (params.get("admin") or [""])[0] == "1" and search:
-                        items, total = _admin_annotate(items, total, search, gazetteer_db)
+                        items, total = list_places(
+                            c, search, province, bbox, lim, offset, category=category, near=near, admin_province_code=narrow_code or ""
+                        )
+                    if admin_active:
+                        _admin_annotate(items, admin_res, narrow_code)
                     return self.json(200, {"items": items, "total": total, "limit": lim, "offset": offset})
                 if path == "/api/export.csv":
                     with session(db_path) as c:
