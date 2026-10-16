@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "description": [
+    "Ngày HIỆU LỰC pháp lý của các văn bản tạo/đổi loại hình đơn vị hành chính, dùng bởi tools/import_gazetteer.py.",
+    "Ô 'Nghị định' trong bảng NSO chỉ ghi NGÀY BAN HÀNH (vd '39/2026/QH16 - 24/08/2026'); importer chỉ được lấy",
+    "valid_from/valid_to/effective_date từ trường effective_on ở file này (hotfix T-E2c).",
+    "Đây là file cam kết (committed) — KHÔNG sửa data/gazetteer/raw/**."
+  ],
+  "reform_milestone": {
+    "document_id": "19/2025/QĐ-TTg",
+    "issued_on": null,
+    "effective_on": "2025-07-01",
+    "evidence_url": "https://danhmuchanhchinh.nso.gov.vn/Default.aspx",
+    "evidence_note": "REFORM_DATE trong tools/import_gazetteer.py (giữ từ T-E2a). Ngày ban hành của văn bản này chưa xác minh được trong môi trường không mạng nên để null thay vì suy diễn."
+  },
+  "documents": [
+    {
+      "document_id": "30/2026/QH16",
+      "issued_on": "2026-04-24",
+      "effective_on": "2026-04-30",
+      "province_codes": ["75"],
+      "evidence_url": "https://danhmuchanhchinh.nso.gov.vn/Default.aspx",
+      "evidence_note": "Ô 'Nghị định' của 'Danh sách cấp tỉnh __16_10_2026.xls' ghi '30/2026/QH16 - 24/04/2026' (ngày BAN HÀNH). Hiệu lực 2026-04-30 khớp chéo file 7: 10 xã Đồng Nai theo '237/NQ-UBTVQH16' có 'Ngày hiệu lực' = 2026-04-30."
+    },
+    {
+      "document_id": "36/2026/QH16",
+      "issued_on": "2026-08-24",
+      "effective_on": "2026-09-01",
+      "province_codes": ["22"],
+      "evidence_url": "https://danhmuchanhchinh.nso.gov.vn/Default.aspx",
+      "evidence_note": "Ô 'Nghị định' của 'Danh sách cấp tỉnh __16_10_2026.xls' ghi '36/2026/QH16 - 24/08/2026' (ngày BAN HÀNH). Hiệu lực 2026-09-01 theo văn bản gốc; không có xã nào của Quảng Ninh đổi trong file 7 nên không có mốc đối chiếu chéo."
+    },
+    {
+      "document_id": "39/2026/QH16",
+      "issued_on": "2026-08-24",
+      "effective_on": "2026-09-20",
+      "province_codes": ["24"],
+      "evidence_url": "https://danhmuchanhchinh.nso.gov.vn/Default.aspx",
+      "evidence_note": "Ô 'Nghị định' của 'Danh sách cấp tỉnh __16_10_2026.xls' ghi '39/2026/QH16 - 24/08/2026' (ngày BAN HÀNH). Hiệu lực 2026-09-20 khớp chéo file 7: 12 xã Bắc Ninh theo '388/NQ-UBTVQH16' có 'Ngày hiệu lực' = 2026-09-20."
+    }
+  ]
+}
