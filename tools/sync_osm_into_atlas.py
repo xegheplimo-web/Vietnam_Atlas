@@ -7,6 +7,10 @@ Lifecycle writes are gated behind --apply --apply-lifecycle: retired staging row
 (is_active=0 from a full --mark-missing import) mark the matching unverified OSM
 atlas rows inactive, and atlas rows whose POI reappears active in staging are
 restored to unverified; verified/user records stay protected either way.
+
+`--manifest <path>` optionally writes a sidecar fingerprint of the change set
+(one entry per changed source_id) for tools/verify_approval.py; the console JSON
+this tool prints is unchanged, so tools/update_report.py keeps working as before.
 """
 
 from __future__ import annotations
@@ -21,11 +25,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+TOOLS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(TOOLS_DIR))
+
+from change_manifest import build_manifest, ddl_fingerprint, make_entry  # noqa: E402
 
 POSITION_JUMP_MIN_KM = 50.0  # bất thường vị trí giữa 2 snapshot: chỉ báo cáo, không chặn
 MAX_RESTORE_SAMPLES = 10
 MAX_POSITION_JUMP_SAMPLES = 20
+# Các trường dữ liệu sync được phép ghi đè lên dòng OSM chưa verified; province/notes/status
+# do người vận hành quản lý nên không bao giờ nằm trong before/after của manifest.
+SYNC_WRITE_FIELDS = ("name", "category", "address", "phone", "website", "lat", "lon")
 
 
 def haversine_km(lat1, lon1, lat2, lon2) -> float:
@@ -87,6 +98,45 @@ def coverage_report(src):
     }
 
 
+def staging_snapshot_sha(src) -> str:
+    """`file_sha256` của snapshot staging mới nhất mà sync vừa đọc; `"absent"` khi chưa có snapshot."""
+    row = src.execute("SELECT file_sha256 FROM ingestion_snapshots ORDER BY imported_at DESC, rowid DESC LIMIT 1").fetchone()
+    return row[0] if row and row[0] else "absent"
+
+
+def atlas_schema_version(dest) -> str:
+    """Fingerprint schema Atlas (`ddl-sha256:<hash>`), `"absent"` khi Atlas chưa tồn tại.
+
+    Repo không dùng `PRAGMA user_version`, nên phiên bản schema ở đây là hash DDL
+    chuẩn hóa — đổi cấu trúc bảng/index là đổi fingerprint (fail-closed ở verify).
+    """
+    if dest is None:
+        return "absent"
+    rows = dest.execute("SELECT type, name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name").fetchall()
+    return ddl_fingerprint(rows)
+
+
+def write_change_manifest(path: Path, entries, *, snapshot_sha, schema_version, update_existing, apply_lifecycle) -> None:
+    """Ghi sidecar manifest thay đổi (atomic: tmp + rename).
+
+    Console JSON của sync KHÔNG đổi (update_report.py vẫn đọc được như cũ); đây là
+    artifact phụ để `tools/verify_approval.py` tái tính đúng tập thay đổi đã duyệt.
+    """
+    manifest = build_manifest(
+        entries,
+        snapshot_sha=snapshot_sha,
+        schema_version=schema_version,
+        update_existing=update_existing,
+        apply_lifecycle=apply_lifecycle,
+    )
+    # Đường dẫn đến từ cờ --manifest của chính CLI này, người vận hành chạy cục bộ.
+    out = Path(path)  # NOSONAR(S8707)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_suffix(out.suffix + ".tmp")
+    tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(out)  # NOSONAR(S8707)
+
+
 def sync(
     osm_db: Path,
     atlas_db: Path,
@@ -97,6 +147,7 @@ def sync(
     coverage: bool = False,
     apply_lifecycle: bool = False,
     retired_state: Path | None = None,
+    manifest_path: Path | None = None,
 ):
     if not osm_db.is_file():
         raise FileNotFoundError(f"Chưa có dữ liệu OSM: {osm_db}. Hãy tải PBF và nhập snapshot trước.")
@@ -151,6 +202,8 @@ def sync(
         "skipped_invalid": 0,
         "backup": None,
     }
+    # Chi tiết từng thay đổi (chỉ thu thập khi người vận hành yêu cầu sidecar manifest).
+    entries = []
     try:
         if apply:
             atlas_db.parent.mkdir(parents=True, exist_ok=True)
@@ -192,6 +245,29 @@ def sync(
             previous = existing.get(sid)
             if previous is None:
                 result["would_insert"] += 1
+                if manifest_path is not None:
+                    entries.append(
+                        make_entry(
+                            "OpenStreetMap",
+                            sid,
+                            "insert",
+                            None,
+                            {
+                                "name": row["name"],
+                                "category": row["category"],
+                                "address": row["address"],
+                                "province": "",
+                                "phone": row["phone"],
+                                "website": row["website"],
+                                "lat": row["lat"],
+                                "lon": row["lon"],
+                                "notes": "",
+                                "source": "OpenStreetMap",
+                                "source_id": sid,
+                                "status": "unverified",
+                            },
+                        )
+                    )
                 if apply:
                     payload = {
                         "name": row["name"],
@@ -259,6 +335,16 @@ def sync(
                 result["would_restore"] += 1
                 if len(result["restore_samples"]) < MAX_RESTORE_SAMPLES:
                     result["restore_samples"].append({"source_id": sid, "name": row["name"]})
+                if manifest_path is not None:
+                    entries.append(
+                        make_entry(
+                            "OpenStreetMap",
+                            sid,
+                            "restore",
+                            {"status": previous["status"], **{k: previous[k] for k in SYNC_WRITE_FIELDS}},
+                            {"status": "unverified", **{k: fields[k] for k in SYNC_WRITE_FIELDS}},
+                        )
+                    )
                 if apply and apply_lifecycle:
                     payload = dict(previous)
                     payload.update(fields)
@@ -273,6 +359,16 @@ def sync(
                 continue
             if changed:
                 result["would_update"] += 1
+                if manifest_path is not None:
+                    entries.append(
+                        make_entry(
+                            "OpenStreetMap",
+                            sid,
+                            "update",
+                            {k: previous[k] for k in SYNC_WRITE_FIELDS},
+                            {k: fields[k] for k in SYNC_WRITE_FIELDS},
+                        )
+                    )
                 if apply:
                     payload = dict(previous)
                     payload.update(fields)
@@ -292,6 +388,8 @@ def sync(
                     result["protected"] += 1
                     continue
                 result["would_retire"] += 1
+                if manifest_path is not None:
+                    entries.append(make_entry("OpenStreetMap", sid, "retire", {"status": previous["status"]}, {"status": "inactive"}))
                 if apply and apply_lifecycle:
                     payload = dict(previous)
                     payload["status"] = "inactive"
@@ -302,6 +400,17 @@ def sync(
                     retired_dirty = True
         if coverage:
             result["coverage"] = coverage_report(src)
+        if manifest_path is not None:
+            # Ghi manifest TRƯỚC commit: lỗi ghi sidecar thì rollback luôn, không có
+            # trạng thái "đã ghi dữ liệu nhưng thiếu dấu vết thay đổi đã duyệt".
+            write_change_manifest(
+                manifest_path,
+                entries,
+                snapshot_sha=staging_snapshot_sha(src),
+                schema_version=atlas_schema_version(dest),
+                update_existing=update_existing,
+                apply_lifecycle=apply_lifecycle,
+            )
         if apply:
             dest.commit()
         if apply and retired_dirty and dest is not None:
@@ -338,6 +447,12 @@ def main():
         help="sổ retired_by_sync.json (mặc định reports/_state/); chỉ dòng trong sổ mới được sync khôi phục",
     )
     p.add_argument("--coverage-report", action="store_true", help="include staging coverage summary (type mix, top categories, 1° grid)")
+    p.add_argument(
+        "--manifest",
+        type=Path,
+        default=None,
+        help="ghi sidecar manifest thay đổi (fingerprint từng source_id) cho verify_approval; console JSON không đổi",
+    )
     a = p.parse_args()
     try:
         print(
@@ -351,6 +466,7 @@ def main():
                     coverage=a.coverage_report,
                     apply_lifecycle=a.apply_lifecycle,
                     retired_state=a.retired_state,
+                    manifest_path=a.manifest,
                 ),
                 indent=2,
                 ensure_ascii=False,

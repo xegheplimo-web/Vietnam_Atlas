@@ -7,8 +7,9 @@ Tài liệu mô tả chu kỳ cập nhật dữ liệu OpenStreetMap vào Vietna
 - Mặc định mọi lần chạy đều là **preview (dry-run)**: không ghi gì vào `data/atlas.sqlite3`.
 - Dữ liệu chỉ được ghi khi người vận hành chạy có chủ đích với `-Apply` (tùy chọn thêm `-Update-existing`).
 - `-Apply` **bắt buộc** `-ApprovedReport <path report.json>` — apply phải ràng buộc vào một báo cáo preview đã được duyệt; `tools/verify_approval.py` đối chiếu SHA-256 của PBF hiện tại và snapshot staging full mới nhất với đúng những gì report đã ghi, lệch là từ chối ghi.
+- **Fingerprint tập thay đổi (manifest)**: 4 counter `would_insert/would_update/would_retire/would_restore` không đủ để ràng buộc apply — hai tập thay đổi *khác source_id* vẫn có thể cùng counter. Vì vậy mỗi lần preview/recheck ghi thêm sidecar manifest (`reports/change-manifest-<stamp>.json`, `reports/_raw/<stamp>/change-manifest-recheck.json`) liệt kê từng thay đổi `{source, source_id, action, before, after}` (chỉ các trường sync được phép ghi) đã sắp xếp ổn định theo `(source, source_id, action)`; apply chỉ được phép khi manifest recheck **tái tính trùng `manifest_hash`** của manifest đã duyệt (xem mục 4). Thiếu/không đọc được/hash lệch → từ chối (fail-closed).
 - Báo cáo `reports/update-<stamp>.md` là tài liệu cần đọc **trước** khi quyết định ghi.
-- Mỗi lần chạy đều chụp đầu ra thô vào `reports/_raw/<YYYYMMDDTHHMMSSZ>/` (`import.json`, `stats.txt`, `verify.txt`, `preview.json`, và khi chạy `-Apply` thêm `recheck.json` + `apply.json` + `postapply.json`); console vẫn hiển thị qua `Tee-Object`.
+- Mỗi lần chạy đều chụp đầu ra thô vào `reports/_raw/<YYYYMMDDTHHMMSSZ>/` (`import.json`, `stats.txt`, `verify.txt`, `preview.json`, và khi chạy `-Apply` thêm `recheck.json` + `change-manifest-recheck.json` + `apply.json` + `postapply.json`); console vẫn hiển thị qua `Tee-Object`.
 
 ## 2. Các bước tuần tự (RUN_UPDATE_WINDOWS.ps1)
 
@@ -17,9 +18,9 @@ Tài liệu mô tả chu kỳ cập nhật dữ liệu OpenStreetMap vào Vietna
 | 1 | Download | `tools/fetch_vn_geofabrik.py --out data/vietnam-latest.osm.pbf` | `data/vietnam-latest.osm.pbf`, `data/vietnam-latest.osm.pbf.provenance.json` |
 | 2 | Import staging | `tools/vn_osm_dataset.py data/vietnam-latest.osm.pbf --db data/osm_vietnam.sqlite3 --mark-missing` (chu kỳ full) | `data/osm_vietnam.sqlite3`, `reports/_raw/<stamp>/import.json` |
 | 3 | Verify | `tools/verify_osm_snapshot.py --db data/osm_vietnam.sqlite3 --require-full --min-active 50000` (chu kỳ full) | `reports/_raw/<stamp>/verify.txt` |
-| 4 | Preview | `tools/sync_osm_into_atlas.py --osm-db data/osm_vietnam.sqlite3 --atlas-db data/atlas.sqlite3` (dry-run, in đúng 1 JSON object) | `reports/_raw/<stamp>/preview.json` (`apply.json` khi `-Apply`) |
-| 5 | Recheck | chạy lại sync dry-run ngay trước khi ghi (chỉ khi `-Apply`) | `reports/_raw/<stamp>/recheck.json` |
-| 6 | Binding | `tools/verify_approval.py --report <approved report.json> --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3 --recheck reports/_raw/<stamp>/recheck.json` (chỉ khi `-Apply`) | chỉ chặn/cho qua |
+| 4 | Preview | `tools/sync_osm_into_atlas.py --osm-db data/osm_vietnam.sqlite3 --atlas-db data/atlas.sqlite3 --manifest reports/change-manifest-<stamp>.json` (dry-run, in đúng 1 JSON object) | `reports/_raw/<stamp>/preview.json`, `reports/change-manifest-<stamp>.json` (`apply.json` khi `-Apply`) |
+| 5 | Recheck | chạy lại sync dry-run ngay trước khi ghi, kèm `--manifest reports/_raw/<stamp>/change-manifest-recheck.json` (chỉ khi `-Apply`) | `reports/_raw/<stamp>/recheck.json`, `reports/_raw/<stamp>/change-manifest-recheck.json` |
+| 6 | Binding | `tools/verify_approval.py --report <approved report.json> --pbf data/vietnam-latest.osm.pbf --staging-db data/osm_vietnam.sqlite3 --recheck reports/_raw/<stamp>/recheck.json --recheck-manifest reports/_raw/<stamp>/change-manifest-recheck.json` (chỉ khi `-Apply`) | chỉ chặn/cho qua |
 | 7 | Post-apply | chạy lại sync dry-run sau apply (chỉ khi `-Apply`) | `reports/_raw/<stamp>/postapply.json` |
 | 8 | Report | `tools/update_report.py` | `reports/update-<stamp>.json`, `reports/update-<stamp>.md` |
 
@@ -31,6 +32,7 @@ Ghi chú:
 - Chu kỳ full (`-Limit 0`): import thêm `--mark-missing` để đánh dấu POI biến mất khỏi nguồn thành `is_active=0` (không bao giờ xóa; importer tự chặn khi >10% active biến mất), verify chạy `--require-full --min-active $VerifyMinActive` (tham số `-VerifyMinActive`, mặc định **50000**).
 - `-OnlyDownload` chỉ tải PBF rồi thoát.
 - `-Apply` chạy preview → kiểm tra `-ApprovedReport` → ghi Atlas → chạy lại dry-run lấy bằng chứng idempotency (`postapply.json`); kết quả ghi được chụp riêng ở `apply.json`, còn `preview.json` giữ nguyên bản dry-run của lần chạy đó. `-Apply -Update-existing` cập nhật thêm các dòng OSM chưa verified.
+- **Manifest (`--manifest`)**: sync in console JSON như cũ (không đổi key, `tools/update_report.py` không bị ảnh hưởng) và ghi thêm sidecar JSON atomic. Header: `snapshot_sha` (SHA-256 của snapshot staging mới nhất mà sync đọc), `schema_version` (fingerprint schema Atlas = `ddl-sha256:<hash>` trên DDL chuẩn hóa `sqlite_master`, hoặc `absent` khi Atlas chưa tồn tại — repo không dùng `PRAGMA user_version`), `update_existing`, `apply_lifecycle`, `entry_count`, `manifest_hash` (SHA-256 của canonical JSON danh sách entries). Mỗi entry có `entry_hash` riêng theo canonical JSON của `{source, source_id, action, before, after}`; canonical JSON = key sort + separator cố định + `ensure_ascii=False` nên hash ổn định qua nhiều lần build và không phụ thuộc thứ tự xử lý.
 
 ## 3. Đọc báo cáo
 
@@ -59,6 +61,7 @@ py -3 tools/update_report.py --preview reports/_raw/<stamp>/preview.json --prove
 1. Chạy chu kỳ preview (`RUN_UPDATE_WINDOWS.ps1` không `-Apply`), đọc `reports/update-<stamp>.md`; xem xét các dòng mới / cập nhật / ngừng xuất hiện / ứng viên retire.
 2. Duyệt xong, chạy `RUN_UPDATE_WINDOWS.ps1 -Apply -ApprovedReport reports/update-<stamp>.json` (thêm `-Update-existing` nếu muốn cập nhật cả dòng OSM đã có nhưng chưa verified). Thiếu `-ApprovedReport` → script `throw` ngay.
 3. Trước khi ghi, pipeline kiểm tra report đã duyệt còn khớp thực tế theo hai lớp: **Recheck** chạy lại đúng sync dry-run hiện tại (cùng options) ngay trước khi ghi; **Binding** (`tools/verify_approval.py`) kiểm `stage=="preview"`, `snapshot.sha256` trùng SHA-256 PBF hiện tại, `staging.latest_snapshot.{id,file_sha256}` trùng snapshot **full** mới nhất trong staging, và 4 đếm `would_insert/would_update/would_retire/would_restore` của recheck phải bằng đúng report đã duyệt. Lệch bất kỳ điều kiện nào → exit 2 → script `throw`, không ghi. PBF, staging, Atlas trôi hoặc đổi options (ví dụ thêm `-Update-existing`) sau khi duyệt = report cũ → phải chạy preview lại và duyệt report mới.
+   - **Lớp manifest**: sau 4 counter, verify còn so **fingerprint tập thay đổi**. Manifest đã duyệt được suy từ tên report (`reports/update-<stamp>.json` → `reports/change-manifest-<stamp>.json`; có thể ghi đè bằng `--manifest`), manifest recheck lấy từ `--recheck-manifest` (mặc định `reports/_raw/<stamp>/change-manifest-recheck.json`). Điều kiện cho qua: `manifest_hash` trùng nhau **và** ngữ cảnh trùng (`snapshot_sha`, `schema_version`, `update_existing`, `apply_lifecycle`), đồng thời `snapshot_sha` của manifest đã duyệt phải bằng `report.staging.latest_snapshot.file_sha256`. Lệch hash → exit 2 kèm `source_id` khác đầu tiên; thiếu/không đọc được/hỏng cấu trúc manifest (thiếu khóa, `entry_hash`/`manifest_hash` không khớp) → exit 1. Cả hai đều chặn apply (fail-closed): **hai diff cùng 4 counter nhưng khác source_id vẫn bị từ chối**.
 4. Khi ghi, `tools/sync_osm_into_atlas.py` tự tạo **backup online** `backups/atlas-pre-osm-sync-<YYYYMMDDTHHMMSSZ>.sqlite3` bằng SQLite online backup và chạy `PRAGMA integrity_check` ngay sau khi tạo.
 5. Lỗi ở bước sinh báo cáo làm script `throw` — kể cả khi apply đã hoàn tất (đánh dấu rõ chu kỳ đã ghi dữ liệu nhưng thiếu báo cáo).
 
@@ -108,7 +111,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/register_update_task.p
 - `data/osm_vietnam.sqlite3` — staging database (sync mở ở chế độ read-only).
 - `data/atlas.sqlite3` — Atlas thật (chỉ ghi qua `-Apply`).
 - `backups/atlas-pre-osm-sync-*.sqlite3` — backup trước mỗi lần ghi.
-- `reports/_raw/<stamp>/` — đầu ra thô (`import.json`, `stats.txt`, `verify.txt`, `preview.json`; thêm `apply.json`, `postapply.json` khi `-Apply`) của từng lần chạy.
+- `reports/_raw/<stamp>/` — đầu ra thô (`import.json`, `stats.txt`, `verify.txt`, `preview.json`; thêm `apply.json`, `postapply.json`, `recheck.json`, `change-manifest-recheck.json` khi `-Apply`) của từng lần chạy.
 - `reports/update-<stamp>.{json,md}` — báo cáo của từng lần chạy; file `.json` của một preview đã duyệt chính là tham số `-ApprovedReport` cho lần `-Apply`.
+- `reports/change-manifest-<stamp>.json` — manifest fingerprint tập thay đổi của lần chạy (sidecar cùng stamp với report; `tools/verify_approval.py` tự suy từ đường dẫn `-ApprovedReport`).
 - `reports/_state/retire_candidates.json` — state file theo dõi ứng viên retire qua các lần chạy (ghi atomic, tự phục hồi khi file hỏng).
 
