@@ -132,9 +132,14 @@ class TestVerifyApproval(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("full", err.lower())
 
-    def _recheck_file(self, **counts):
+    def _recheck_file(self, encoding="utf-8", **counts):
         path = self.tmp / "recheck.json"
-        path.write_text(json.dumps(counts), encoding="utf-8")
+        text = json.dumps(counts)
+        if encoding == "utf-16":
+            # PowerShell 5.1 Tee-Object capture: UTF-16LE with BOM.
+            path.write_bytes(text.encode("utf-16"))
+        else:
+            path.write_text(text, encoding=encoding)
         return path
 
     def test_recheck_match_returns_zero(self):
@@ -156,6 +161,25 @@ class TestVerifyApproval(unittest.TestCase):
         self.assertEqual(code, 1)
 
     def test_recheck_absent_keeps_backward_compatible_checks(self):
+        code, err, _ = self.run_tool()
+        self.assertEqual(code, 0, err)
+
+    def test_recheck_utf16_teeobject_capture_accepted(self):
+        # RUN_UPDATE_WINDOWS.ps1 writes recheck.json through Tee-Object (UTF-16LE
+        # with BOM); the guard must read that capture, not fail as not-UTF-8.
+        self.write_report(changes={"would_insert": 319, "would_update": 0, "would_retire": 60, "would_restore": 0})
+        recheck = self._recheck_file(encoding="utf-16", would_insert=319, would_update=0, would_retire=60, would_restore=0)
+        code, err, _ = self.run_tool(recheck=recheck)
+        self.assertEqual(code, 0, err)
+
+    def test_report_utf16_accepted(self):
+        # Same BOM tolerance applies to the approved report file itself.
+        payload = {
+            "stage": "preview",
+            "snapshot": {"sha256": self.sha},
+            "staging": {"latest_snapshot": {"id": SNAPSHOT_ID, "file_sha256": SNAPSHOT_SHA}},
+        }
+        self.report.write_bytes(json.dumps(payload).encode("utf-16"))
         code, err, _ = self.run_tool()
         self.assertEqual(code, 0, err)
 

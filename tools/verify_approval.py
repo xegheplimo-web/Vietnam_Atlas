@@ -9,6 +9,7 @@ approved report recorded. Any drift means the report is stale — refuse to writ
 from __future__ import annotations
 
 import argparse
+import codecs
 import hashlib
 import json
 import sqlite3
@@ -19,6 +20,22 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = 1
 # Change counters re-checked against the approved report right before apply.
 RECHECK_KEYS = ("would_insert", "would_update", "would_retire", "would_restore")
+
+
+def read_text_any_bom(path) -> str:
+    """Read a UTF-8 or UTF-16 (BOM) text file.
+
+    RUN_UPDATE_WINDOWS.ps1 captures the recheck preview via PowerShell 5.1
+    Tee-Object, which writes UTF-16LE with BOM; the guard must not read those
+    captures as plain UTF-8 (live apply failed on this before the fix).
+    """
+    # Path đến từ CLI flag của tool chạy cục bộ bởi người vận hành (không phải input từ xa).
+    data = Path(path).read_bytes()  # NOSONAR(S8707)
+    if data.startswith(codecs.BOM_UTF8):
+        return data.decode("utf-8-sig")
+    if data.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        return data.decode("utf-16")
+    return data.decode("utf-8")
 
 
 def sha256_file(path: Path) -> str:
@@ -44,8 +61,7 @@ def check_recheck(report, recheck_path: Path) -> int:
     unreadable, and 2 on drift (options or Atlas/staging changed since approval).
     """
     try:
-        # Đường dẫn đến từ cờ CLI của chính công cụ cục bộ (người vận hành chạy).
-        recheck_text = recheck_path.read_text(encoding="utf-8")  # NOSONAR(S8707)
+        recheck_text = read_text_any_bom(recheck_path)
         recheck = json.loads(recheck_text)
         if not isinstance(recheck, dict):
             raise ValueError("recheck JSON is not an object")
@@ -69,8 +85,7 @@ def check_recheck(report, recheck_path: Path) -> int:
 def read_report(path: Path) -> tuple[dict | None, int]:
     """Load the approved report JSON; returns (report, 0) or (None, exit code)."""
     try:
-        # Đường dẫn đến từ cờ CLI của chính công cụ cục bộ (người vận hành chạy).
-        report = json.loads(path.read_text(encoding="utf-8"))  # NOSONAR(S8707)
+        report = json.loads(read_text_any_bom(path))
         if not isinstance(report, dict):
             raise ValueError("report JSON is not an object")
     except (OSError, ValueError) as exc:
