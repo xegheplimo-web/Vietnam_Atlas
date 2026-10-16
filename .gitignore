@@ -6,6 +6,7 @@ data/*.sqlite3*
 data/*.osm.pbf
 data/*.partial
 data/provinces/.cache/
+data/gazetteer/raw/
 storage/
 .env
 .serena/
