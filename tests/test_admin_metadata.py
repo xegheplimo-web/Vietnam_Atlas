@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from tools.vn_osm_dataset import compose_address
+from tools.vn_osm_dataset import compose_address  # noqa: E402 (import sau sys.path.insert là chủ ý)
 
 PROVINCES = ROOT / "data" / "provinces_34.json"
 
@@ -84,6 +84,7 @@ class AdminTypeMetadata(unittest.TestCase):
             capture_output=True,
             text=True,
             timeout=60,
+            check=False,
         )
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 

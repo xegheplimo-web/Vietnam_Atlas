@@ -26,8 +26,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from server.store import build_search_text, utcnow
-from tools.vn_osm_dataset import compose_address
+from server.store import build_search_text, utcnow  # noqa: E402 (import sau sys.path.insert là chủ ý của CLI)
+from tools.vn_osm_dataset import compose_address  # noqa: E402 (như trên)
 
 
 def sha256_file(path: Path) -> str:
