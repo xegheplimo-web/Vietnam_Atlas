@@ -91,7 +91,7 @@ Xét ràng buộc bắt buộc trước (tên thực thể, loại POI, địa b
 `hit` · `retrieval_failure` · `coverage_gap` · `correct_no_match` · `false_positive` · `unjudged` · `invalid_query` · `run_error`.
 Thứ tự kiểm tra: validate topic/evidence → run error → coverage audit → qrels/top-10 → outcome (không nhầm retrieval_failure thành coverage_gap).
 
-### 6.3 error_labels (nhiều nhãn, có thể rỗng) — 6 nhóm, 41 nhãn
+### 6.3 error_labels (nhiều nhãn, có thể rỗng) — 6 nhóm, 37 nhãn (2026-10-16: đếm enum thực tế 5+7+6+9+5+5; sửa từ "41" theo review GPT — không tự thêm nhãn)
 Ground truth (evidence_missing, evidence_stale, label_conflict, insufficient_judgments, ambiguous_intent) · Data (poi_missing_in_db, gazetteer_gap, historical_alias_missing, incorrect_coordinates, incorrect_category_data, stale_poi, duplicate_entity) · Admin (admin_unresolved, admin_ambiguous, admin_wrong, historical_mapping_wrong, wrong_province, wrong_ward) · Text/ranking (normalization_failure, typo_handling_failure, alias_match_failure, category_match_failure, wrong_entity, rank_below_10, candidate_generation_failure, relevance_ranking_failure, false_positive_no_match) · Spatial (outside_radius, incorrect_distance, incorrect_distance_order, radius_filter_unsupported, spatial_evidence_uncertain) · Runtime (api_error, sqlite_error, query_timeout, non_deterministic_results, latency_budget_exceeded).
 `severity`: info|minor|major|critical — critical = khẳng định chắc chắn sai địa danh/vị trí có bằng chứng rõ, hoặc dẫn người dùng tới cơ sở không phù hợp. Nhãn suy được tự động (rank_below_10, query_timeout…) scorer tự gán; nhãn cần phán đoán (wrong_entity, historical_mapping_wrong, evidence_stale…) KHÔNG được scorer tự sáng tác.
 
