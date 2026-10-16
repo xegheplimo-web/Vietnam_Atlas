@@ -32,6 +32,9 @@ CITY_TYPE = "Thành phố Trung ương"
 PROVINCE_TYPE = "Tỉnh"
 
 
+GAZETTEER = ROOT / "data" / "gazetteer.sqlite3"
+
+
 class AdminTypeMetadata(unittest.TestCase):
     """Card V1-03: tên/level giữ nguyên; thêm unit_type + mốc hiệu lực có nguồn."""
 
@@ -74,6 +77,7 @@ class AdminTypeMetadata(unittest.TestCase):
             self.assertEqual(entry["type_effective_from"], "2025-07-01", entry["name"])
             self.assertEqual(entry["type_source"], "19/2025/QĐ-TTg", entry["name"])
 
+    @unittest.skipUnless(GAZETTEER.exists(), "gazetteer DB absent (không đóng gói trong repo)")
     def test_sync_tool_check_passes(self):
         proc = subprocess.run(
             [sys.executable, str(ROOT / "tools" / "sync_province_types.py"), "--check"],
