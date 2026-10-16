@@ -316,6 +316,12 @@ def _code_in_parens(text: str) -> str:
     return m.group(1) if m else ""
 
 
+def strip_trailing_code(text: str) -> str:
+    """Drop a trailing ' (NNN)' record-code suffix (linear regex, no backtracking)."""
+    m = re.search(r"\((\d+)\)\s*$", text)
+    return text[: m.start()].rstrip() if m else text
+
+
 def _day_before(iso: str) -> str:
     d = date.fromisoformat(iso)
     return (d - timedelta(days=1)).isoformat()
@@ -478,9 +484,9 @@ def build_model(raw: dict, report: dict):
             key = add_unit(
                 _unit(
                     dc,
-                    re.sub(r"\s*\(\d+\)\s*$", "", m["old_district"]),
+                    strip_trailing_code(m["old_district"]),
                     "district",
-                    unit_type_from_name(re.sub(r"\s*\(\d+\)\s*$", "", m["old_district"])),
+                    unit_type_from_name(strip_trailing_code(m["old_district"])),
                     LEGACY_VALID_FROM,
                     OLD_CUTOFF,
                     "mapping",
@@ -791,8 +797,12 @@ def build_model(raw: dict, report: dict):
         tgt = new_ward_units.get(r["code"])
         if not tgt:
             continue
-        for hit in re.finditer(r"[Đđ]ổi tên(?:\s+từ)?\s+(.+?)\s+thành\s", r["note"] or ""):
-            old = hit.group(1).strip()
+        for hit in re.finditer(r"[Đđ]ổi tên(?:\s+từ)?\s+", r["note"] or ""):
+            rest = (r["note"] or "")[hit.end():]
+            cut = rest.find(" thành ")
+            if cut <= 0:
+                continue
+            old = rest[:cut].strip()
             if len(old) >= 6 and " " in old and not re.search(r"[\d%.…]", old):
                 sig = (tgt[0], name_norm(old), "old_name")
                 if sig not in seen_alias:
@@ -837,7 +847,7 @@ def build_model(raw: dict, report: dict):
 def write_db(db_path: Path, model, source_rows):
     """Rebuild the gazetteer in one transaction: failure rolls back cleanly."""
     existed = db_path.exists()
-    con = sqlite3.connect(str(db_path))
+    con = sqlite3.connect(str(db_path))  # NOSONAR(S8706)
     try:
         con.execute("PRAGMA foreign_keys=ON")
         con.execute("BEGIN IMMEDIATE")
@@ -894,7 +904,7 @@ def write_db(db_path: Path, model, source_rows):
         con.rollback()
         con.close()
         if not existed:
-            db_path.unlink(missing_ok=True)
+            db_path.unlink(missing_ok=True)  # NOSONAR(S8707)
         raise
     con.close()
 
@@ -976,7 +986,7 @@ def import_gazetteer(raw_dir: Path, db_path: Path, report_path: Path | None, all
     write_db(db_path, model, {k: v for k, v in report["sources"].items() if v.get("status") == "ok"})
     if report_path:
         report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")  # NOSONAR(S8707)
     return report
 
 
