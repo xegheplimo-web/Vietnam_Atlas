@@ -608,5 +608,175 @@ class TestE1ReportBlocks(unittest.TestCase):
             self.assertIn(section, md)
 
 
+OFFSHORE_SNAPSHOT_SIDS = [
+    # 11 POI ngoài bbox trong snapshot 15/10 (sha c81183a9) — toàn bộ địa danh quần đảo,
+    # KHÔNG lỗi tọa độ. Mẫu thứ 11 (way/1414619753) lấy từ Atlas DB đối chiếu §0.
+    ("node", 5788934070, "Tượng Trần Hưng Đạo", 11.4288134, 114.3323476),
+    ("node", 14041819017, "Âu tàu An Bang", 7.8940805, 112.9205174),
+    ("way", 610144901, "Nhà văn hóa Trường Sa", 11.428161, 114.3317612),
+    ("way", 610144920, "Chùa Song Tử Tây", 11.427257, 114.3300133),
+    ("way", 611435476, "Sân vận động Song Tử Tây", 11.4292376, 114.3317277),
+    ("way", 614046133, "Bệnh xá Đảo Song Tử Tây", 11.4284252, 114.3309778),
+    ("relation", 10074917, "Trường Song Tử Tây", 11.4269272, 114.3311066),
+    ("way", 1092772454, "Chùa Trường Sa Đông", 8.9310012, 112.3532877),
+    ("way", 1094011834, "Chùa Đá Tây A", 8.8660848, 112.256221),
+    ("way", 1190320960, "Trung tâm dịch vụ hậu cần nghề cá đảo Đá Tây A", 8.8668375, 112.2561734),
+    ("way", 1414619753, "Âu tàu Đá Nam", 11.3800008, 114.3031527),
+]
+
+OFFSHORE_NOTE = "địa danh quần đảo — allowlist kỹ thuật theo vị trí, không phải xác định ranh giới pháp lý"
+
+
+def _allowlist_entries(sids):
+    """Build allowlist JSON entries (evidence_url derived from sid — no network)."""
+    return [
+        {
+            "osm_type": osm_type,
+            "osm_id": osm_id,
+            "name": name,
+            "lat": lat,
+            "lon": lon,
+            "evidence_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
+            "note": OFFSHORE_NOTE,
+        }
+        for osm_type, osm_id, name, lat, lon in sids
+    ]
+
+
+class TestOffshoreAllowlist(unittest.TestCase):
+    """Round E2 (T-Offshore): outside-bbox POIs split into 3 position groups."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = Path(self._tmp.name)
+        self._build_calls = 0
+
+    def _write_allowlist(self, entries, name="allowlist.json"):
+        path = self.tmp / name
+        path.write_text(json.dumps(entries, ensure_ascii=False), encoding="utf-8")
+        return path
+
+    def _build(self, places, allowlist_path, preview=None):
+        self._build_calls += 1
+        staging_db = _make_staging_db(self.tmp / f"staging-{self._build_calls}.sqlite3", places=places)
+        pbf = self.tmp / "vietnam-latest.osm.pbf"
+        pbf.write_bytes(b"fake pbf bytes")
+        return update_report.build_report(
+            json.dumps(preview or PREVIEW),
+            PROVENANCE,
+            stamp=STAMP,
+            pbf_path=pbf,
+            staging_db=staging_db,
+            atlas_db=self.tmp / "missing-atlas.sqlite3",
+            retire_state_path=self.tmp / "reports" / "_state" / "retire_candidates.json",
+            allowlist_path=allowlist_path,
+        )
+
+    def test_committed_allowlist_file_shape(self):
+        """File cam kết nạp được 11 entry, đúng sid/evidence_url/note; khớp 11 sid §0."""
+        entries = update_report._load_offshore_allowlist(update_report.DEFAULT_OFFSHORE_ALLOWLIST)
+        self.assertEqual(len(entries), 11)
+        sids = set()
+        for entry in entries:
+            self.assertEqual(entry["evidence_url"], f"https://www.openstreetmap.org/{entry['osm_type']}/{entry['osm_id']}")
+            self.assertEqual(entry["note"], OFFSHORE_NOTE)
+            sids.add(f"{entry['osm_type']}/{entry['osm_id']}")
+        self.assertEqual(sids, {f"{t}/{i}" for t, i, _n, _la, _lo in OFFSHORE_SNAPSHOT_SIDS})
+
+    def test_committed_allowlist_classifies_eleven_snapshot_sids(self):
+        """11 sid §0 dựng thành fixture → offshore_valid = 11, suspicious = 0."""
+        staging_db = _make_staging_db(
+            self.tmp / "staging.sqlite3",
+            places=[(t, i, n, la, lo, "snap-full", 1) for t, i, n, la, lo in OFFSHORE_SNAPSHOT_SIDS],
+        )
+        pbf = self.tmp / "vietnam-latest.osm.pbf"
+        pbf.write_bytes(b"fake pbf bytes")
+        report, _md = update_report.build_report(
+            json.dumps(PREVIEW),
+            PROVENANCE,
+            stamp=STAMP,
+            pbf_path=pbf,
+            staging_db=staging_db,
+            atlas_db=self.tmp / "missing-atlas.sqlite3",
+            retire_state_path=self.tmp / "reports" / "_state" / "retire_candidates.json",
+        )
+        outside = report["quality"]["outside_region"]
+        self.assertEqual(outside["outside_primary_bbox_total"], 11)
+        self.assertEqual(outside["count"], 11)  # key cũ giữ nguyên nghĩa
+        self.assertEqual(outside["within_primary_extent"], 0)
+        self.assertEqual(outside["offshore_valid"]["count"], 11)
+        self.assertEqual(outside["offshore_valid"]["samples"][0]["sid"], "node/5788934070")
+        self.assertEqual(outside["outside_region_suspicious"]["count"], 0)
+        self.assertEqual(outside["outside_region_suspicious"]["samples"], [])
+        self.assertLessEqual(len(outside["offshore_valid"]["samples"]), update_report.OUTSIDE_REGION_SAMPLE_LIMIT)
+
+    def test_three_group_classification(self):
+        """Trong bbox → within; ngoài khớp allowlist → valid; ngoài không khớp → suspicious."""
+        allowlist = self._write_allowlist(_allowlist_entries([("node", 900, "Đảo xa bờ", 11.5, 114.3)]))
+        report, md = self._build(
+            [
+                ("node", 1, "Trong bbox", 16.0, 106.0, "s", 1),
+                ("node", 2, "Trong bbox 2", 10.0, 104.0, "s", 1),
+                ("node", 900, "Đảo xa bờ", 11.5, 114.3, "s", 1),
+                ("node", 901, "Ngoài bbox lạ", 7.5, 105.0, "s", 1),  # lat 7.5 < 8.0 — ngoài bbox, không khớp allowlist
+            ],
+            allowlist,
+        )
+        outside = report["quality"]["outside_region"]
+        self.assertEqual(outside["within_primary_extent"], 2)
+        self.assertEqual(outside["outside_primary_bbox_total"], 2)
+        self.assertEqual(outside["count"], 2)
+        self.assertEqual(outside["offshore_valid"]["count"], 1)
+        self.assertEqual(outside["offshore_valid"]["samples"][0]["sid"], "node/900")
+        self.assertEqual(outside["outside_region_suspicious"]["count"], 1)
+        self.assertEqual(outside["outside_region_suspicious"]["samples"][0]["sid"], "node/901")
+        # Markdown in 3 nhóm thay câu outside_region cũ.
+        self.assertIn("within_primary_extent", md)
+        self.assertIn("offshore_valid", md)
+        self.assertIn("outside_region_suspicious", md)
+        self.assertIn("node/900", md)
+        self.assertIn("node/901", md)
+
+    def test_allowlist_name_mismatch_is_suspicious(self):
+        """Cùng sid nhưng name lệch → KHÔNG tính valid."""
+        allowlist = self._write_allowlist(_allowlist_entries([("node", 900, "Tên khác hẳn", 11.5, 114.3)]))
+        report, _md = self._build([("node", 900, "Đảo xa bờ", 11.5, 114.3, "s", 1)], allowlist)
+        outside = report["quality"]["outside_region"]
+        self.assertEqual(outside["offshore_valid"]["count"], 0)
+        self.assertEqual(outside["outside_region_suspicious"]["count"], 1)
+
+    def test_allowlist_coord_mismatch_is_suspicious(self):
+        """Cùng sid+name nhưng lệch tọa độ quá ngưỡng → suspicious; trôi nhỏ vẫn valid."""
+        allowlist = self._write_allowlist(_allowlist_entries([("node", 900, "Đảo xa bờ", 11.5, 114.3)]))
+        report, _md = self._build(
+            [
+                ("node", 900, "Đảo xa bờ", 11.62, 114.3, "s", 1),  # lệch lat 0.12° — quá ngưỡng 0.05°
+                ("node", 901, "Đảo xa bờ", 11.505, 114.305, "s", 1),  # sid không khớp — suspicious
+            ],
+            allowlist,
+        )
+        outside = report["quality"]["outside_region"]
+        self.assertEqual(outside["offshore_valid"]["count"], 0)
+        self.assertEqual(outside["outside_region_suspicious"]["count"], 2)
+        report2, _md2 = self._build([("node", 900, "Đảo xa bờ", 11.505, 114.305, "s", 1)], allowlist)
+        outside2 = report2["quality"]["outside_region"]
+        self.assertEqual(outside2["offshore_valid"]["count"], 1)
+        self.assertEqual(outside2["outside_region_suspicious"]["count"], 0)
+
+    def test_missing_allowlist_degrades_quietly(self):
+        """Không có allowlist file → không crash; mọi dòng ngoài bbox đi vào suspicious."""
+        report, md = self._build(
+            [("node", 1, "Trong bbox", 16.0, 106.0, "s", 1), ("node", 2, "Ngoài bbox", 50.0, 0.0, "s", 1)],
+            self.tmp / "no-such-allowlist.json",
+        )
+        outside = report["quality"]["outside_region"]
+        self.assertEqual(outside["count"], 1)
+        self.assertEqual(outside["samples"][0]["sid"], "node/2")  # key cũ vẫn hoạt động
+        self.assertEqual(outside["offshore_valid"]["count"], 0)
+        self.assertEqual(outside["outside_region_suspicious"]["count"], 1)
+        self.assertIn("outside_region_suspicious", md)
+
+
 if __name__ == "__main__":
     unittest.main()

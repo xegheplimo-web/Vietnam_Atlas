@@ -51,6 +51,11 @@ STAGE_APPLY = "apply"
 # Vietnam bbox used to spot staging rows that fall outside the country extent.
 VN_BBOX = (8.0, 23.6, 102.0, 110.7)  # lat_min, lat_max, lon_min, lon_max
 OUTSIDE_REGION_SAMPLE_LIMIT = 10
+# Round E2 (T-Offshore): POI ngoài bbox chính vẫn hợp lệ nếu là địa danh quần đảo
+# (Trường Sa / Song Tử Tây / Đá Tây A...) — allowlist theo VỊ TRÍ, không phải xác định
+# ranh giới pháp lý. Tọa độ giữa các snapshot có thể trôi vài km; lệch name hoặc tọa độ
+# quá ngưỡng thì KHÔNG tính valid (rơi về outside_region_suspicious).
+OFFSHORE_COORD_TOLERANCE_DEG = 0.05  # ~5.5 km
 RETIRE_SAMPLE_LIMIT = 15
 RETIRE_READY_DISTINCT_SHAS = 2
 RETIRE_READY_MIN_DAYS = 7
@@ -67,6 +72,7 @@ RETIRE_STATE_PATH = ROOT / "reports" / "_state" / "retire_candidates.json"
 DEFAULT_PBF = ROOT / "data" / "vietnam-latest.osm.pbf"
 DEFAULT_STAGING_DB = ROOT / "data" / "osm_vietnam.sqlite3"
 DEFAULT_ATLAS_DB = ROOT / "data" / "atlas.sqlite3"
+DEFAULT_OFFSHORE_ALLOWLIST = ROOT / "data" / "offshore_allowlist.json"
 
 
 def read_text_any_bom(path) -> str:
@@ -197,15 +203,104 @@ def _format_size(size_bytes):
     return f"{int(size_bytes)} bytes ({int(size_bytes) / 2**20:.1f} MiB)"
 
 
-def _outside_region(con):
-    """Count active staging rows outside the Vietnam bbox; keep a small sample."""
+def _load_offshore_allowlist(path):
+    """Load offshore-allowlist entries; [] when the file is missing/unreadable.
+
+    Each entry needs at least osm_type/osm_id/name/lat/lon (sid numbers, not
+    strings); evidence_url/note ride along verbatim for the committed
+    data/offshore_allowlist.json documentation.
+    """
+    if path is None:
+        return []
+    path = Path(path)  # NOSONAR(S8707)
+    if not path.is_file():
+        return []
+    try:
+        data = json.loads(read_text_any_bom(path))
+    except (OSError, UnicodeError, ValueError):
+        return []
+    if not isinstance(data, list):
+        return []
+    entries = []
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        osm_type = item.get("osm_type")
+        osm_id = item.get("osm_id")
+        name = item.get("name")
+        lat = item.get("lat")
+        lon = item.get("lon")
+        if not isinstance(osm_type, str) or not osm_type or not isinstance(osm_id, int) or isinstance(osm_id, bool):
+            continue
+        if not isinstance(name, str):
+            continue
+        if not isinstance(lat, (int, float)) or isinstance(lat, bool):
+            continue
+        if not isinstance(lon, (int, float)) or isinstance(lon, bool):
+            continue
+        entries.append(dict(item))
+    return entries
+
+
+def _offshore_entry_matches(entry, osm_type, osm_id, name, lat, lon):
+    """True when a staging row IS the allowlist island place: same sid, same name, position within tolerance."""
+    if entry.get("osm_type") != osm_type or entry.get("osm_id") != osm_id:
+        return False
+    if (entry.get("name") or "").strip().casefold() != (name or "").strip().casefold():
+        return False
+    return abs(float(entry.get("lat")) - lat) <= OFFSHORE_COORD_TOLERANCE_DEG and abs(float(entry.get("lon")) - lon) <= OFFSHORE_COORD_TOLERANCE_DEG
+
+
+def _outside_region(con, allowlist_path=None):  # NOSONAR(S3776)
+    """Classify active staging rows by position (Round E2 / T-Offshore).
+
+    Chọn GIỮ nguyên nghĩa key cũ để không phá consumer: count = tổng dòng active
+    ngoài bbox, samples = mẫu thô của chúng (giống báo cáo trước E2). Bổ sung:
+      - within_primary_extent: số dòng active TRONG bbox chính (thông tin);
+      - outside_primary_bbox_total: cùng con số với count, tên mới tường minh để
+        so sánh báo cáo cũ/mới;
+      - offshore_valid {count, samples}: dòng ngoài bbox khớp allowlist (địa danh
+        quần đảo như Trường Sa / Song Tử Tây) — hợp lệ, thống kê riêng;
+      - outside_region_suspicious {count, samples}: dòng ngoài bbox KHÔNG có
+        bằng chứng — vẫn "cần kiểm tra", không bao giờ tự PASS.
+    """
     lat_min, lat_max, lon_min, lon_max = VN_BBOX
-    where = "is_active=1 AND NOT (lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?)"
     args = (lat_min, lat_max, lon_min, lon_max)
-    count = con.execute(f"SELECT count(*) FROM osm_places WHERE {where}", args).fetchone()[0]
-    rows = con.execute(f"SELECT osm_type,osm_id,name,lat,lon FROM osm_places WHERE {where} LIMIT {OUTSIDE_REGION_SAMPLE_LIMIT}", args).fetchall()
-    samples = [{"sid": f"{r[0]}/{r[1]}", "name": r[2], "lat": r[3], "lon": r[4]} for r in rows]
-    return {"count": count, "samples": samples}
+    outside_where = "is_active=1 AND NOT (lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?)"
+    inside_where = "is_active=1 AND lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?"
+    total = con.execute(f"SELECT count(*) FROM osm_places WHERE {outside_where}", args).fetchone()[0]
+    within = con.execute(f"SELECT count(*) FROM osm_places WHERE {inside_where}", args).fetchone()[0]
+    allowlist = _load_offshore_allowlist(allowlist_path)
+    # Fetch ALL outside-bbox rows so group counts are exact; only the sample
+    # lists are trimmed to OUTSIDE_REGION_SAMPLE_LIMIT.
+    rows = con.execute(f"SELECT osm_type,osm_id,name,lat,lon FROM osm_places WHERE {outside_where}", args).fetchall()
+    samples = []
+    valid_samples = []
+    suspicious_samples = []
+    valid = 0
+    suspicious = 0
+    for osm_type, osm_id, name, lat, lon in rows:
+        sample = {"sid": f"{osm_type}/{osm_id}", "name": name, "lat": lat, "lon": lon}
+        if len(samples) < OUTSIDE_REGION_SAMPLE_LIMIT:
+            samples.append(sample)
+        if any(_offshore_entry_matches(e, osm_type, osm_id, name, lat, lon) for e in allowlist):
+            valid += 1
+            if len(valid_samples) < OUTSIDE_REGION_SAMPLE_LIMIT:
+                valid_samples.append(sample)
+        else:
+            suspicious += 1
+            if len(suspicious_samples) < OUTSIDE_REGION_SAMPLE_LIMIT:
+                suspicious_samples.append(sample)
+    return {
+        # Key cũ — giữ nguyên nghĩa để consumer hiện tại không phá.
+        "count": total,
+        "samples": samples,
+        # Round E2 — phân loại 3 nhóm theo vị trí.
+        "within_primary_extent": within,
+        "outside_primary_bbox_total": total,
+        "offshore_valid": {"count": valid, "samples": valid_samples},
+        "outside_region_suspicious": {"count": suspicious, "samples": suspicious_samples},
+    }
 
 
 def _atlas_status_by_sid(atlas_db, sids):
@@ -428,9 +523,14 @@ def render_markdown(report, stamp, raw_paths=None):  # NOSONAR(S3776)
         "",
         f"- Tọa độ không hợp lệ (invalid_coordinates): {_md_fmt(quality.get('invalid_coordinates'))}",
         f"- Dòng active ngoài bbox Việt Nam (outside_region): {_md_fmt(outside.get('count'))}",
+        f"  - Trong bbox chính (within_primary_extent): {_md_fmt(outside.get('within_primary_extent'))}",
+        f"  - Ngoài bbox — quần đảo xa bờ hợp lệ (offshore_valid): {_md_fmt((outside.get('offshore_valid') or {}).get('count'))}",
+        f"  - Ngoài bbox — không có bằng chứng (outside_region_suspicious): {_md_fmt((outside.get('outside_region_suspicious') or {}).get('count'))}",
     ]
-    for sample in outside.get("samples") or []:
-        lines.append(f"  - `{sample.get('sid') or '—'}` {sample.get('name') or '—'} ({sample.get('lat')}, {sample.get('lon')})")
+    for sample in (outside.get("offshore_valid") or {}).get("samples") or []:
+        lines.append(f"    - `{sample.get('sid') or '—'}` {sample.get('name') or '—'} ({sample.get('lat')}, {sample.get('lon')})")
+    for sample in (outside.get("outside_region_suspicious") or {}).get("samples") or []:
+        lines.append(f"    - `{sample.get('sid') or '—'}` {sample.get('name') or '—'} ({sample.get('lat')}, {sample.get('lon')})")
     lines += [
         f"- Lý do bị bỏ qua khi import (skip_reasons): {_md_skip_reasons(quality.get('skip_reasons'))}",
         f"- Nhảy tọa độ (position_jumps): {_md_fmt(quality.get('position_jumps'))}",
@@ -509,6 +609,7 @@ def build_report(  # NOSONAR(S3776)
     staging_db=None,
     atlas_db=None,
     retire_state_path=None,
+    allowlist_path=None,
 ):
     """Build (machine report dict, markdown text) from captured pipeline outputs.
 
@@ -526,6 +627,10 @@ def build_report(  # NOSONAR(S3776)
     missing one degrades quietly (None), keeping backward compatibility.
     retire_state_path: optional override for the retire-candidate state file
         (tests isolate it; CLI runs keep reports/_state/retire_candidates.json).
+    allowlist_path: optional override for the Round E2 offshore allowlist used to
+        classify outside-bbox rows (None keeps data/offshore_allowlist.json;
+        tests isolate it with a fixture or a nonexistent path — a missing file
+        degrades to "all suspicious").
     """
     preview = extract_preview_dict(preview_text)
     counts = {key: int(preview.get(key) or 0) for key in COUNT_KEYS}
@@ -558,6 +663,7 @@ def build_report(  # NOSONAR(S3776)
     staging = None
     quality = {"invalid_coordinates": None, "outside_region": None, "skip_reasons": None, "position_jumps": None}
     sdb = Path(staging_db) if staging_db else DEFAULT_STAGING_DB
+    allowlist = Path(allowlist_path) if allowlist_path else DEFAULT_OFFSHORE_ALLOWLIST
     # None = staging unreadable (skip retire tracking entirely); a list, possibly
     # empty, = real inactive set so reappeared sids can be cancelled this run.
     inactive_rows = None
@@ -572,7 +678,7 @@ def build_report(  # NOSONAR(S3776)
                 latest = {"id": row[0], "mode": row[1], "file_sha256": row[2], "source_date": row[3], "imported_at": row[4]} if row else None
                 full = con.execute("SELECT count(*) FROM ingestion_snapshots WHERE mode LIKE '%:full:%'").fetchone()[0]
                 staging = {"latest_snapshot": latest, "full_snapshots": full}
-                quality["outside_region"] = _outside_region(con)
+                quality["outside_region"] = _outside_region(con, allowlist)
                 # Absence evidence = the CURRENT full snapshot, not the row's stale
                 # last_snapshot (the importer only flips is_active on missing rows).
                 full_row = con.execute(
@@ -673,6 +779,12 @@ def main(argv=None):
         "--atlas-db", type=Path, default=DEFAULT_ATLAS_DB, help="Atlas SQLite for retire-candidate status lookup (default: data/atlas.sqlite3)"
     )
     parser.add_argument(
+        "--allowlist",
+        type=Path,
+        default=DEFAULT_OFFSHORE_ALLOWLIST,
+        help="offshore allowlist JSON phân loại POI ngoài bbox (default: data/offshore_allowlist.json)",
+    )
+    parser.add_argument(
         "--import-json", type=Path, default=None, help="captured vn_osm_dataset.py import JSON (skip_reasons); missing file is skipped quietly"
     )
     parser.add_argument("--post-apply", type=Path, default=None, help="captured post-apply dry-run JSON for the idempotency check")
@@ -708,6 +820,7 @@ def main(argv=None):
             pbf_path=args.pbf,
             staging_db=args.staging_db,
             atlas_db=args.atlas_db,
+            allowlist_path=args.allowlist,
             raw_paths={
                 "preview": args.preview.as_posix(),
                 "stats": args.staging_stats.as_posix() if args.staging_stats else None,
