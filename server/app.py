@@ -8,11 +8,13 @@ from __future__ import annotations
 import argparse
 import csv
 import html
+import importlib.util
 import io
 import json
 import os
 import re
 import sqlite3
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlsplit
@@ -35,6 +37,7 @@ from .store import (
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = ROOT / "data" / "atlas.sqlite3"
+GAZETTEER_DB = ROOT / "data" / "gazetteer.sqlite3"
 MAX_BODY = 16 * 1024 * 1024
 MIME = {
     ".html": "text/html; charset=utf-8",
@@ -116,8 +119,58 @@ def satellite_layer_config():
     }
 
 
-def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
+_resolver_cache: dict = {}
+
+
+def _admin_resolver():
+    """Lazy-load tools/resolve_admin.py (sibling CLI tool, not a package module)."""
+    if "mod" not in _resolver_cache:
+        spec = importlib.util.spec_from_file_location("resolve_admin", ROOT / "tools" / "resolve_admin.py")
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        sys.modules["resolve_admin"] = module  # dataclass field resolution needs registration
+        spec.loader.exec_module(module)
+        _resolver_cache["mod"] = module
+    return _resolver_cache["mod"]
+
+
+def _admin_annotate(items, total, search, gazetteer_db):
+    """Attach an 'admin' block to each place item; narrow to the resolved province when evidenced.
+
+    Opt-in via /api/places?admin=1 — with the flag off the response is byte-identical
+    to the legacy path. Narrowing applies only on status 'resolved' with a province
+    code: places whose recorded province_code contradicts it are dropped, places
+    without geo evidence (province_code NULL) are kept and flagged filtered=false —
+    nothing is dropped or relabelled on guesswork. A resolver failure (missing
+    gazetteer, no admin_fts) degrades every item to confidence 'unresolved'.
+    """
+    try:
+        res = _admin_resolver().resolve(search, db_path=gazetteer_db)
+    except (OSError, sqlite3.Error):
+        res = None
+    status = res.status if res is not None else "unresolved"
+    top = res.candidates[0] if res is not None and res.candidates else None
+    narrowing = res is not None and res.status == "resolved" and top is not None and bool(top.province_code)
+    kept = []
+    for item in items:
+        evidence = item.get("province_code")
+        matched = bool(narrowing and evidence == top.province_code)
+        if narrowing and evidence and not matched:
+            continue
+        item["admin"] = {
+            "code": top.code if top else None,
+            "name": top.name if top else None,
+            "level": top.level if top else None,
+            "confidence": status,
+            "filtered": matched,
+        }
+        kept.append(item)
+    return kept, (len(kept) if narrowing else total)
+
+
+def make_handler(db_path=DEFAULT_DB, web_dir=None, token="", gazetteer_db=None):
     db_path = Path(db_path)
+    gazetteer_db = Path(gazetteer_db or os.getenv("ATLAS_GAZETTEER_DB") or GAZETTEER_DB)
     web_dir = Path(web_dir or ROOT / "web").resolve()
     live = LiveChanges(db_path)
 
@@ -195,6 +248,18 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                     # boundary_available: đủ 34 polygon GSO nạp được (file thiếu/hỏng/không đủ → False, không crash)
                     provinces = geo.all_provinces()
                     return self.json(200, {"items": [x["name"] for x in data], "count": len(data), "boundary_available": len(provinces) == 34})
+                if path == "/api/admin/resolve":
+                    q = (params.get("q") or [""])[0]
+                    as_of = (params.get("as_of") or [""])[0] or None
+                    if as_of and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", as_of):
+                        raise ValueError("as_of phải là YYYY-MM-DD")
+                    if not gazetteer_db.exists():
+                        return self.json(503, {"error": "Gazetteer chưa được build (xem tools/import_gazetteer.py)"})
+                    try:
+                        result = _admin_resolver().resolve(q, db_path=gazetteer_db, as_of=as_of)
+                    except (OSError, sqlite3.Error):
+                        return self.json(503, {"error": "Không đọc được gazetteer"})
+                    return self.json(200, result.to_dict())
                 if path == "/api/places" or path == "/api/export.geojson":
                     search = (params.get("search") or [""])[0]
                     province = (params.get("province") or [""])[0]
@@ -239,6 +304,8 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token=""):
                     offset = max(int((params.get("offset") or ["0"])[0]), 0)
                     with session(db_path) as c:
                         items, total = list_places(c, search, province, bbox, lim, offset, category=category, near=near)
+                    if (params.get("admin") or [""])[0] == "1" and search:
+                        items, total = _admin_annotate(items, total, search, gazetteer_db)
                     return self.json(200, {"items": items, "total": total, "limit": lim, "offset": offset})
                 if path == "/api/export.csv":
                     with session(db_path) as c:

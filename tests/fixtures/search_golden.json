@@ -1,0 +1,105 @@
+{
+  "description": "Golden top-5 place ids per query via list_places() default path (pre-admin-resolver baseline)",
+  "queries": {
+    "phở": {
+      "top5_ids": [
+        "381b75db-ca21-49da-b8e3-5264346a9d7d",
+        "29c9e418-afdc-4dd4-be1f-907dd6c39ad5",
+        "f12277b1-94b0-4d7f-a816-a8e370aee976",
+        "6152b2ff-4489-4550-9bd9-faaa5e5606e8",
+        "2e05d91e-ceff-4882-be5e-a93f27cbaaad"
+      ],
+      "total": 12883
+    },
+    "cà phê": {
+      "top5_ids": [
+        "4d9e7adf-d6a2-415a-8a50-1bb1a2ee3b0a",
+        "2b9d3e12-f556-42f1-a196-ed48f130a8a2",
+        "02921cc2-83a5-4cc9-8b0f-3fbf851fafa9",
+        "c974e4c4-1ebd-4453-b614-626a80a8848c",
+        "0eed6036-2ba4-4bf1-ace3-01effa64bf63"
+      ],
+      "total": 1349
+    },
+    "bệnh viện": {
+      "top5_ids": [
+        "d72e9bde-7976-4b32-b420-0791702c03e6",
+        "88a133de-2a35-4f02-90a8-50d16d59dc31",
+        "7dfd55f3-2cf9-4aae-a001-fbbeddbb8242",
+        "e7036dc9-1d7e-4aba-9294-9ef40b63231f",
+        "f3635929-1c82-443d-b1c4-f16dabae25a3"
+      ],
+      "total": 1030
+    },
+    "khách sạn": {
+      "top5_ids": [
+        "06c31836-5c70-4c81-9905-63272474497f",
+        "53180525-b2a9-4c64-8144-d9590ffc03fc",
+        "dc2a986f-14dd-43b6-aefc-96811ed628fc",
+        "33b63161-9489-4b45-9ab9-c7799667fb22",
+        "b5af7455-b4ea-4a5e-bf12-83f3f15d760e"
+      ],
+      "total": 1092
+    },
+    "hồ chí minh": {
+      "top5_ids": [
+        "4d19a75d-0b98-4d02-9236-d52931b72ba6",
+        "4e78486b-9a05-4315-9fa3-c211109261b6",
+        "5bff52af-ceac-4eea-853f-2153c8b2dd3e",
+        "7c8a3412-3f2d-45d7-a218-7c26a2a07fc5",
+        "3cd7777f-c3e8-46dc-895a-6313e1b66ee0"
+      ],
+      "total": 2166
+    },
+    "hà nội": {
+      "top5_ids": [
+        "5f2074d1-248e-4226-8ca4-d96779e244de",
+        "a44ffe48-81aa-48ea-84a0-09cf4e741b4a",
+        "62c07de1-df2e-4e14-96d8-697eeecf6028",
+        "05f95037-aa91-45b2-95b9-7d6f55ca5da8",
+        "fd77573f-a5fc-4f39-bd69-496366116039"
+      ],
+      "total": 5105
+    },
+    "quán ăn": {
+      "top5_ids": [
+        "dd5d5415-f2a1-476c-a3f5-4a49c90f61e3",
+        "8040068e-64f7-405d-b0bc-b3022d085d7d",
+        "5b0ffefc-5849-45f5-bc4c-db611b867f1b",
+        "86d6400c-e82d-4ddc-b3c2-2ea633d7699b",
+        "22fcc80b-73f0-4d59-904a-5719a10a2dcd"
+      ],
+      "total": 569
+    },
+    "trường học": {
+      "top5_ids": [
+        "72864a77-2a6d-4e04-81b8-82c38c19a348",
+        "59130ab6-5a2a-4039-9abc-26a3b3a2755b",
+        "9105cd73-c24c-4b6f-b301-c5c938ffa5c7",
+        "b0e3db38-eeca-47ca-95dd-7c9ebe17f621",
+        "f314fe62-908f-4523-aaaf-c4d04bff2dc5"
+      ],
+      "total": 6922
+    },
+    "bắc ninh": {
+      "top5_ids": [
+        "4d619e5a-4fc6-496e-b6e2-7efca2f55716",
+        "049d8226-3cc7-44bb-b50d-2aaf453079d8",
+        "38ef7ed5-1aae-4da7-beb5-df58347d8abc",
+        "8dd90969-e462-4855-97d0-bd96c78fca8f",
+        "2170d56d-52a7-40ce-b8b5-4864e208f39e"
+      ],
+      "total": 3384
+    },
+    "đà nẵng": {
+      "top5_ids": [
+        "d6b0be42-4e11-409d-858c-d0fa0a87ea2f",
+        "d4adccb1-f13f-4317-b1ad-aa8107fcc2d8",
+        "c63b6c5d-1b79-474f-9afb-a7923eee2324",
+        "4c1612ce-35f1-4e72-838d-e14ded42c8e1",
+        "a41de883-4747-4f87-b2cb-7d64a20661c6"
+      ],
+      "total": 621
+    }
+  }
+}
