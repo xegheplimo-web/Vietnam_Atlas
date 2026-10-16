@@ -14,6 +14,7 @@ import json
 import math
 import sqlite3
 import sys
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter
 from datetime import datetime, timezone
@@ -29,6 +30,56 @@ SQL_ACTIVE_COUNT = "SELECT count(*) FROM osm_places WHERE is_active=1"
 
 def now_utc():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _addr_norm(text: str) -> str:
+    """ASCII-folded lowercase key used for address-component dedup only."""
+    return unicodedata.normalize("NFD", text).encode("ascii", "ignore").decode().lower().strip()
+
+
+def _addr_dedupe(parts: list[str]) -> list[str]:
+    """Drop adjacent duplicate components; when the final two overlap
+    (city vs province, e.g. 'Hà Nội' vs 'Thành phố Hà Nội') keep the fuller
+    form instead of rendering both."""
+    out: list[str] = []
+    for part in parts:
+        if not part:
+            continue
+        if out:
+            prev_n = _addr_norm(out[-1])
+            cur_n = _addr_norm(part)
+            if cur_n == prev_n:
+                continue
+            if cur_n in prev_n:  # already have a fuller form of the same name
+                continue
+            if prev_n in cur_n:  # upgrade to the fuller form of the same name
+                out[-1] = part
+                continue
+        out.append(part)
+    return out
+
+
+def compose_address(tags: dict) -> str:
+    """Display address from OSM addr:* tags, comma-separated.
+
+    Component order: số nhà + tên đường, phường/xã (addr:subdistrict|addr:ward),
+    quận/huyện (addr:district — nested either by pre-2025 hierarchy or by
+    2025 ward-level tagging), then thành phố/tỉnh. EQ '34 Hàng Giấy Hà Nội'
+    (space join from the old builder) renders '34 Hàng Giấy, Thành phố Hà Nội'.
+    """
+    hn = (tags.get("addr:housenumber") or "").strip()
+    street = (tags.get("addr:street") or "").strip()
+    ward = next(
+        (v for v in (tags.get("addr:subdistrict"), tags.get("addr:ward")) if v and v.strip()),
+        "",
+    )
+    dist = (tags.get("addr:district") or "").strip()
+    city_v = (tags.get("addr:city") or "").strip()
+    prov_v = (tags.get("addr:province") or "").strip()
+    # dedupe xử lý chồng lấn ('Hà Nội' ⊂ 'Thành phố Hà Nội' → giữ bản đầy đủ hơn)
+    # và hai tên khác nhau giữ cả hai (thành phố trước, tỉnh sau).
+    components = _addr_dedupe([f"{hn} {street}".strip() if hn and street else (hn or street), ward, dist, city_v, prov_v])
+    return ", ".join(components)
 
 
 def sha256_file(path: Path) -> str:
@@ -92,9 +143,7 @@ def record(kind: str, ident: int | str, tags: dict, location: tuple[float, float
     name = str(tags.get("name") or tags.get(NAME_VI) or "").strip()
     category = next((f"{k}:{tags[k]}" for k in CATEGORIES if tags.get(k)), None)
     lat, lon = location
-    addr = " ".join(
-        filter(None, [tags.get("addr:housenumber", ""), tags.get("addr:street", ""), tags.get("addr:ward", ""), tags.get("addr:city", "")])
-    ).strip()
+    addr = compose_address(tags)
     phone = tags.get("contact:phone") or tags.get("phone") or ""
     website = tags.get("contact:website") or tags.get("website") or ""
     reduced = {str(k): str(v) for k, v in tags.items() if isinstance(k, str) and isinstance(v, str)}

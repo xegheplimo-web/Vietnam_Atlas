@@ -4,237 +4,339 @@
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Bắc Ninh",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2026-09-20",
+    "type_source": "39/2026/QH16"
   },
   {
     "name": "Cà Mau",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Cao Bằng",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Đắk Lắk",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Điện Biên",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Đồng Nai",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2026-04-30",
+    "type_source": "30/2026/QH16"
   },
   {
     "name": "Đồng Tháp",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Gia Lai",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Hà Tĩnh",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Hải Phòng",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Hồ Chí Minh",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Huế",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Hưng Yên",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Khánh Hòa",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Lai Châu",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Lâm Đồng",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Lạng Sơn",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Lào Cai",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Nghệ An",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Ninh Bình",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Phú Thọ",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Quảng Ngãi",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Quảng Ninh",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2026-09-01",
+    "type_source": "36/2026/QH16"
   },
   {
     "name": "Quảng Trị",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Sơn La",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Tây Ninh",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Thái Nguyên",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Thanh Hóa",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Tuyên Quang",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Vĩnh Long",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Tỉnh",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Đà Nẵng",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Hà Nội",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   },
   {
     "name": "Cần Thơ",
     "level": "province",
     "effective_from": "2025-07-01",
     "source": "Danh mục đơn vị hành chính sau sắp xếp năm 2025",
-    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền."
+    "note": "Tên đơn vị cấp tỉnh; cần ghép mã hành chính chính thức và polygon ranh giới từ nguồn có thẩm quyền.",
+    "unit_type": "Thành phố Trung ương",
+    "type_effective_from": "2025-07-01",
+    "type_source": "19/2025/QĐ-TTg"
   }
 ]

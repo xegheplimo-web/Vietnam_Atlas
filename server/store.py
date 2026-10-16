@@ -32,6 +32,28 @@ def normalize(text):
     return "".join(ch for ch in unicodedata.normalize("NFD", s) if unicodedata.category(ch) != "Mn")
 
 
+# 'Thành phố' / 'Tỉnh' trước tên đơn vị là cú pháp hiển thị; bỏ khi build FTS
+# để query như 'phở' không trúng chuỗi 'thanh phố'. Tên đơn vị vẫn còn nguyên
+# (vd 'Thành phố Hà Nội' vẫn tìm được bằng 'hà nội').
+_ADDRESS_TYPE_PREFIX_RE = re.compile(r"\b(?:Thành phố|Tỉnh)\s+")
+
+
+def address_search_tokens(address):
+    """Search-token view của address: bỏ tiền tố loại đơn vị hành chính."""
+    return _ADDRESS_TYPE_PREFIX_RE.sub("", address or "")
+
+
+def build_search_text(place):
+    """search_text = name + category + address (không tiền tố loại) + province + phone + notes."""
+    name = str(place.get("name") or "")
+    category = str(place.get("category") or "")
+    address = address_search_tokens(place.get("address"))
+    province = str(place.get("province") or "")
+    phone = str(place.get("phone") or "")
+    notes = str(place.get("notes") or "")
+    return normalize(" ".join((name, category, address, province, phone, notes)))
+
+
 # Seed aliases commonly typed by Vietnamese users (normalized, no diacritics).
 # Keep entries short and unambiguous; expansions are space-separated token phrases.
 ALIAS_SEED = (
@@ -282,7 +304,7 @@ def clean(payload):
     if p["status"] not in VALID_STATUSES:
         raise ValueError("Trạng thái không hợp lệ")
     p["source"] = p["source"] or "user"
-    p["search_text"] = normalize(" ".join(p.get(k, "") for k in ("name", "category", "address", "province", "phone", "notes")))
+    p["search_text"] = build_search_text(p)
     p["name_norm"] = normalize(p["name"])
     province = geo.province_at(p["lat"], p["lon"])
     p["province_code"] = province.code if province is not None else None

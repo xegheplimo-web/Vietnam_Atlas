@@ -9,7 +9,7 @@
         "6152b2ff-4489-4550-9bd9-faaa5e5606e8",
         "2e05d91e-ceff-4882-be5e-a93f27cbaaad"
       ],
-      "total": 12883
+      "total": 11895
     },
     "cà phê": {
       "top5_ids": [
@@ -44,22 +44,22 @@
     "hồ chí minh": {
       "top5_ids": [
         "4d19a75d-0b98-4d02-9236-d52931b72ba6",
-        "4e78486b-9a05-4315-9fa3-c211109261b6",
         "5bff52af-ceac-4eea-853f-2153c8b2dd3e",
-        "7c8a3412-3f2d-45d7-a218-7c26a2a07fc5",
-        "3cd7777f-c3e8-46dc-895a-6313e1b66ee0"
+        "c7c3b067-07b4-4141-838e-9fcc6963cb05",
+        "5468669c-9955-402f-a345-3bcafecab52b",
+        "abe7b3f7-ee5a-4c0b-8e39-b87899f25ccd"
       ],
-      "total": 2166
+      "total": 3064
     },
     "hà nội": {
       "top5_ids": [
         "5f2074d1-248e-4226-8ca4-d96779e244de",
+        "a9643603-02d4-430c-93b5-339e46123271",
         "a44ffe48-81aa-48ea-84a0-09cf4e741b4a",
-        "62c07de1-df2e-4e14-96d8-697eeecf6028",
-        "05f95037-aa91-45b2-95b9-7d6f55ca5da8",
-        "fd77573f-a5fc-4f39-bd69-496366116039"
+        "66c82cca-7843-42cd-8e0c-b790b7382edb",
+        "c690b338-6843-4423-a865-90e7b840ddb4"
       ],
-      "total": 5105
+      "total": 5914
     },
     "quán ăn": {
       "top5_ids": [
@@ -69,7 +69,7 @@
         "86d6400c-e82d-4ddc-b3c2-2ea633d7699b",
         "22fcc80b-73f0-4d59-904a-5719a10a2dcd"
       ],
-      "total": 569
+      "total": 927
     },
     "trường học": {
       "top5_ids": [
@@ -79,27 +79,28 @@
         "b0e3db38-eeca-47ca-95dd-7c9ebe17f621",
         "f314fe62-908f-4523-aaaf-c4d04bff2dc5"
       ],
-      "total": 6922
+      "total": 6926
     },
     "bắc ninh": {
       "top5_ids": [
-        "4d619e5a-4fc6-496e-b6e2-7efca2f55716",
+        "4c2a3c06-528c-4d4f-95b2-2ff1a4c91c3a",
+        "1f4dcc95-6992-4822-8d71-ff2963951881",
+        "ef81d139-a73a-40b5-b995-677027e96e75",
         "049d8226-3cc7-44bb-b50d-2aaf453079d8",
-        "38ef7ed5-1aae-4da7-beb5-df58347d8abc",
-        "8dd90969-e462-4855-97d0-bd96c78fca8f",
-        "2170d56d-52a7-40ce-b8b5-4864e208f39e"
+        "4d619e5a-4fc6-496e-b6e2-7efca2f55716"
       ],
-      "total": 3384
+      "total": 3416
     },
     "đà nẵng": {
       "top5_ids": [
-        "d6b0be42-4e11-409d-858c-d0fa0a87ea2f",
-        "d4adccb1-f13f-4317-b1ad-aa8107fcc2d8",
-        "c63b6c5d-1b79-474f-9afb-a7923eee2324",
         "4c1612ce-35f1-4e72-838d-e14ded42c8e1",
-        "a41de883-4747-4f87-b2cb-7d64a20661c6"
+        "a41de883-4747-4f87-b2cb-7d64a20661c6",
+        "d6b0be42-4e11-409d-858c-d0fa0a87ea2f",
+        "c63b6c5d-1b79-474f-9afb-a7923eee2324",
+        "9721021b-5e07-45dd-b805-0b25881bf2ff"
       ],
-      "total": 621
+      "total": 658
     }
-  }
+  },
+  "rebaseline_note": "2026-10-16: địa chỉ hiển thị compose_from OSM tags vấn đề V1-03 (mẫu list địa phường/xã/Thành phố-.., search_text per store.build_search_text — bỏ tiền tố loại đơn vị; recall tăng cho query tỉnh/thành, giảm nhiễu 'thanh phố' trúng không hợp lệ cho â'phở')."
 }

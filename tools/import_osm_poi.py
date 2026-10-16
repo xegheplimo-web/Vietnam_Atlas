@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from server.store import connect, init_db, save_place
+from tools.vn_osm_dataset import compose_address
 
 try:
     import osmium
@@ -42,7 +43,7 @@ class Pois(osmium.SimpleHandler):
             return
         self.seen += 1
         lat, lon = float(n.location.lat), float(n.location.lon)
-        addr = " ".join(filter(None, [tags.get("addr:housenumber"), tags.get("addr:street"), tags.get("addr:city")]))
+        addr = compose_address(dict(n.tags))
         self.pending.append(
             {
                 "name": tags["name"],
