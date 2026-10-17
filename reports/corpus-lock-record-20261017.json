@@ -1,0 +1,112 @@
+{
+  "lock_date": "2026-10-17T05:50:13+07:00",
+  "commit_head": "ad54682",
+  "commit_head_sha256_files_called_out_in_contract": false,
+  "status": "CORPUS LOCKED — GPT conditional acceptance 17/10: C1-C3 PASS, CL-01/02 PASS, chờ ký benchmark freeze khi đủ 300 queries + qrels",
+  "working_tree_clean": true,
+  "ci_codeql": "green (CI+CodeQL tại style(v1-03) push)",
+  "files_sha256": {
+    "server/store.py": "b98eeff046f01a5fd734ea55641859490fd3a47b5fb6bbe30187eec56ca08c16",
+    "server/geo.py": "4959b210f6c25885401858d8ccebbe5f9b824a81274c836c0816e931ae77d95b",
+    "server/app.py": "3b803ea25a2c3f443ee6288ef61d81734d7e6c0b655c8db3cfc8dc386729094b",
+    "tools/vn_osm_dataset.py": "b5799a442a29ade1dd1ae5e9ca7bd63f4a309065d1a4f75ad230316063f287af",
+    "tools/import_osm_poi.py": "c31137957cdeb5547414c38c9c69715e08f8475e08e8a6e3e20e1cd6be10655e",
+    "tools/recompose_addresses.py": "18f6676d3b551077d838e9cd918a88cba10596f2db4fe40c2b6cb3deeb3110eb",
+    "tools/sync_province_types.py": "8a16c77079b6cb49b122617248f8a8d45f273a61ec01a23720a848ed1395a38e",
+    "data/provinces_34.json": "76c9e5d22645ca869e24bd66bed840a7e37e7789bde42bd7d07ac2de72819420",
+    "data/gazetteer/DECREES.json": "75df658b7628de2306421c6b6cb3eb3cfd274f398d985441f2e79e30d796ef72",
+    "data/gazetteer/SOURCES.json": "73f06ee5e0fdfcc25d9bedba7d05dd63aafbbe97eace7c0f8bb46c09861a60a2",
+    "data/province_mergers_2025.json": "1296b8a3f67258efcf4f5f3993646a5db6ffbffc7ce733537da75aa534b9d5e4",
+    "data/provinces/PROVENANCE.json": "c371065a94aae4c7bb443e1b93c445a59aeab3dfc0f2642c3ffbc55deae69c58",
+    "data/provinces/provinces_34.geojson": "fb156b9e7960a7c315ed9f661897caac5d19a1848b17461ce5649db562723a8e",
+    "data/offshore_allowlist.json": "767ad9424d4e59cfd36497aaa27243f58018a164c90f6107ac90ff47b59408ee",
+    "data/SOURCE_STATUS_2026-10-11.json": "1c0882dbb7bdf48b266fceab4d1aa75dbf40ca4ff26874ed55c89f7854fb680f",
+    "tools/search_benchmark.py": "100c4a811c27cad3c757192615cad7af83cda1968ce2b44a0a5bbb21c1a00be7",
+    "tests/fixtures/search_golden.json": "7659d89b88edbf83d2371f71254fbf071ad7c1037930b1c7bc88d1bb44562f3c",
+    "benchmarks/search_queries.json": "a5492db74bae751272d15c2f50e81e96ac4cf56dd4778ae98150be0785a74610"
+  },
+  "snapshots": {
+    "atlas": {
+      "path": "backups\\corpus-lock-20261017\\atlas-20261017-054643-342609.sqlite3",
+      "sha256": "14293e3912a4dff089bf7dc965bf807296e30e813652c905fcf8db20965203fe",
+      "places_total": 98938,
+      "osm_places": 98936,
+      "user_places": 2,
+      "gaz_admin_unit": 3355
+    },
+    "gazetteer": {
+      "path": "backups\\corpus-lock-20261017\\gaz-054645.sqlite3",
+      "sha256": "ef7f8feff653af59bd7bcecb4f0ca505b7de273273db6e9ef5008b6192635996",
+      "current_units_by_level": {
+        "province": 34,
+        "ward": 3321,
+        "district": 0
+      },
+      "current_province_units": 34
+    }
+  },
+  "gates": {
+    "C1_commit": {
+      "head": "ad54682",
+      "clean": true,
+      "result": "PASS"
+    },
+    "C2_recompose_dry": {
+      "changed": 0,
+      "missing_tags": 60,
+      "missing_tags_reason": "60 rows = chính xác các OSM POI đã auto-retire ở staging (is_active=0): node 36 + way 24, giữ nguyên theo design; recommendation: không sửa/xoá — decoded theo yêu cầu GPT",
+      "result": "PASS (changed=0, missing_tags giải thích)"
+    },
+    "C3_fts_integrity": {
+      "sqlite_integrity": "ok",
+      "fts5_integrity_check": "PASS",
+      "search_text_consistent": "98938/98938 (fix 1 row legacy way/1331423706 trước khi snapshot: source_id inactive ở staging, address giữ nguyên, chỉ tokens)"
+    },
+    "C4_regression150": {
+      "hit@10": 0.9926,
+      "mrr@10": 0.8841,
+      "recall@10": 0.8555,
+      "no_match_false_positives": 0,
+      "diff_vs_round_c": {
+        "hit@10_delta": 0.0,
+        "mrr@10_delta": -0.0294,
+        "recall@10_delta": -0.0103,
+        "per_query_rank_regressions_hit层面": 0,
+        "rr_worse_queries": 9,
+        "rr_better_queries": 1,
+        "explanation": "hit@10 giữ nguyên 0.9926 (0 per-query hit regression); MRR −2.94pt do 9 câu tụt hạng trong pool mở rộng (phở hồ chí minh 1→6 = −5 hạng; quán ăn Quảng Nam & Công an xã Phù Đổng 1→3; khách sạn Bà Rịa - Vũng Tàu, ubnd Bắc Giang, bv nhi dong 2, đại học hồ chí minh 1→2; quán ăn hải phòng 2→4; truong dh ton duc thang 3→4), 1 câu tăng hạng; tất cả vẫn hit trong top-10; latency p95 36.39ms (cap 200ms)"
+      },
+      "latency_ms_p50": 5.95,
+      "latency_ms_p95": 36.39,
+      "result": "PASS (gate: Hit@10 không giảm; no-match 0 false positive; latency ≤200ms)"
+    }
+  },
+  "recency_provenance": "updated_at đã refresh trên ~21.355 OSM rows trong 3 lượt recompose ⇒ một phần biến động ranking có thể từ tín hiệu recency, không chỉ tokens (ghi theo yêu cầu GPT; không chặn freeze)",
+  "frozen_master_unchanged_after_run": {
+    "method": "rowhash từng bảng (places, changes, metadata, memory_records, place_media, search_aliases) giữa live master và snapshot: 6/6 identical content",
+    "note": "byte-level VACUUM INTO chênh layout (SQLite page reuse) — không phải content diff; FTS shadow content được bảo hành bởi places_fts integrity-check PASS trên snapshot",
+    "live_master_writes_since_lock": 0
+  },
+  "next": [
+    "ban hành corpus-lock record cho GPT review",
+    "300 topic sourcing lane + scorer lane (OC/Cline) trên working copies",
+    "V1-05 RIGID drill song song",
+    "benchmark freeze ký 1 lần khi qrels có SHA cuối"
+  ],
+  "cl_confirmations": {
+    "CL-01": {
+      "query": "admin_unit WHERE valid_to IS NULL GROUP BY level",
+      "result": {
+        "province": 34,
+        "ward": 3321,
+        "district": 0
+      },
+      "verdict": "PASS — 34 là current_province_units (metric đã đổi tên); district hiện hành = 0 đúng mô hình 2 cấp; ward 3.321"
+    },
+    "CL-02": {
+      "atlas_sha256_post_regression": "14293e3912a4dff089bf7dc965bf807296e30e813652c905fcf8db20965203fe",
+      "gazetteer_sha256_post_regression": "ef7f8feff653af59bd7bcecb4f0ca505b7de273273db6e9ef5008b6192635996",
+      "verdict": "PASS — SHA bất biến sau toàn bộ lượt chạy (FTS integrity-check chỉ chạy trên snapshot, không trên live)"
+    }
+  }
+}
