@@ -1,0 +1,1147 @@
+{
+  "schema": "e3a-score/v1",
+  "created_at": "2026-10-19T12:27:06+00:00",
+  "run_sha256": "2dde7e266ac72f82fa70aa58f9dc35fb6c9cfc0007bd8f2629ee6599bae53aa4",
+  "run_file_sha256": "672254e77f684e6328c31215176f57ddb6c7efe98b825afd83787ad1cfb59863",
+  "corpus_sha256": "73e5c9de1c53be094b22463e62ee483b32f2412d59f322e1bbb32a4bd53b7f2f",
+  "gazetteer_sha256": "20605020c627c8179727f834e8f62bf50a08c5b695ba0fa007f00a6cafc4ca5d",
+  "queries_sha256": "a1467d048e6e91ea42d78baf7936454c487d6ff1d4e6024aa8500fd5faf03d04",
+  "qrels_sha256": "778964c47c593c7c56efbcee55490558c97184c9d4ac11392c0ac68feefa1289",
+  "protocol": {
+    "mode": "smoke",
+    "warmup": 0,
+    "repeats": 1,
+    "timeout_s": 2.0,
+    "concurrency": 1,
+    "limit": 10,
+    "official": false
+  },
+  "master_unchanged": true,
+  "judgments": {
+    "records": 26,
+    "effective": 25,
+    "unjudged": 1
+  },
+  "adapters": [
+    {
+      "adapter": "legacy-http",
+      "metrics": {
+        "queries_total": 12,
+        "positive_total": 10,
+        "scored_positive": 8,
+        "unjudged": 1,
+        "coverage_gap": 1,
+        "run_error": 0,
+        "invalid_query": 0,
+        "judgment_incomplete": 3,
+        "hit@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 0.9375,
+        "ndcg@10": 0.9766,
+        "no_match_queries": 2,
+        "no_match_false_positive": 0.0,
+        "critical_errors": 0,
+        "latency_ms_p50": 2.96,
+        "latency_ms_p95": 26.64
+      },
+      "groups": {
+        "G1": {
+          "n": 2,
+          "scored": 2,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 2
+          }
+        },
+        "G2": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G3": {
+          "n": 3,
+          "scored": 2,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 2,
+            "coverage_gap": 1
+          }
+        },
+        "G4": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G5": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 0.5,
+          "ndcg@10": 0.8124,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G6": {
+          "n": 2,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1,
+            "unjudged": 1
+          }
+        },
+        "G7": {
+          "n": 2,
+          "scored": 0,
+          "hit@10": null,
+          "mrr@10": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "outcomes": {
+            "correct_no_match": 2
+          }
+        }
+      },
+      "panels": {
+        "pilot_hard_15": {
+          "n": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "pilot_random_85": {
+          "n": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        }
+      },
+      "coverage": {
+        "positive_total": 10,
+        "audited": 10,
+        "proven_missing": 1,
+        "coverage_gap_rate": 0.1
+      },
+      "per_query": [
+        {
+          "query_id": "q001",
+          "group": "G1",
+          "panel": null,
+          "regression150": true,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 36.75,
+          "latency_ms_max": 36.75,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q002",
+          "group": "G1",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 2.96,
+          "latency_ms_max": 2.96,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q003",
+          "group": "G2",
+          "panel": null,
+          "regression150": true,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 2.44,
+          "latency_ms_max": 2.44,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q004",
+          "group": "G3",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 3,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 20.19,
+          "latency_ms_max": 20.19,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q005",
+          "group": "G4",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 2.71,
+          "latency_ms_max": 2.71,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q006",
+          "group": "G5",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 0.5,
+          "ndcg@10": 0.8124,
+          "judged_relevant": 2,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 2.33,
+          "latency_ms_max": 2.33,
+          "error_labels": [
+            {
+              "label": "outside_radius",
+              "severity": "info",
+              "source": "judge"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q007",
+          "group": "G6",
+          "panel": null,
+          "regression150": false,
+          "outcome": "unjudged",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": 1,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 26.64,
+          "latency_ms_max": 26.64,
+          "error_labels": [
+            {
+              "label": "ambiguous_intent",
+              "severity": "info",
+              "source": "judge"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q008",
+          "group": "G7",
+          "panel": null,
+          "regression150": false,
+          "outcome": "correct_no_match",
+          "hit": null,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": null,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 15.92,
+          "latency_ms_max": 15.92,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q009",
+          "group": "G7",
+          "panel": null,
+          "regression150": false,
+          "outcome": "correct_no_match",
+          "hit": null,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": null,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 2.32,
+          "latency_ms_max": 2.32,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q010",
+          "group": "G3",
+          "panel": "pilot_random_85",
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 13.42,
+          "latency_ms_max": 13.42,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q011",
+          "group": "G3",
+          "panel": null,
+          "regression150": false,
+          "outcome": "coverage_gap",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 2.26,
+          "latency_ms_max": 2.26,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q012",
+          "group": "G6",
+          "panel": "pilot_hard_15",
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 1,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 2.1,
+          "latency_ms_max": 2.1,
+          "error_labels": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "adapter": "admin-http",
+      "metrics": {
+        "queries_total": 12,
+        "positive_total": 10,
+        "scored_positive": 8,
+        "unjudged": 1,
+        "coverage_gap": 1,
+        "run_error": 0,
+        "invalid_query": 0,
+        "judgment_incomplete": 3,
+        "hit@10": 0.75,
+        "mrr@10": 0.75,
+        "recall@10": 0.6875,
+        "ndcg@10": 0.7266,
+        "no_match_queries": 2,
+        "no_match_false_positive": 0.0,
+        "critical_errors": 0,
+        "latency_ms_p50": 16.13,
+        "latency_ms_p95": 25.47
+      },
+      "groups": {
+        "G1": {
+          "n": 2,
+          "scored": 2,
+          "hit@10": 0.5,
+          "mrr@10": 0.5,
+          "recall@10": 0.5,
+          "ndcg@10": 0.5,
+          "outcomes": {
+            "hit": 1,
+            "retrieval_failure": 1
+          }
+        },
+        "G2": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 0.0,
+          "mrr@10": 0.0,
+          "recall@10": 0.0,
+          "ndcg@10": 0.0,
+          "outcomes": {
+            "retrieval_failure": 1
+          }
+        },
+        "G3": {
+          "n": 3,
+          "scored": 2,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 2,
+            "coverage_gap": 1
+          }
+        },
+        "G4": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G5": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 0.5,
+          "ndcg@10": 0.8124,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G6": {
+          "n": 2,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1,
+            "unjudged": 1
+          }
+        },
+        "G7": {
+          "n": 2,
+          "scored": 0,
+          "hit@10": null,
+          "mrr@10": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "outcomes": {
+            "correct_no_match": 2
+          }
+        }
+      },
+      "panels": {
+        "pilot_hard_15": {
+          "n": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "pilot_random_85": {
+          "n": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        }
+      },
+      "coverage": {
+        "positive_total": 10,
+        "audited": 10,
+        "proven_missing": 1,
+        "coverage_gap_rate": 0.1
+      },
+      "per_query": [
+        {
+          "query_id": "q001",
+          "group": "G1",
+          "panel": null,
+          "regression150": true,
+          "outcome": "retrieval_failure",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": 0.0,
+          "recall@10": 0.0,
+          "ndcg@10": 0.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 34.1,
+          "latency_ms_max": 34.1,
+          "error_labels": [
+            {
+              "label": "rank_below_10",
+              "severity": "minor",
+              "source": "auto"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q002",
+          "group": "G1",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 25.16,
+          "latency_ms_max": 25.16,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q003",
+          "group": "G2",
+          "panel": null,
+          "regression150": true,
+          "outcome": "retrieval_failure",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": 0.0,
+          "recall@10": 0.0,
+          "ndcg@10": 0.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 15.24,
+          "latency_ms_max": 15.24,
+          "error_labels": [
+            {
+              "label": "rank_below_10",
+              "severity": "minor",
+              "source": "auto"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q004",
+          "group": "G3",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 3,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 16.13,
+          "latency_ms_max": 16.13,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q005",
+          "group": "G4",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 16.52,
+          "latency_ms_max": 16.52,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q006",
+          "group": "G5",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 0.5,
+          "ndcg@10": 0.8124,
+          "judged_relevant": 2,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 14.8,
+          "latency_ms_max": 14.8,
+          "error_labels": [
+            {
+              "label": "outside_radius",
+              "severity": "info",
+              "source": "judge"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q007",
+          "group": "G6",
+          "panel": null,
+          "regression150": false,
+          "outcome": "unjudged",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": 1,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 2.35,
+          "latency_ms_max": 2.35,
+          "error_labels": [
+            {
+              "label": "ambiguous_intent",
+              "severity": "info",
+              "source": "judge"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q008",
+          "group": "G7",
+          "panel": null,
+          "regression150": false,
+          "outcome": "correct_no_match",
+          "hit": null,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": null,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 3.73,
+          "latency_ms_max": 3.73,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q009",
+          "group": "G7",
+          "panel": null,
+          "regression150": false,
+          "outcome": "correct_no_match",
+          "hit": null,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": null,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 25.47,
+          "latency_ms_max": 25.47,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q010",
+          "group": "G3",
+          "panel": "pilot_random_85",
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 3.32,
+          "latency_ms_max": 3.32,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q011",
+          "group": "G3",
+          "panel": null,
+          "regression150": false,
+          "outcome": "coverage_gap",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 3.31,
+          "latency_ms_max": 3.31,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q012",
+          "group": "G6",
+          "panel": "pilot_hard_15",
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 1,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 25.44,
+          "latency_ms_max": 25.44,
+          "error_labels": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "adapter": "inprocess",
+      "metrics": {
+        "queries_total": 12,
+        "positive_total": 10,
+        "scored_positive": 8,
+        "unjudged": 1,
+        "coverage_gap": 1,
+        "run_error": 0,
+        "invalid_query": 0,
+        "judgment_incomplete": 3,
+        "hit@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 0.9375,
+        "ndcg@10": 0.9766,
+        "no_match_queries": 2,
+        "no_match_false_positive": 0.0,
+        "critical_errors": 0,
+        "latency_ms_p50": 0.64,
+        "latency_ms_p95": 1.02
+      },
+      "groups": {
+        "G1": {
+          "n": 2,
+          "scored": 2,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 2
+          }
+        },
+        "G2": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G3": {
+          "n": 3,
+          "scored": 2,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 2,
+            "coverage_gap": 1
+          }
+        },
+        "G4": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G5": {
+          "n": 1,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 0.5,
+          "ndcg@10": 0.8124,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "G6": {
+          "n": 2,
+          "scored": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "outcomes": {
+            "hit": 1,
+            "unjudged": 1
+          }
+        },
+        "G7": {
+          "n": 2,
+          "scored": 0,
+          "hit@10": null,
+          "mrr@10": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "outcomes": {
+            "correct_no_match": 2
+          }
+        }
+      },
+      "panels": {
+        "pilot_hard_15": {
+          "n": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        },
+        "pilot_random_85": {
+          "n": 1,
+          "hit@10": 1.0,
+          "mrr@10": 1.0,
+          "outcomes": {
+            "hit": 1
+          }
+        }
+      },
+      "coverage": {
+        "positive_total": 10,
+        "audited": 10,
+        "proven_missing": 1,
+        "coverage_gap_rate": 0.1
+      },
+      "per_query": [
+        {
+          "query_id": "q001",
+          "group": "G1",
+          "panel": null,
+          "regression150": true,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 33.24,
+          "latency_ms_max": 33.24,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q002",
+          "group": "G1",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 0.67,
+          "latency_ms_max": 0.67,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q003",
+          "group": "G2",
+          "panel": null,
+          "regression150": true,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 0.59,
+          "latency_ms_max": 0.59,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q004",
+          "group": "G3",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 3,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 0.83,
+          "latency_ms_max": 0.83,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q005",
+          "group": "G4",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 1.02,
+          "latency_ms_max": 1.02,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q006",
+          "group": "G5",
+          "panel": null,
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 0.5,
+          "ndcg@10": 0.8124,
+          "judged_relevant": 2,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 0.58,
+          "latency_ms_max": 0.58,
+          "error_labels": [
+            {
+              "label": "outside_radius",
+              "severity": "info",
+              "source": "judge"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q007",
+          "group": "G6",
+          "panel": null,
+          "regression150": false,
+          "outcome": "unjudged",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": 1,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 0.34,
+          "latency_ms_max": 0.34,
+          "error_labels": [
+            {
+              "label": "ambiguous_intent",
+              "severity": "info",
+              "source": "judge"
+            }
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q008",
+          "group": "G7",
+          "panel": null,
+          "regression150": false,
+          "outcome": "correct_no_match",
+          "hit": null,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": null,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 0.64,
+          "latency_ms_max": 0.64,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q009",
+          "group": "G7",
+          "panel": null,
+          "regression150": false,
+          "outcome": "correct_no_match",
+          "hit": null,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": null,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 0.54,
+          "latency_ms_max": 0.54,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q010",
+          "group": "G3",
+          "panel": "pilot_random_85",
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 0.78,
+          "latency_ms_max": 0.78,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q011",
+          "group": "G3",
+          "panel": null,
+          "regression150": false,
+          "outcome": "coverage_gap",
+          "hit": false,
+          "first_relevant_rank": null,
+          "rr": null,
+          "recall@10": null,
+          "ndcg@10": null,
+          "judged_relevant": 0,
+          "top10_unjudged": 0,
+          "judgment_incomplete": false,
+          "latency_ms_mean": 0.56,
+          "latency_ms_max": 0.56,
+          "error_labels": [],
+          "error": null
+        },
+        {
+          "query_id": "q012",
+          "group": "G6",
+          "panel": "pilot_hard_15",
+          "regression150": false,
+          "outcome": "hit",
+          "hit": true,
+          "first_relevant_rank": 1,
+          "rr": 1.0,
+          "recall@10": 1.0,
+          "ndcg@10": 1.0,
+          "judged_relevant": 1,
+          "top10_unjudged": 1,
+          "judgment_incomplete": true,
+          "latency_ms_mean": 0.52,
+          "latency_ms_max": 0.52,
+          "error_labels": [],
+          "error": null
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,7 @@ data/*.partial
 data/provinces/.cache/
 data/gazetteer/raw/
 storage/
+tests/fixtures/e3a/*.sqlite3*
 .env
 .serena/
 .devin/

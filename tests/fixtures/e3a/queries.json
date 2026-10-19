@@ -1,0 +1,25 @@
+{
+  "version": "e3a-fixture/v1",
+  "description": "Synthetic E3a fixture query set — exercises every group on the fixture DB (tests/fixtures/e3a). Place ids come from places.json.",
+  "queries": [
+    {"id": "q001", "group": "G1", "persona": "nguoi_dan", "split": "dev", "regression150": true, "query": "Bệnh viện Đa khoa Minh An"},
+    {"id": "q002", "group": "G1", "persona": "du_khach", "split": "dev", "query": "Khách sạn Hoa Ban"},
+    {"id": "q003", "group": "G2", "persona": "nguoi_dan", "split": "dev", "regression150": true, "query": "benh vien minh an"},
+    {"id": "q004", "group": "G3", "persona": "du_khach", "split": "dev", "query": "phở hà nội"},
+    {"id": "q005", "group": "G4", "persona": "dia_danh_lich_su", "split": "dev", "query": "bưu điện sài gòn"},
+    {
+      "id": "q006",
+      "group": "G5",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "atm bến thành",
+      "near": {"lat": 10.7722, "lon": 106.6981, "radius_km": 1.0, "crs": "EPSG:4326", "coordinate_source": "GPS field survey", "evidence_id": "ev-q006-geo", "accuracy_m": 30}
+    },
+    {"id": "q007", "group": "G6", "persona": "du_khach", "split": "dev", "query": "chợ"},
+    {"id": "q008", "group": "G7", "persona": "giao_hang", "split": "dev", "query": "zzqx không có gì 98765"},
+    {"id": "q009", "group": "G7", "persona": "nguoi_dan", "split": "dev", "query": "thương viện abcxyz 555"},
+    {"id": "q010", "group": "G3", "persona": "giao_hang", "split": "dev", "panel": "pilot_random_85", "query": "quán ăn hải phòng"},
+    {"id": "q011", "group": "G3", "persona": "nguoi_dan", "split": "dev", "query": "sân golf abcxyz hà nội"},
+    {"id": "q012", "group": "G6", "persona": "du_khach", "split": "dev", "panel": "pilot_hard_15", "query": "chợ bến thành"}
+  ]
+}

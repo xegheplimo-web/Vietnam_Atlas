@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "e3a-schema/v1",
+  "title": "E3A benchmark schema v1",
+  "description": "Frozen schemas for the E3a independent search benchmark (contract: contracts/E3A_CONTRACT.md). The harness tools/benchmark_e3a.py implements a stdlib validator over this document; `required` lists and `enum` sets here are authoritative.",
+  "benchmark_version": "v1.0",
+  "rubric_version": "rubric_v1",
+  "groups": ["G1", "G2", "G3", "G4", "G5", "G6", "G7"],
+  "error_labels": {
+    "ground_truth": ["evidence_missing", "evidence_stale", "label_conflict", "insufficient_judgments", "ambiguous_intent"],
+    "data": ["poi_missing_in_db", "gazetteer_gap", "historical_alias_missing", "incorrect_coordinates", "incorrect_category_data", "stale_poi", "duplicate_entity"],
+    "admin": ["admin_unresolved", "admin_ambiguous", "admin_wrong", "historical_mapping_wrong", "wrong_province", "wrong_ward"],
+    "text_ranking": ["normalization_failure", "typo_handling_failure", "alias_match_failure", "category_match_failure", "wrong_entity", "rank_below_10", "candidate_generation_failure", "relevance_ranking_failure", "false_positive_no_match"],
+    "spatial": ["outside_radius", "incorrect_distance", "incorrect_distance_order", "radius_filter_unsupported", "spatial_evidence_uncertain"],
+    "runtime": ["api_error", "sqlite_error", "query_timeout", "non_deterministic_results", "latency_budget_exceeded"]
+  },
+  "primary_outcomes": ["hit", "retrieval_failure", "coverage_gap", "correct_no_match", "false_positive", "unjudged", "invalid_query", "run_error"],
+  "judgment_statuses": ["pending", "verified", "rejected", "needs_review"],
+  "review_statuses": ["pending", "verified", "rejected", "needs_review"],
+  "severities": ["info", "minor", "major", "critical"],
+  "adapters": ["legacy-http", "admin-http", "inprocess"],
+  "$defs": {
+    "query": {
+      "type": "object",
+      "required": ["id", "group", "query"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "group": {"enum": ["G1", "G2", "G3", "G4", "G5", "G6", "G7"]},
+        "persona": {"type": "string"},
+        "split": {"enum": ["dev", "holdout"]},
+        "panel": {"enum": ["pilot_random_85", "pilot_hard_15"]},
+        "query": {"type": "string", "minLength": 1},
+        "near": {"$ref": "#/$defs/near"},
+        "province_code": {"type": "string"},
+        "regression150": {"type": "boolean"},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": true,
+      "comment": "Topic only — NO evaluation labels (expected_ids, coverage_gap, evidence) live in qrels/evidence, never here (contract §5.1). `near` is mandatory when group=G5. `panel` marks pilot membership; pilot queries still carry split=dev (B4). `regression150` marks membership in the locked round-b-150 regression set."
+    },
+    "near": {
+      "type": "object",
+      "required": ["lat", "lon", "radius_km", "crs", "coordinate_source", "evidence_id", "accuracy_m"],
+      "properties": {
+        "lat": {"type": "number", "minimum": -90, "maximum": 90},
+        "lon": {"type": "number", "minimum": -180, "maximum": 180},
+        "radius_km": {"type": "number", "exclusiveMinimum": 0},
+        "crs": {"const": "EPSG:4326"},
+        "coordinate_source": {"type": "string"},
+        "evidence_id": {"type": "string"},
+        "accuracy_m": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "queries_file": {
+      "type": "object",
+      "required": ["version", "queries"],
+      "properties": {
+        "version": {"type": "string"},
+        "queries": {"type": "array", "items": {"$ref": "#/$defs/query"}}
+      }
+    },
+    "qrel": {
+      "type": "object",
+      "required": ["query_id", "place_id", "grade", "judged_by", "judgment_status"],
+      "properties": {
+        "query_id": {"type": "string", "minLength": 1},
+        "place_id": {"type": "string", "minLength": 1},
+        "grade": {"type": "integer", "minimum": 0, "maximum": 3},
+        "judged_by": {"type": "string", "minLength": 1},
+        "judgment_status": {"enum": ["pending", "verified", "rejected", "needs_review"]},
+        "error_labels": {"type": "array", "items": {"$ref": "#/$defs/error_label"}},
+        "evidence_ids": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": true,
+      "comment": "One (query_id, place_id) relevance judgment. Only judgment_status=verified participates in scoring; everything else stays `unjudged` and is NEVER coerced to grade 0 (contract §6.1)."
+    },
+    "coverage_audit": {
+      "type": "object",
+      "required": ["query_id", "coverage_audit", "judged_by", "judgment_status"],
+      "properties": {
+        "query_id": {"type": "string", "minLength": 1},
+        "coverage_audit": {"enum": ["present", "missing", "unjudged"]},
+        "judged_by": {"type": "string", "minLength": 1},
+        "judgment_status": {"enum": ["pending", "verified", "rejected", "needs_review"]},
+        "evidence_ids": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": true,
+      "comment": "Query-level record proving the DB holds ('present') or lacks ('missing') a matching POI — result of a whole-DB audit, NEVER inferred from an empty top-10 (contract §6)."
+    },
+    "error_label": {
+      "anyOf": [
+        {"type": "string"},
+        {"type": "object", "required": ["label", "severity"], "properties": {"label": {"type": "string"}, "severity": {"enum": ["info", "minor", "major", "critical"]}}}
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["evidence_id", "query_id", "source_type", "publisher", "url", "accessed_at", "claim_supported", "snippet", "snippet_sha256", "rights_basis", "review_status"],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "query_id": {"type": "string", "minLength": 1},
+        "source_type": {"type": "string", "minLength": 1},
+        "publisher": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "minLength": 1},
+        "accessed_at": {"type": "string", "format": "date-time"},
+        "published_at": {"type": "string"},
+        "effective_on": {"type": "string"},
+        "claim_supported": {"type": "string", "minLength": 1},
+        "snippet": {"type": "string"},
+        "snippet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "content_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "rights_basis": {"type": "string", "minLength": 1},
+        "notes": {"type": "string"},
+        "review_status": {"enum": ["pending", "verified", "rejected", "needs_review"]},
+        "lat": {"type": "number", "minimum": -90, "maximum": 90},
+        "lon": {"type": "number", "minimum": -180, "maximum": 180},
+        "crs": {"const": "EPSG:4326"},
+        "accuracy_m": {"type": "number", "minimum": 0},
+        "coordinate_method": {"type": "string"}
+      },
+      "additionalProperties": true,
+      "comment": "snippet_sha256 = sha256 of the NORMALIZED snippet (NFC, whitespace collapsed, stripped), UTF-8. content_sha256 is only allowed when source bytes actually exist. Records for G5 queries MUST also carry lat/lon/crs/accuracy_m/coordinate_method (contract §5.5, B5)."
+    },
+    "run_query_result": {
+      "type": "object",
+      "required": ["query_id", "top_ids", "latencies_ms", "error"],
+      "properties": {
+        "query_id": {"type": "string"},
+        "top_ids": {"type": "array", "items": {"type": ["string", "null"]}},
+        "top_rows": {"type": "array"},
+        "latencies_ms": {"type": "array", "items": {"type": "number"}},
+        "ids_by_repeat": {"type": "array"},
+        "error": {"type": ["string", "null"]}
+      }
+    },
+    "run_adapter_block": {
+      "type": "object",
+      "required": ["adapter", "results", "latency_ms_p50", "latency_ms_p95"],
+      "properties": {
+        "adapter": {"enum": ["legacy-http", "admin-http", "inprocess"]},
+        "results": {"type": "array", "items": {"$ref": "#/$defs/run_query_result"}},
+        "latency_ms_p50": {"type": ["number", "null"]},
+        "latency_ms_p95": {"type": ["number", "null"]},
+        "warmup_ms": {"type": "array"},
+        "requests_total": {"type": "integer"},
+        "errors_total": {"type": "integer"}
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["schema", "created_at", "corpus_sha256", "queries_sha256", "environment", "protocol", "adapters", "master_sha_before", "master_sha_after", "master_unchanged", "run_sha256"],
+      "properties": {
+        "schema": {"const": "e3a-run/v1"},
+        "created_at": {"type": "string"},
+        "git_sha": {"type": ["string", "null"]},
+        "corpus_path": {"type": "string"},
+        "corpus_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "gazetteer_path": {"type": ["string", "null"]},
+        "gazetteer_sha256": {"type": ["string", "null"]},
+        "queries_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "environment": {
+          "type": "object",
+          "required": ["os", "cpu", "python", "sqlite"],
+          "properties": {"os": {"type": "string"}, "cpu": {"type": "string"}, "python": {"type": "string"}, "sqlite": {"type": "string"}}
+        },
+        "protocol": {
+          "type": "object",
+          "required": ["mode", "warmup", "repeats", "timeout_s", "concurrency", "limit", "official"],
+          "properties": {
+            "mode": {"enum": ["official", "smoke"]},
+            "warmup": {"type": "integer"},
+            "repeats": {"type": "integer"},
+            "timeout_s": {"type": "number"},
+            "concurrency": {"const": 1},
+            "limit": {"type": "integer"},
+            "official": {"type": "boolean"}
+          }
+        },
+        "adapters": {"type": "array", "items": {"$ref": "#/$defs/run_adapter_block"}},
+        "master_sha_before": {"type": "string"},
+        "master_sha_after": {"type": "string"},
+        "master_unchanged": {"type": "boolean"},
+        "run_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "debug": {"type": "object"}
+      },
+      "comment": "run_sha256 = sha256 of the canonical JSON (sort_keys, compact) of the `adapters` block — a content fingerprint used by C5 manifests as base_run_sha256. master_unchanged=false means the G8 guard fired and the run MUST be discarded."
+    },
+    "score": {
+      "type": "object",
+      "required": ["schema", "created_at", "run_sha256", "corpus_sha256", "queries_sha256", "qrels_sha256", "adapters"],
+      "properties": {
+        "schema": {"const": "e3a-score/v1"},
+        "created_at": {"type": "string"},
+        "run_sha256": {"type": "string"},
+        "corpus_sha256": {"type": "string"},
+        "queries_sha256": {"type": "string"},
+        "qrels_sha256": {"type": "string"},
+        "adapters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["adapter", "metrics", "per_query"],
+            "properties": {
+              "adapter": {"type": "string"},
+              "metrics": {"type": "object"},
+              "per_query": {"type": "array"},
+              "latency_ms_p50": {"type": ["number", "null"]},
+              "latency_ms_p95": {"type": ["number", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "required": ["benchmark_version", "rubric_version", "created_at", "atlas_db_sha256", "query_set_sha256", "qrels_sha256", "counts"],
+      "properties": {
+        "benchmark_version": {"type": "string"},
+        "rubric_version": {"type": "string"},
+        "created_at": {"type": "string"},
+        "git_sha": {"type": ["string", "null"]},
+        "atlas_db_sha256": {"type": "string"},
+        "gazetteer_db_sha256": {"type": ["string", "null"]},
+        "sqlite_version": {"type": "string"},
+        "query_set_sha256": {"type": "string"},
+        "qrels_sha256": {"type": "string"},
+        "counts": {"type": "object"}
+      },
+      "comment": "Inputs/config/hashes ONLY — metrics (Hit@10/MRR/nDCG/errors) live in baseline_summary.json, never here (contract §7)."
+    }
+  }
+}

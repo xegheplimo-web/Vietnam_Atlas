@@ -1,0 +1,1342 @@
+{
+  "schema": "e3a-run/v1",
+  "created_at": "2026-10-19T12:22:26+00:00",
+  "git_sha": "a5d0fb9d894cbfc274161e2373aa379589755b8e",
+  "corpus_path": "tests\\fixtures\\e3a\\atlas_fixture.sqlite3",
+  "corpus_sha256": "73e5c9de1c53be094b22463e62ee483b32f2412d59f322e1bbb32a4bd53b7f2f",
+  "gazetteer_path": "tests\\fixtures\\e3a\\gazetteer_fixture.sqlite3",
+  "gazetteer_sha256": "20605020c627c8179727f834e8f62bf50a08c5b695ba0fa007f00a6cafc4ca5d",
+  "queries_sha256": "c6cd246d9e36c2bc6736ddead31fffc4bf55965d5caef46634dfeb401703420a",
+  "environment": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "cpu": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD",
+    "python": "3.14.7",
+    "sqlite": "3.53.1"
+  },
+  "protocol": {
+    "mode": "smoke",
+    "warmup": 0,
+    "repeats": 1,
+    "timeout_s": 2.0,
+    "concurrency": 1,
+    "limit": 10,
+    "official": false
+  },
+  "adapters": [
+    {
+      "adapter": "legacy-http",
+      "results": [
+        {
+          "query_id": "q001",
+          "top_ids": [
+            "fix-hn-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-bv-01",
+              "name": "Bệnh viện Đa khoa Minh An",
+              "category": "hospital",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0312,
+              "lon": 105.8512,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            36.754
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-bv-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q002",
+          "top_ids": [
+            "fix-hn-ks-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-ks-01",
+              "name": "Khách sạn Hoa Ban",
+              "category": "hotel",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0275,
+              "lon": 105.8421,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            2.96
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-ks-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q003",
+          "top_ids": [
+            "fix-hn-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-bv-01",
+              "name": "Bệnh viện Đa khoa Minh An",
+              "category": "hospital",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0312,
+              "lon": 105.8512,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            2.44
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-bv-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q004",
+          "top_ids": [
+            "fix-hn-pho-01",
+            "fix-hn-xang-01",
+            "fix-hn-bv-01",
+            "fix-hn-tr-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-pho-01",
+              "name": "Phở Hà Nội Xưa",
+              "category": "restaurant",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0298,
+              "lon": 105.8501,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-xang-01",
+              "name": "Trạm xăng Petrolimex 10",
+              "category": "fuel",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 20.9987,
+              "lon": 105.8413,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-bv-01",
+              "name": "Bệnh viện Đa khoa Minh An",
+              "category": "hospital",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0312,
+              "lon": 105.8512,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-tr-01",
+              "name": "Trường Tiểu học Chu Văn An",
+              "category": "school",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0201,
+              "lon": 105.8389,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            20.193
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-pho-01",
+              "fix-hn-xang-01",
+              "fix-hn-bv-01",
+              "fix-hn-tr-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q005",
+          "top_ids": [
+            "fix-hcm-bd-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-bd-01",
+              "name": "Bưu điện Thành phố Hồ Chí Minh",
+              "category": "post_office",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7799,
+              "lon": 106.6992,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            2.71
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-bd-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q006",
+          "top_ids": [
+            "fix-hcm-atm-01",
+            "fix-hcm-atm-03"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-atm-01",
+              "name": "ATM ACB Bến Thành",
+              "category": "atm",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7728,
+              "lon": 106.6988,
+              "distance_km": 0.1,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-atm-03",
+              "name": "ATM BIDV Bến Thành",
+              "category": "atm",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.8501,
+              "lon": 106.7502,
+              "distance_km": 10.4,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            2.335
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-atm-01",
+              "fix-hcm-atm-03"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q007",
+          "top_ids": [
+            "fix-dn-cho-01",
+            "fix-hn-cho-01",
+            "fix-ct-cho-01",
+            "fix-hcm-cho-02",
+            "fix-hcm-bt-01",
+            "fix-hcm-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-dn-cho-01",
+              "name": "Chợ Hàn",
+              "category": "marketplace",
+              "province": "Đà Nẵng",
+              "province_code": "48",
+              "lat": 16.068,
+              "lon": 108.2245,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-cho-01",
+              "name": "Chợ Đồng Xuân",
+              "category": "marketplace",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0381,
+              "lon": 105.8491,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-ct-cho-01",
+              "name": "Chợ Ninh Kiều",
+              "category": "marketplace",
+              "province": "Cần Thơ",
+              "province_code": "92",
+              "lat": 10.0342,
+              "lon": 105.783,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-cho-02",
+              "name": "Chợ Tân Định",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7896,
+              "lon": 106.6904,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-bt-01",
+              "name": "Chợ Bến Thành",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7721,
+              "lon": 106.698,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-bv-01",
+              "name": "Bệnh viện Chợ Rẫy",
+              "category": "hospital",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7566,
+              "lon": 106.6597,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            26.636
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-dn-cho-01",
+              "fix-hn-cho-01",
+              "fix-ct-cho-01",
+              "fix-hcm-cho-02",
+              "fix-hcm-bt-01",
+              "fix-hcm-bv-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q008",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            15.917
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q009",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            2.322
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q010",
+          "top_ids": [
+            "fix-hp-nh-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hp-nh-01",
+              "name": "Quán ăn Hải Phòng Xôi",
+              "category": "restaurant",
+              "province": "Hải Phòng",
+              "province_code": "31",
+              "lat": 20.8608,
+              "lon": 106.6797,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            13.424
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hp-nh-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q011",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            2.258
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q012",
+          "top_ids": [
+            "fix-hcm-bt-01",
+            "fix-hcm-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-bt-01",
+              "name": "Chợ Bến Thành",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7721,
+              "lon": 106.698,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-bv-01",
+              "name": "Bệnh viện Chợ Rẫy",
+              "category": "hospital",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7566,
+              "lon": 106.6597,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            2.101
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-bt-01",
+              "fix-hcm-bv-01"
+            ]
+          ],
+          "error": null
+        }
+      ],
+      "warmup_ms": [],
+      "errors_total": 0,
+      "requests_total": 12,
+      "latency_ms_p50": 2.96,
+      "latency_ms_p95": 26.64
+    },
+    {
+      "adapter": "admin-http",
+      "results": [
+        {
+          "query_id": "q001",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            34.105
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q002",
+          "top_ids": [
+            "fix-hn-ks-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-ks-01",
+              "name": "Khách sạn Hoa Ban",
+              "category": "hotel",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0275,
+              "lon": 105.8421,
+              "status": "unverified",
+              "admin": {
+                "code": null,
+                "name": null,
+                "confidence": "unresolved",
+                "filtered": false
+              }
+            }
+          ],
+          "latencies_ms": [
+            25.157
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-ks-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q003",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            15.241
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q004",
+          "top_ids": [
+            "fix-hn-pho-01",
+            "fix-hn-xang-01",
+            "fix-hn-bv-01",
+            "fix-hn-tr-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-pho-01",
+              "name": "Phở Hà Nội Xưa",
+              "category": "restaurant",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0298,
+              "lon": 105.8501,
+              "status": "unverified",
+              "admin": {
+                "code": "01",
+                "name": "Thành phố Hà Nội",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            },
+            {
+              "id": "fix-hn-xang-01",
+              "name": "Trạm xăng Petrolimex 10",
+              "category": "fuel",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 20.9987,
+              "lon": 105.8413,
+              "status": "unverified",
+              "admin": {
+                "code": "01",
+                "name": "Thành phố Hà Nội",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            },
+            {
+              "id": "fix-hn-bv-01",
+              "name": "Bệnh viện Đa khoa Minh An",
+              "category": "hospital",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0312,
+              "lon": 105.8512,
+              "status": "unverified",
+              "admin": {
+                "code": "01",
+                "name": "Thành phố Hà Nội",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            },
+            {
+              "id": "fix-hn-tr-01",
+              "name": "Trường Tiểu học Chu Văn An",
+              "category": "school",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0201,
+              "lon": 105.8389,
+              "status": "unverified",
+              "admin": {
+                "code": "01",
+                "name": "Thành phố Hà Nội",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            }
+          ],
+          "latencies_ms": [
+            16.129
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-pho-01",
+              "fix-hn-xang-01",
+              "fix-hn-bv-01",
+              "fix-hn-tr-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q005",
+          "top_ids": [
+            "fix-hcm-bd-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-bd-01",
+              "name": "Bưu điện Thành phố Hồ Chí Minh",
+              "category": "post_office",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7799,
+              "lon": 106.6992,
+              "status": "unverified",
+              "admin": {
+                "code": "79",
+                "name": "Thành phố Hồ Chí Minh",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            }
+          ],
+          "latencies_ms": [
+            16.519
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-bd-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q006",
+          "top_ids": [
+            "fix-hcm-atm-01",
+            "fix-hcm-atm-03"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-atm-01",
+              "name": "ATM ACB Bến Thành",
+              "category": "atm",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7728,
+              "lon": 106.6988,
+              "distance_km": 0.1,
+              "status": "unverified",
+              "admin": {
+                "code": "77001",
+                "name": "Phường Bến Thành",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            },
+            {
+              "id": "fix-hcm-atm-03",
+              "name": "ATM BIDV Bến Thành",
+              "category": "atm",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.8501,
+              "lon": 106.7502,
+              "distance_km": 10.4,
+              "status": "unverified",
+              "admin": {
+                "code": "77001",
+                "name": "Phường Bến Thành",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            }
+          ],
+          "latencies_ms": [
+            14.805
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-atm-01",
+              "fix-hcm-atm-03"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q007",
+          "top_ids": [
+            "fix-dn-cho-01",
+            "fix-hn-cho-01",
+            "fix-ct-cho-01",
+            "fix-hcm-cho-02",
+            "fix-hcm-bt-01",
+            "fix-hcm-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-dn-cho-01",
+              "name": "Chợ Hàn",
+              "category": "marketplace",
+              "province": "Đà Nẵng",
+              "province_code": "48",
+              "lat": 16.068,
+              "lon": 108.2245,
+              "status": "unverified",
+              "admin": {
+                "code": null,
+                "name": null,
+                "confidence": "unresolved",
+                "filtered": false
+              }
+            },
+            {
+              "id": "fix-hn-cho-01",
+              "name": "Chợ Đồng Xuân",
+              "category": "marketplace",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0381,
+              "lon": 105.8491,
+              "status": "unverified",
+              "admin": {
+                "code": null,
+                "name": null,
+                "confidence": "unresolved",
+                "filtered": false
+              }
+            },
+            {
+              "id": "fix-ct-cho-01",
+              "name": "Chợ Ninh Kiều",
+              "category": "marketplace",
+              "province": "Cần Thơ",
+              "province_code": "92",
+              "lat": 10.0342,
+              "lon": 105.783,
+              "status": "unverified",
+              "admin": {
+                "code": null,
+                "name": null,
+                "confidence": "unresolved",
+                "filtered": false
+              }
+            },
+            {
+              "id": "fix-hcm-cho-02",
+              "name": "Chợ Tân Định",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7896,
+              "lon": 106.6904,
+              "status": "unverified",
+              "admin": {
+                "code": null,
+                "name": null,
+                "confidence": "unresolved",
+                "filtered": false
+              }
+            },
+            {
+              "id": "fix-hcm-bt-01",
+              "name": "Chợ Bến Thành",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7721,
+              "lon": 106.698,
+              "status": "unverified",
+              "admin": {
+                "code": null,
+                "name": null,
+                "confidence": "unresolved",
+                "filtered": false
+              }
+            },
+            {
+              "id": "fix-hcm-bv-01",
+              "name": "Bệnh viện Chợ Rẫy",
+              "category": "hospital",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7566,
+              "lon": 106.6597,
+              "status": "unverified",
+              "admin": {
+                "code": null,
+                "name": null,
+                "confidence": "unresolved",
+                "filtered": false
+              }
+            }
+          ],
+          "latencies_ms": [
+            2.345
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-dn-cho-01",
+              "fix-hn-cho-01",
+              "fix-ct-cho-01",
+              "fix-hcm-cho-02",
+              "fix-hcm-bt-01",
+              "fix-hcm-bv-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q008",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            3.725
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q009",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            25.469
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q010",
+          "top_ids": [
+            "fix-hp-nh-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hp-nh-01",
+              "name": "Quán ăn Hải Phòng Xôi",
+              "category": "restaurant",
+              "province": "Hải Phòng",
+              "province_code": "31",
+              "lat": 20.8608,
+              "lon": 106.6797,
+              "status": "unverified",
+              "admin": {
+                "code": "31",
+                "name": "Thành phố Hải Phòng",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            }
+          ],
+          "latencies_ms": [
+            3.32
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hp-nh-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q011",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            3.31
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q012",
+          "top_ids": [
+            "fix-hcm-bt-01",
+            "fix-hcm-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-bt-01",
+              "name": "Chợ Bến Thành",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7721,
+              "lon": 106.698,
+              "status": "unverified",
+              "admin": {
+                "code": "77001",
+                "name": "Phường Bến Thành",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            },
+            {
+              "id": "fix-hcm-bv-01",
+              "name": "Bệnh viện Chợ Rẫy",
+              "category": "hospital",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7566,
+              "lon": 106.6597,
+              "status": "unverified",
+              "admin": {
+                "code": "77001",
+                "name": "Phường Bến Thành",
+                "confidence": "resolved",
+                "filtered": true
+              }
+            }
+          ],
+          "latencies_ms": [
+            25.443
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-bt-01",
+              "fix-hcm-bv-01"
+            ]
+          ],
+          "error": null
+        }
+      ],
+      "warmup_ms": [],
+      "errors_total": 0,
+      "requests_total": 12,
+      "latency_ms_p50": 16.13,
+      "latency_ms_p95": 25.47
+    },
+    {
+      "adapter": "inprocess",
+      "results": [
+        {
+          "query_id": "q001",
+          "top_ids": [
+            "fix-hn-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-bv-01",
+              "name": "Bệnh viện Đa khoa Minh An",
+              "category": "hospital",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0312,
+              "lon": 105.8512,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            33.244
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-bv-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q002",
+          "top_ids": [
+            "fix-hn-ks-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-ks-01",
+              "name": "Khách sạn Hoa Ban",
+              "category": "hotel",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0275,
+              "lon": 105.8421,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            0.667
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-ks-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q003",
+          "top_ids": [
+            "fix-hn-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-bv-01",
+              "name": "Bệnh viện Đa khoa Minh An",
+              "category": "hospital",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0312,
+              "lon": 105.8512,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            0.587
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-bv-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q004",
+          "top_ids": [
+            "fix-hn-pho-01",
+            "fix-hn-xang-01",
+            "fix-hn-bv-01",
+            "fix-hn-tr-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hn-pho-01",
+              "name": "Phở Hà Nội Xưa",
+              "category": "restaurant",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0298,
+              "lon": 105.8501,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-xang-01",
+              "name": "Trạm xăng Petrolimex 10",
+              "category": "fuel",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 20.9987,
+              "lon": 105.8413,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-bv-01",
+              "name": "Bệnh viện Đa khoa Minh An",
+              "category": "hospital",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0312,
+              "lon": 105.8512,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-tr-01",
+              "name": "Trường Tiểu học Chu Văn An",
+              "category": "school",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0201,
+              "lon": 105.8389,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            0.827
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hn-pho-01",
+              "fix-hn-xang-01",
+              "fix-hn-bv-01",
+              "fix-hn-tr-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q005",
+          "top_ids": [
+            "fix-hcm-bd-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-bd-01",
+              "name": "Bưu điện Thành phố Hồ Chí Minh",
+              "category": "post_office",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7799,
+              "lon": 106.6992,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            1.019
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-bd-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q006",
+          "top_ids": [
+            "fix-hcm-atm-01",
+            "fix-hcm-atm-03"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-atm-01",
+              "name": "ATM ACB Bến Thành",
+              "category": "atm",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7728,
+              "lon": 106.6988,
+              "distance_km": 0.1,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-atm-03",
+              "name": "ATM BIDV Bến Thành",
+              "category": "atm",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.8501,
+              "lon": 106.7502,
+              "distance_km": 10.4,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            0.583
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-atm-01",
+              "fix-hcm-atm-03"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q007",
+          "top_ids": [
+            "fix-dn-cho-01",
+            "fix-hn-cho-01",
+            "fix-ct-cho-01",
+            "fix-hcm-cho-02",
+            "fix-hcm-bt-01",
+            "fix-hcm-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-dn-cho-01",
+              "name": "Chợ Hàn",
+              "category": "marketplace",
+              "province": "Đà Nẵng",
+              "province_code": "48",
+              "lat": 16.068,
+              "lon": 108.2245,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hn-cho-01",
+              "name": "Chợ Đồng Xuân",
+              "category": "marketplace",
+              "province": "Hà Nội",
+              "province_code": "01",
+              "lat": 21.0381,
+              "lon": 105.8491,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-ct-cho-01",
+              "name": "Chợ Ninh Kiều",
+              "category": "marketplace",
+              "province": "Cần Thơ",
+              "province_code": "92",
+              "lat": 10.0342,
+              "lon": 105.783,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-cho-02",
+              "name": "Chợ Tân Định",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7896,
+              "lon": 106.6904,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-bt-01",
+              "name": "Chợ Bến Thành",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7721,
+              "lon": 106.698,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-bv-01",
+              "name": "Bệnh viện Chợ Rẫy",
+              "category": "hospital",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7566,
+              "lon": 106.6597,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            0.345
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-dn-cho-01",
+              "fix-hn-cho-01",
+              "fix-ct-cho-01",
+              "fix-hcm-cho-02",
+              "fix-hcm-bt-01",
+              "fix-hcm-bv-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q008",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            0.636
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q009",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            0.535
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q010",
+          "top_ids": [
+            "fix-hp-nh-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hp-nh-01",
+              "name": "Quán ăn Hải Phòng Xôi",
+              "category": "restaurant",
+              "province": "Hải Phòng",
+              "province_code": "31",
+              "lat": 20.8608,
+              "lon": 106.6797,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            0.776
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hp-nh-01"
+            ]
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q011",
+          "top_ids": [],
+          "top_rows": [],
+          "latencies_ms": [
+            0.556
+          ],
+          "ids_by_repeat": [
+            []
+          ],
+          "error": null
+        },
+        {
+          "query_id": "q012",
+          "top_ids": [
+            "fix-hcm-bt-01",
+            "fix-hcm-bv-01"
+          ],
+          "top_rows": [
+            {
+              "id": "fix-hcm-bt-01",
+              "name": "Chợ Bến Thành",
+              "category": "marketplace",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7721,
+              "lon": 106.698,
+              "status": "unverified"
+            },
+            {
+              "id": "fix-hcm-bv-01",
+              "name": "Bệnh viện Chợ Rẫy",
+              "category": "hospital",
+              "province": "Hồ Chí Minh",
+              "province_code": "79",
+              "lat": 10.7566,
+              "lon": 106.6597,
+              "status": "unverified"
+            }
+          ],
+          "latencies_ms": [
+            0.519
+          ],
+          "ids_by_repeat": [
+            [
+              "fix-hcm-bt-01",
+              "fix-hcm-bv-01"
+            ]
+          ],
+          "error": null
+        }
+      ],
+      "warmup_ms": [],
+      "errors_total": 0,
+      "requests_total": 12,
+      "latency_ms_p50": 0.64,
+      "latency_ms_p95": 1.02
+    }
+  ],
+  "debug": {
+    "mismatches": [],
+    "checked": 12
+  },
+  "master_sha_before": "73e5c9de1c53be094b22463e62ee483b32f2412d59f322e1bbb32a4bd53b7f2f",
+  "master_sha_after": "73e5c9de1c53be094b22463e62ee483b32f2412d59f322e1bbb32a4bd53b7f2f",
+  "gazetteer_sha_before": "20605020c627c8179727f834e8f62bf50a08c5b695ba0fa007f00a6cafc4ca5d",
+  "gazetteer_sha_after": "20605020c627c8179727f834e8f62bf50a08c5b695ba0fa007f00a6cafc4ca5d",
+  "master_unchanged": true,
+  "run_sha256": "2dde7e266ac72f82fa70aa58f9dc35fb6c9cfc0007bd8f2629ee6599bae53aa4"
+}
