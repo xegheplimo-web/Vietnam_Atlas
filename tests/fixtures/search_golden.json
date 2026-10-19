@@ -9,7 +9,7 @@
         "6152b2ff-4489-4550-9bd9-faaa5e5606e8",
         "2e05d91e-ceff-4882-be5e-a93f27cbaaad"
       ],
-      "total": 11895
+      "total": 11894
     },
     "cà phê": {
       "top5_ids": [
@@ -102,5 +102,5 @@
       "total": 658
     }
   },
-  "rebaseline_note": "2026-10-16: địa chỉ hiển thị compose_from OSM tags vấn đề V1-03 (mẫu list địa phường/xã/Thành phố-.., search_text per store.build_search_text — bỏ tiền tố loại đơn vị; recall tăng cho query tỉnh/thành, giảm nhiễu 'thanh phố' trúng không hợp lệ cho â'phở')."
+  "rebaseline_note": "2026-10-16: địa chỉ hiển thị compose_from OSM tags vấn đề V1-03 (mẫu list địa phường/xã/Thành phố-.., search_text per store.build_search_text — bỏ tiền tố loại đơn vị; recall tăng cho query tỉnh/thành, giảm nhiễu 'thanh phố' trúng không hợp lệ cho â'phở'). 2026-10-19: re-baseline total 'phở' 11895→11894 — C3 token fix 1 dòng way/1331423706 (address 'thanh pho' bị bỏ khỏi search_text) trước corpus lock; top5 không đổi; corpus khóa 14293e39…"
 }

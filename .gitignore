@@ -14,3 +14,5 @@ storage/
 reports/
 _prompts/
 data/snapshots/
+# E3a: holdout tách quyền truy cập thật — không bao giờ commit queries/qrels blind
+private_holdout/
