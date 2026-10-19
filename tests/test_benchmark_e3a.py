@@ -8,12 +8,14 @@ the G8 master-SHA guard, the GET-only HTTP guard, and a 1-query smoke run.
 """
 
 import importlib.util
+import io
 import json
 import os
 import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -130,6 +132,73 @@ class ScorerTest(unittest.TestCase):
         self.assertEqual(row["outcome"], "unjudged")
         self.assertNotEqual(row["outcome"], "retrieval_failure")  # never silently grade 0
         self.assertEqual(out["metrics"]["scored_positive"], 0)
+
+    def test_start_drain_prevents_pipe_deadlock(self):
+        """Regression: stdout không drain → pipe đầy (~64KB) → server block ở write().
+
+        Triệu chứng đã gặp khi chạy 40 câu dev: 18/40 legacy-http + 40/40 admin-http
+        timeout ở ngưỡng 2 s trong khi gọi tay server chỉ mất 12-130 ms.
+        """
+        child = subprocess.Popen(
+            [
+                sys.executable,
+                "-c",
+                "for i in range(20000): print('log line', i, 'x' * 40)",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            cwd=str(ROOT),
+        )
+        tail = be3a.start_drain(child)
+        try:
+            rc = child.wait(timeout=60)
+        finally:
+            if child.stdout is not None:
+                child.stdout.close()
+        self.assertEqual(rc, 0, "tiến trình con phải thoát được (không kẹt vì pipe đầy)")
+        self.assertTrue(tail and tail[-1].startswith("log line 19999"), f"tail cuối: {tail[-1] if tail else None}")
+
+    def test_spawn_server_starts_drain(self):
+        """spawn_server phải gắn luồng drain stdout cho server nó tự chạy."""
+
+        class FakeProc:
+            returncode = None
+
+            def __init__(self):
+                self.stdout = io.StringIO("server booting" + chr(10) + "ready" + chr(10))
+
+            def poll(self):
+                return None
+
+            def terminate(self):
+                pass
+
+            def wait(self, timeout=None):
+                return 0
+
+        def fake_popen(*args, **kwargs):
+            self.assertIs(kwargs.get("stdout"), subprocess.PIPE)
+            return FakeProc()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            work_db = Path(tmp) / "atlas-work.sqlite3"
+            work_db.write_bytes(b"")
+            with (
+                patch.object(be3a.subprocess, "Popen", side_effect=fake_popen),
+                patch.object(be3a, "free_port", return_value=1),
+                patch.object(be3a, "http_json", return_value=({"ok": True}, 1.0, None)),
+            ):
+                proc, base = be3a.spawn_server(work_db, None)
+                for _ in range(50):
+                    if getattr(proc, "bench_log_tail", None):
+                        break
+                    time.sleep(0.02)
+                tail = list(getattr(proc, "bench_log_tail", []))
+                self.assertIn("server booting", tail)
+                be3a.stop_server(proc)
+            self.assertEqual(base, "http://127.0.0.1:1")
 
     def test_run_error_and_timeout(self):
         q = [{"id": "e1", "group": "G1", "query": "x"}]
