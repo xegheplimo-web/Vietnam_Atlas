@@ -118,6 +118,16 @@ def build_atlas(path: Path) -> Path:
             "node/90005",
         )
         _place(con, "g1-6", "Quán Cà Phê Sân Vườn Xanh", "amenity:cafe", "3 Hải Châu, Đà Nẵng", 16.065, 108.221, "48", "node/90006")
+        # G6 (trùng tên/mơ hồ): cùng tên xuất hiện ở >=3 tỉnh.
+        _place(con, "b01-0", "Ngân Hàng Thịnh Vượng", "amenity:bank", "11 Tràng Tiền, Hà Nội", 21.025, 105.852, "01", "node/95000")
+        _place(con, "b48-0", "Ngân Hàng Thịnh Vượng", "amenity:bank", "22 Bạch Đằng, Đà Nẵng", 16.072, 108.223, "48", "node/95001")
+        _place(con, "b79-0", "Ngân Hàng Thịnh Vượng", "amenity:bank", "33 Nguyễn Huệ, Thành phố Hồ Chí Minh", 10.774, 106.703, "79", "node/95002")
+        _place(con, "m01-0", "Siêu Thị An Nhiên", "shop:supermarket", "44 Hàng Bài, Hà Nội", 21.026, 105.853, "01", "node/95100")
+        _place(con, "m48-0", "Siêu Thị An Nhiên", "shop:supermarket", "55 Lê Duẩn, Đà Nẵng", 16.073, 108.224, "48", "node/95101")
+        _place(con, "m79-0", "Siêu Thị An Nhiên", "shop:supermarket", "66 Hai Bà Trưng, Thành phố Hồ Chí Minh", 10.775, 106.704, "79", "node/95102")
+        _place(con, "n01-0", "Nhà Sách Tri Thức Việt", "shop:books", "77 Đinh Tiên Hoàng, Hà Nội", 21.027, 105.854, "01", "node/95200")
+        _place(con, "n48-0", "Nhà Sách Tri Thức Việt", "shop:books", "88 Nguyễn Chí Thanh, Đà Nẵng", 16.074, 108.225, "48", "node/95201")
+        _place(con, "n79-0", "Nhà Sách Tri Thức Việt", "shop:books", "99 Lý Tự Trọng, Thành phố Hồ Chí Minh", 10.776, 106.705, "79", "node/95202")
         # G3/G4 pool: same-category POIs clustered in admin units.
         for i in range(4):
             _place(
@@ -293,10 +303,10 @@ class PilotBuildTest(unittest.TestCase):
         ]
         errors = be3a.validate_query_set(queries) + be3a.validate_evidence(records, queries)
         self.assertEqual(errors, [])
-        # Every non-G6 query has at least one evidence record.
+        # Mọi câu trừ G7 (no-match ⇒ không có gold) đều phải có >=1 evidence.
         with_ev = {r["query_id"] for _i, r in records}
         for q in queries:
-            if q["group"] == "G6":
+            if q["group"] == "G7":
                 continue
             self.assertIn(q["id"], with_ev)
         for q in queries:
@@ -304,17 +314,34 @@ class PilotBuildTest(unittest.TestCase):
                 self.assertIn("near", q)
                 self.assertEqual(q["near"]["crs"], "EPSG:4326")
 
-    def test_g6_zero_name_norm_on_corpus(self):
-        out = Path(self.temp.name) / "g6"
+    def test_g7_zero_name_norm_on_corpus(self):
+        """Contract §5.2: G7 = không có kết quả phù hợp ⇒ 0 POI trùng tên."""
+        out = Path(self.temp.name) / "g7"
         self.build(out)
         queries = json.loads((out / "queries.json").read_text(encoding="utf-8"))["queries"]
+        self.assertTrue(any(q["group"] == "G7" for q in queries))
         con = sqlite3.connect(self.atlas.resolve().as_uri() + "?mode=ro", uri=True)
         try:
             for q in queries:
-                if q["group"] != "G6":
+                if q["group"] != "G7":
                     continue
                 n = con.execute("SELECT COUNT(*) FROM places WHERE name_norm = ?", (pb._normalize_query(q["query"]),)).fetchone()[0]
                 self.assertEqual(n, 0, q["query"])
+        finally:
+            con.close()
+
+    def test_g6_is_multi_province(self):
+        """Contract §5.2: G6 = trùng tên/mơ hồ ⇒ mỗi câu phải khớp >=3 tỉnh."""
+        out = Path(self.temp.name) / "g6"
+        self.build(out)
+        queries = json.loads((out / "queries.json").read_text(encoding="utf-8"))["queries"]
+        g6 = [q["query"] for q in queries if q["group"] == "G6"]
+        self.assertTrue(g6)
+        con = sqlite3.connect(self.atlas.resolve().as_uri() + "?mode=ro", uri=True)
+        try:
+            for text in g6:
+                rows = con.execute("SELECT COUNT(DISTINCT province_code) FROM places WHERE name_norm = ?", (pb._normalize_query(text),)).fetchone()[0]
+                self.assertGreaterEqual(rows, 3, text)
         finally:
             con.close()
 

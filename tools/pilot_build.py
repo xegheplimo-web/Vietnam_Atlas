@@ -236,6 +236,13 @@ def _persona_list(group, n, rng):
 # ---------------------------------------------------------------------------
 # Corpus + gazetteer loading
 # ---------------------------------------------------------------------------
+PURPOSE = (
+    "Harness smoke set — KHÔNG phải E3a dev set. Câu hỏi lấy tên POI từ corpus nên vi phạm "
+    "contract §5.4 (cấm lấy tên POI từ atlas/OSM) và evidence G5 dùng toạ độ OSM (cấm bởi §5.5). "
+    "Chỉ dùng để kiểm tra cơ chế harness (validate/run/score/compare/latency), không công bố số."
+)
+
+
 def _load_context(atlas_path, gaz_path):
     con = _open_ro(atlas_path)
     gaz = _open_ro(gaz_path)
@@ -709,8 +716,11 @@ def build_pilot(db, gaz_db, seed, out_dir, now=None, quotas=None, verbose=False)
             "G3": lambda: _gen_g3(ctx, *quotas["G3"], used_texts),
             "G4": lambda: _gen_g4(ctx, *quotas["G4"], used_texts),
             "G5": lambda: _gen_g5(ctx, *quotas["G5"], used_texts),
-            "G6": lambda: _gen_g6(ctx, *quotas["G6"], used_texts),
-            "G7": lambda: _gen_g7(ctx, *quotas["G7"], used_texts),
+            # Contract §5.2: G6 = trùng tên/mơ hồ, G7 = không có kết quả phù hợp.
+            # _gen_g6 sinh câu no-match (template hư cấu) ⇒ thuộc G7; _gen_g7 sinh
+            # câu nhiều chi nhánh ⇒ thuộc G6. Giữ tên hàm, hoán đổi vị trí.
+            "G6": lambda: _gen_g7(ctx, *quotas["G6"], used_texts),
+            "G7": lambda: _gen_g6(ctx, *quotas["G7"], used_texts),
         }
 
         queries = []
@@ -757,7 +767,7 @@ def build_pilot(db, gaz_db, seed, out_dir, now=None, quotas=None, verbose=False)
                         evidence.append(
                             _evidence_record(qid, i, poi, _province_name(ctx, poi.get("province_code") or entry.get("province_code")), now)
                         )
-                if group == "G6":
+                if group == "G7":
                     g6_report.append((qid, entry["query"], entry["_g6_count"]))
                 queries.append(q)
     finally:
@@ -770,11 +780,12 @@ def build_pilot(db, gaz_db, seed, out_dir, now=None, quotas=None, verbose=False)
         raise PilotBuildError("G8: SHA-256 master thay đổi trong lúc build — huỷ output")
     if verbose:
         for qid, text, n in g6_report:
-            print(f"  G6 {qid}: {text!r} → name_norm count={n}")
+            print(f"  G7 {qid}: {text!r} → name_norm count={n}")
 
     quota_table = {g: {"random": quotas[g][0], "hard": quotas[g][1], "total": quotas[g][0] + quotas[g][1]} for g in GROUP_ORDER}
     counts = {g: sum(1 for q in queries if q["group"] == g) for g in GROUP_ORDER}
     manifest = {
+        "purpose": PURPOSE,
         "seed": int(seed) if str(seed).isdigit() else str(seed),
         "created_at": now,
         "git_sha": git_sha(),
@@ -786,7 +797,7 @@ def build_pilot(db, gaz_db, seed, out_dir, now=None, quotas=None, verbose=False)
     }
 
     (out_dir / "queries.json").write_text(
-        json.dumps({"version": "e3a-pilot/v1", "queries": queries}, ensure_ascii=False, indent=2) + "\n",
+        json.dumps({"version": "e3a-pilot/v1", "purpose": PURPOSE, "queries": queries}, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )

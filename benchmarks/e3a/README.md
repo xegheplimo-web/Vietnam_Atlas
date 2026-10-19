@@ -131,7 +131,12 @@ python tools/benchmark_e3a.py run --adapter legacy-http \
 python -m unittest tests.test_benchmark_e3a -v         # offline, DB tạm
 ```
 
-## Pilot dev set (C3a — `pilot/`)
+## Pilot smoke set (C3a — `pilot/`)
+
+> **Không phải E3a dev set.** Câu hỏi lấy tên POI trực tiếp từ corpus nên vi phạm contract
+> §5.4 (cấm lấy tên POI từ atlas/OSM) và evidence G5 dùng toạ độ OSM (§5.5 cấm). Bộ này chỉ
+> để kiểm tra cơ chế harness (validate/run/score/compare/latency) — **không công bố số**.
+> Dev/holdout chính thức phải soạn từ nguồn ngoài, xem §5.4 của `contracts/E3A_CONTRACT.md`.
 
 ```bash
 python tools/pilot_build.py build --db data/atlas.sqlite3 --gazetteer-db data/gazetteer.sqlite3 \

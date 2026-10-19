@@ -1,5 +1,6 @@
 {
   "version": "e3a-pilot/v1",
+  "purpose": "Harness smoke set — KHÔNG phải E3a dev set. Câu hỏi lấy tên POI từ corpus nên vi phạm contract §5.4 (cấm lấy tên POI từ atlas/OSM) và evidence G5 dùng toạ độ OSM (cấm bởi §5.5). Chỉ dùng để kiểm tra cơ chế harness (validate/run/score/compare/latency), không công bố số.",
   "queries": [
     {
       "id": "q001",
@@ -1062,75 +1063,68 @@
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "bệnh viện vũ trụ Hưng Yên",
-      "province_code": "33",
-      "notes": "template:bệnh viện vũ trụ"
+      "query": "Chùa Khánh An",
+      "notes": "branches:4 in 3 provinces"
     },
     {
       "id": "q088",
       "group": "G6",
-      "persona": "lao_dong",
+      "persona": "nguoi_dan",
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "nhà hàng lỗ đen Cần Thơ",
-      "province_code": "92",
-      "notes": "template:nhà hàng lỗ đen"
+      "query": "Tra Sua",
+      "notes": "branches:3 in 3 provinces"
     },
     {
       "id": "q089",
       "group": "G6",
-      "persona": "nguoi_dan",
+      "persona": "lao_dong",
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "khách sạn trên mây Cà Mau",
-      "province_code": "96",
-      "notes": "template:khách sạn trên mây"
+      "query": "Oasis",
+      "notes": "branches:4 in 4 provinces"
     },
     {
       "id": "q090",
       "group": "G6",
-      "persona": "nguoi_dan",
+      "persona": "lao_dong",
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "trường đại học phép thuật Khánh Hòa",
-      "province_code": "56",
-      "notes": "template:trường đại học phép thuật"
+      "query": "ATM BIDV",
+      "notes": "branches:17 in 4 provinces"
     },
     {
       "id": "q091",
       "group": "G6",
-      "persona": "nguoi_dan",
+      "persona": "lao_dong",
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "quán phở sao hoả Hà Tĩnh",
-      "province_code": "42",
-      "notes": "template:quán phở sao hoả"
+      "query": "Trường Tiểu học Phước Tân",
+      "notes": "branches:3 in 3 provinces"
     },
     {
       "id": "q092",
       "group": "G6",
-      "persona": "lao_dong",
+      "persona": "nguoi_dan",
       "split": "dev",
       "panel": "pilot_hard_15",
       "regression150": false,
-      "query": "bệnh viện vũ trụ Hà Nội",
-      "province_code": "01",
-      "notes": "template:bệnh viện vũ trụ"
+      "query": "Trường Trung học cơ sở Cao Bá Quát",
+      "notes": "branches:6 in 5 provinces"
     },
     {
       "id": "q093",
       "group": "G6",
-      "persona": "lao_dong",
+      "persona": "nguoi_dan",
       "split": "dev",
       "panel": "pilot_hard_15",
       "regression150": false,
-      "query": "nhà hàng lỗ đen Đồng Nai",
-      "province_code": "75",
-      "notes": "template:nhà hàng lỗ đen"
+      "query": "Sao Mai Hotel",
+      "notes": "branches:5 in 5 provinces"
     },
     {
       "id": "q094",
@@ -1139,8 +1133,9 @@
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "Quán nước",
-      "notes": "branches:4 in 3 provinces"
+      "query": "bệnh viện vũ trụ An Giang",
+      "province_code": "91",
+      "notes": "template:bệnh viện vũ trụ"
     },
     {
       "id": "q095",
@@ -1149,8 +1144,9 @@
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "SCB",
-      "notes": "branches:20 in 6 provinces"
+      "query": "nhà hàng lỗ đen Đắk Lắk",
+      "province_code": "66",
+      "notes": "template:nhà hàng lỗ đen"
     },
     {
       "id": "q096",
@@ -1159,8 +1155,9 @@
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "Trường Trung học cơ sở Nguyễn Huệ",
-      "notes": "branches:7 in 3 provinces"
+      "query": "khách sạn trên mây Ninh Bình",
+      "province_code": "37",
+      "notes": "template:khách sạn trên mây"
     },
     {
       "id": "q097",
@@ -1169,8 +1166,9 @@
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "Trường Mầm non Hoa Hồng",
-      "notes": "branches:16 in 7 provinces"
+      "query": "trường đại học phép thuật Cao Bằng",
+      "province_code": "04",
+      "notes": "template:trường đại học phép thuật"
     },
     {
       "id": "q098",
@@ -1179,8 +1177,9 @@
       "split": "dev",
       "panel": "pilot_random_85",
       "regression150": false,
-      "query": "Phúc Hưng",
-      "notes": "branches:3 in 3 provinces"
+      "query": "quán phở sao hoả Lào Cai",
+      "province_code": "15",
+      "notes": "template:quán phở sao hoả"
     },
     {
       "id": "q099",
@@ -1189,8 +1188,9 @@
       "split": "dev",
       "panel": "pilot_hard_15",
       "regression150": false,
-      "query": "SeABank",
-      "notes": "branches:31 in 8 provinces"
+      "query": "bệnh viện vũ trụ Tuyên Quang",
+      "province_code": "08",
+      "notes": "template:bệnh viện vũ trụ"
     },
     {
       "id": "q100",
@@ -1199,8 +1199,9 @@
       "split": "dev",
       "panel": "pilot_hard_15",
       "regression150": false,
-      "query": "Trường Trung học phổ thông Trần Hưng Đạo",
-      "notes": "branches:10 in 8 provinces"
+      "query": "nhà hàng lỗ đen Hưng Yên",
+      "province_code": "33",
+      "notes": "template:nhà hàng lỗ đen"
     }
   ]
 }
