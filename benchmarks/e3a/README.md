@@ -130,3 +130,12 @@ python tools/benchmark_e3a.py run --adapter legacy-http \
     --gazetteer-db tests/fixtures/e3a/gazetteer_fixture.sqlite3 --quick
 python -m unittest tests.test_benchmark_e3a -v         # offline, DB tạm
 ```
+
+## Pilot dev set (C3a — `pilot/`)
+
+```bash
+python tools/pilot_build.py build --db data/atlas.sqlite3 --gazetteer-db data/gazetteer.sqlite3 \
+    --seed 20261019 --out benchmarks/e3a/pilot            # 100 câu: 85 random + 15 hard, deterministic
+python tools/pilot_build.py worksheet --run <run.json> --queries benchmarks/e3a/pilot/queries.json \
+    --out benchmarks/e3a/pilot/worksheet.jsonl            # top-10 legacy-http để chấm tay
+```

@@ -1,0 +1,54 @@
+{
+  "seed": 20261019,
+  "created_at": "2026-10-19T00:00:00+07:00",
+  "git_sha": "527ca96305d6cb815afb83bb0ed5cc9ed8112c58",
+  "atlas_sha256": "ea8247756c33c66168dccba1606d40bdeffa687dc3de3307d9274422b850919a",
+  "gazetteer_sha256": "4fd25c5f920ceb6c6a85793e4c0d4f77eb9a608ad5eff928098ab8e95110c8c3",
+  "quotas": {
+    "G1": {
+      "random": 20,
+      "hard": 0,
+      "total": 20
+    },
+    "G2": {
+      "random": 13,
+      "hard": 3,
+      "total": 16
+    },
+    "G3": {
+      "random": 20,
+      "hard": 3,
+      "total": 23
+    },
+    "G4": {
+      "random": 12,
+      "hard": 3,
+      "total": 15
+    },
+    "G5": {
+      "random": 10,
+      "hard": 2,
+      "total": 12
+    },
+    "G6": {
+      "random": 5,
+      "hard": 2,
+      "total": 7
+    },
+    "G7": {
+      "random": 5,
+      "hard": 2,
+      "total": 7
+    }
+  },
+  "counts_by_group": {
+    "G1": 20,
+    "G2": 16,
+    "G3": 23,
+    "G4": 15,
+    "G5": 12,
+    "G6": 7,
+    "G7": 7
+  },
+  "ids_sha256": "fc68dd6ef0bc6955b0981a8c06bb116d787c71d9ce72b00611038e3764bd74a0"
+}
