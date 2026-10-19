@@ -139,9 +139,9 @@ def write_text_out(raw_path: str, text: str) -> None:
     rải khắp các command.
     """
 
-    out = Path(raw_path)
+    out = Path(os.path.realpath(raw_path))
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(text, encoding="utf-8", newline="\n")  # NOSONAR: operator-supplied --out path, local CLI (S2083)
+    out.write_text(text, encoding="utf-8", newline="\n")
 
 
 def sha256_file(path) -> str:
@@ -258,6 +258,18 @@ def _type_ok(node, t) -> bool:
     }.get(t, True)
 
 
+def matches_schema_pattern(pattern: str, value: str) -> bool:
+    """Chỉ chấp nhận pattern nằm trong whitelist của schema đã commit.
+
+    Không bao giờ chạy regex lấy từ file dữ liệu (S2631/ReDoS): schema lạ ⇒ fail rõ
+    ràng thay vì âm thầm bỏ qua kiểm tra.
+    """
+
+    if pattern == r"^[0-9a-f]{64}$":
+        return len(value) == 64 and all(c in "0123456789abcdef" for c in value)
+    return False
+
+
 def _check(node, schema: dict, path: str, errors: list, root: dict):
     if "$ref" in schema:
         schema = root["$defs"][schema["$ref"].rsplit("/", 1)[1]]
@@ -288,8 +300,7 @@ def _check(node, schema: dict, path: str, errors: list, root: dict):
     if isinstance(node, str):
         if "minLength" in schema and len(node) < schema["minLength"]:
             errors.append(f"{path}: chuỗi ngắn hơn minLength={schema['minLength']}")
-        # pattern lấy từ schema đã commit trong repo, không phải input người dùng
-        if "pattern" in schema and not re.fullmatch(schema["pattern"], node):  # NOSONAR: S2631 false positive
+        if "pattern" in schema and not matches_schema_pattern(schema["pattern"], node):
             errors.append(f"{path}: không khớp pattern {schema['pattern']}")
     if type(node) in (int, float):
         for key, cmp_ in (("minimum", lambda a, b: a >= b), ("maximum", lambda a, b: a <= b), ("exclusiveMinimum", lambda a, b: a > b)):
