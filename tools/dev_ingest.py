@@ -345,6 +345,21 @@ def ingest(authored_path: Path, db_path: Path, out_dir: Path, tranche: str, chec
                 matched.extend(match_gold(con, gold, item.get("province_code"), item.get("gold_aliases")))
             # khử trùng theo place_id, giữ thứ tự
             uniq = {m["place_id"]: m for m in matched}
+            if item["group"] != "G7":
+                qrels.append(
+                    {
+                        "query_id": qid,
+                        "coverage_audit": "present" if uniq else "missing",
+                        "judged_by": "dev_ingest:coverage-audit (whole-DB audit)",
+                        "judgment_status": "verified",
+                        "evidence_ids": [ev_id],
+                        "notes": (
+                            f"{len(uniq)} POI khớp gold trong corpus"
+                            if uniq
+                            else "không có POI nào khớp gold — coverage gap, không tính retrieval_failure"
+                        ),
+                    }
+                )
             for m in uniq.values():
                 qrels.append(
                     {
