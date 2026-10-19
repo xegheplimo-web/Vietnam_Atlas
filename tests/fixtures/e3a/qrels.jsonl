@@ -1,0 +1,26 @@
+{"query_id": "q001", "place_id": "fix-hn-bv-01", "grade": 3, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q001"], "error_labels": []}
+{"query_id": "q002", "place_id": "fix-hn-ks-01", "grade": 3, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q002"], "error_labels": []}
+{"query_id": "q003", "place_id": "fix-hn-bv-01", "grade": 2, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q003"], "error_labels": []}
+{"query_id": "q004", "place_id": "fix-hn-pho-01", "grade": 3, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q004"], "error_labels": []}
+{"query_id": "q005", "place_id": "fix-hcm-bd-01", "grade": 3, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q005"], "error_labels": []}
+{"query_id": "q006", "place_id": "fix-hcm-atm-01", "grade": 3, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q006"], "error_labels": []}
+{"query_id": "q006", "place_id": "fix-hcm-atm-02", "grade": 2, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q006"], "error_labels": []}
+{"query_id": "q006", "place_id": "fix-hcm-atm-03", "grade": 1, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q006"], "error_labels": [{"label": "outside_radius", "severity": "info"}]}
+{"query_id": "q007", "place_id": "fix-hcm-bt-01", "grade": 1, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q007"], "error_labels": [{"label": "ambiguous_intent", "severity": "info"}]}
+{"query_id": "q007", "place_id": "fix-hn-cho-01", "grade": 1, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q007"], "error_labels": []}
+{"query_id": "q007", "place_id": "fix-hcm-cho-02", "grade": 1, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q007"], "error_labels": []}
+{"query_id": "q007", "place_id": "fix-dn-cho-01", "grade": 1, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q007"], "error_labels": []}
+{"query_id": "q007", "place_id": "fix-ct-cho-01", "grade": 1, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q007"], "error_labels": []}
+{"query_id": "q010", "place_id": "fix-hp-nh-01", "grade": 3, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q010"], "error_labels": []}
+{"query_id": "q010", "place_id": "fix-hn-nh-01", "grade": 2, "judged_by": "llm-draft", "judgment_status": "pending", "evidence_ids": [], "error_labels": []}
+{"query_id": "q012", "place_id": "fix-hcm-bt-01", "grade": 3, "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q012"], "error_labels": []}
+{"query_id": "q001", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q001"]}
+{"query_id": "q002", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q002"]}
+{"query_id": "q003", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q003"]}
+{"query_id": "q004", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q004"]}
+{"query_id": "q005", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q005"]}
+{"query_id": "q006", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q006"]}
+{"query_id": "q007", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q007"]}
+{"query_id": "q010", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q010"]}
+{"query_id": "q011", "coverage_audit": "missing", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q011"], "notes": "audit toàn DB fixture: không có sân golf tên này"}
+{"query_id": "q012", "coverage_audit": "present", "judged_by": "hermes", "judgment_status": "verified", "evidence_ids": ["ev-q012"]}
