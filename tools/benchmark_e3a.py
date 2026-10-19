@@ -30,6 +30,7 @@ read local files.
 from __future__ import annotations
 
 import argparse
+import collections
 import hashlib
 import json
 import math
@@ -41,6 +42,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unicodedata
 from datetime import datetime, timezone
@@ -510,12 +512,45 @@ def http_json(url: str, params: dict | None = None, timeout: float = TIMEOUT_S, 
         return None, (time.perf_counter() - started) * 1000.0, f"error:{type(e).__name__}"
 
 
+def _tail(path: Path, chars: int = 800) -> str:
+    """Đuôi file log server (chẩn đoán khi server thoát sớm)."""
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")[-chars:].strip()
+    except OSError:
+        return ""
+
+
+def _drain_stream(stream, tail: collections.deque) -> None:
+    """Đọc hết stdout của tiến trình con để pipe không bao giờ đầy."""
+    try:
+        for line in stream:
+            tail.append(line.rstrip())
+    except (ValueError, OSError):
+        pass
+
+
+def start_drain(proc) -> collections.deque:
+    """Chạy luồng nền hút stdout của server; giữ 40 dòng cuối để chẩn đoán."""
+    tail: collections.deque = collections.deque(maxlen=40)
+    proc.bench_log_tail = tail
+    threading.Thread(target=_drain_stream, args=(proc.stdout, tail), daemon=True).start()
+    return tail
+
+
+def _proc_tail(proc) -> str:
+    tail = getattr(proc, "bench_log_tail", None)
+    return "\n".join(tail) if tail else ""
+
+
 def spawn_server(work_db: Path, gaz_db: Path | None):
     """Spawn `python -m server.app` on the working copy, bound to 127.0.0.1 only."""
     port = free_port()
     env = dict(os.environ)
     if gaz_db is not None:
         env["ATLAS_GAZETTEER_DB"] = str(gaz_db)
+    # stdout PHẢI được drain liên tục: pipe đầy (~64KB access log) làm server block ở
+    # write() → mọi request sau đó timeout oan (đã tái hiện: 18/40 legacy + 40/40 admin
+    # timeout, trong khi gọi tay server chỉ 12-130 ms).
     proc = subprocess.Popen(
         [sys.executable, "-m", "server.app", "--host", "127.0.0.1", "--port", str(port), "--db", str(work_db)],
         cwd=str(ROOT),
@@ -524,13 +559,14 @@ def spawn_server(work_db: Path, gaz_db: Path | None):
         stderr=subprocess.STDOUT,
         text=True,
         encoding="utf-8",
+        errors="replace",
     )
+    start_drain(proc)
     base = f"http://127.0.0.1:{port}"
     deadline = time.monotonic() + HEALTH_DEADLINE_S
     while time.monotonic() < deadline:
         if proc.poll() is not None:
-            out = proc.stdout.read() if proc.stdout else ""
-            raise BenchmarkError(f"server benchmark thoát sớm (code {proc.returncode}): {out.strip()[:500]}")
+            raise BenchmarkError(f"server benchmark thoát sớm (code {proc.returncode}): {_proc_tail(proc)}")
         data, _ms, err = http_json(base + "/api/health", timeout=1.0)
         if err is None and isinstance(data, dict) and data.get("ok"):
             return proc, base
@@ -548,6 +584,11 @@ def stop_server(proc):
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.wait(timeout=5)
+    if proc.stdout is not None:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
 
 
 def _row_brief(item: dict) -> dict:
