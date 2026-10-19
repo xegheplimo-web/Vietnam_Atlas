@@ -25,7 +25,7 @@
 | CI (`CI`) | SUCCESS @ `7b574d8` | `gh run list --workflow CI` |
 | CodeQL | SUCCESS (19/10 03:33Z) | `gh run list` |
 | PR mở | 0 | `gh pr list` |
-| Test local (246) | **245 pass · 1 fail · 1 skip** | `uv run --with xlrd --with openpyxl python -m unittest discover -s tests` |
+| Test local (246) | **244 pass · 1 fail · 1 skip** (246 chạy) | `uv run --with xlrd --with openpyxl python -m unittest discover -s tests` |
 | Ruff lint + format | PASS (42 files formatted) | `ruff check .`, `ruff format --check .` |
 | Runtime smoke trên bản sao | PASS — `/api/health`, `/api/stats`, `/api/places?search=…`, `/api/admin/resolve`, UI 200 | §12.3 |
 | Corpus lock (nội dung) | PASS — rowhash 6/6 bảng identical live ↔ snapshot | §12.2 |
@@ -105,6 +105,8 @@ Thiếu để đóng trụ Data Freshness: **bằng chứng drill** backup → r
 
 ## 6. Phát hiện (đã xác minh)
 
+> **Cách đọc bằng chứng:** các probe ở mục này là **bằng chứng tồn tại** của một lỗi cụ thể (tái lập được bằng lệnh ở §12), **không phải tỷ lệ chất lượng**. Ví dụ "2/10 probe rác trả kết quả" không có nghĩa No-match accuracy của hệ thống là 80%; con số thật chỉ lấy từ benchmark có phân bổ và ground truth đã khóa (bộ 300).
+
 Mức: **P0** = chặn nghiệm thu v1 · **P1** = ảnh hưởng trực tiếp chất lượng đo · **P2** = nợ kỹ thuật.
 
 ### P0-1. Dụng cụ đo v1 chưa tồn tại
@@ -160,6 +162,7 @@ Bộ 150 báo 0/10 false positive vì query no-match của nó được chọn "
 
 ### P2-1. Recency là tiebreaker xếp hạng
 `ORDER BY … bm25, places.updated_at DESC`. Lần recompose 21.355 dòng làm MRR −2,94 điểm dù Hit@10 không đổi (ghi trong lock record C4). Recency là tín hiệu *vận hành*, không phải *liên quan* — nên thay bằng tín hiệu ngữ nghĩa (độ phủ token, độ dài tên, exact-prefix).
+*Lưu ý quy trách nhiệm:* mức giảm MRR quan sát được là kết hợp của **thay đổi candidate pool** (geo scope thêm nhánh) và **recency tiebreak**; cần ablation trên bản sao (chạy cùng query với recency bị vô hiệu) để tách phần đóng góp — không chặn E3a.
 
 ### P2-2. `/api/stats` trả sai `provinces_with_places`
 Trả `0` vì đếm `DISTINCT province` trong khi cột này rỗng 100% (dữ liệu thật nằm ở `province_code` = 97.212). Metric hiển thị cho người dùng đang sai.
