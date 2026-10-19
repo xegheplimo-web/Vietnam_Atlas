@@ -131,6 +131,19 @@ class BenchmarkError(Exception):
 # ---------------------------------------------------------------------------
 # Small helpers
 # ---------------------------------------------------------------------------
+def write_text_out(raw_path: str, text: str) -> None:
+    """Ghi report/artifact ra path do operator chỉ định.
+
+    CLI đo lường chạy local: operator đã có toàn quyền ghi trên máy họ nên không có
+    ranh giới đặc quyền nào bị vượt qua. Suppression S2083 tập trung một chỗ thay vì
+    rải khắp các command.
+    """
+
+    out = Path(raw_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8", newline="\n")  # NOSONAR: operator-supplied --out path, local CLI (S2083)
+
+
 def sha256_file(path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -275,7 +288,8 @@ def _check(node, schema: dict, path: str, errors: list, root: dict):
     if isinstance(node, str):
         if "minLength" in schema and len(node) < schema["minLength"]:
             errors.append(f"{path}: chuỗi ngắn hơn minLength={schema['minLength']}")
-        if "pattern" in schema and not re.fullmatch(schema["pattern"], node):
+        # pattern lấy từ schema đã commit trong repo, không phải input người dùng
+        if "pattern" in schema and not re.fullmatch(schema["pattern"], node):  # NOSONAR: S2631 false positive
             errors.append(f"{path}: không khớp pattern {schema['pattern']}")
     if type(node) in (int, float):
         for key, cmp_ in (("minimum", lambda a, b: a >= b), ("maximum", lambda a, b: a <= b), ("exclusiveMinimum", lambda a, b: a > b)):
@@ -663,7 +677,7 @@ def cmd_run(a) -> int:
 
     adapters = [*HTTP_ADAPTERS, "inprocess"] if a.adapter == "all" else [a.adapter]
     warmup, repeats = (0, 1) if a.quick else (WARMUP_REQUESTS, REPEATS_PER_QUERY)
-    official = warmup == WARMUP_REQUESTS and repeats == REPEATS_PER_QUERY and TIMEOUT_S == 2.0
+    official = warmup == WARMUP_REQUESTS and repeats == REPEATS_PER_QUERY and abs(TIMEOUT_S - 2.0) < 1e-9
 
     master_sha_before = sha256_file(master)
     gaz_sha_before = sha256_file(gaz_master) if gaz_master else None
@@ -725,8 +739,7 @@ def cmd_run(a) -> int:
     report["master_unchanged"] = master_sha_before == master_sha_after and gaz_sha_before == gaz_sha_after
     report["run_sha256"] = canonical_sha(report["adapters"])
     if a.out:
-        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.out).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+        write_text_out(a.out, json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     else:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     if not report["master_unchanged"]:
@@ -791,8 +804,7 @@ def cmd_judge_import(a) -> int:
             warnings += 1
             print(f"judge-import: cảnh báo {rec.get('query_id')} verified thiếu evidence_ids → unjudged khi score", file=sys.stderr)
         out_lines.append(json.dumps(rec, ensure_ascii=False, sort_keys=True))
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text("\n".join(out_lines) + ("\n" if out_lines else ""), encoding="utf-8", newline="\n")
+    write_text_out(a.out, "\n".join(out_lines) + ("\n" if out_lines else ""))
     print(f"judge-import OK: {len(out_lines)} judgments → {a.out} ({warnings} cảnh báo evidence)")
     return 0
 
@@ -1084,8 +1096,7 @@ def cmd_score(a) -> int:
     }
     text = json.dumps(out, ensure_ascii=False, indent=2) + "\n"
     if a.out:
-        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.out).write_text(text, encoding="utf-8", newline="\n")
+        write_text_out(a.out, text)
         print(f"score OK → {a.out}")
     else:
         print(text)
@@ -1222,8 +1233,7 @@ def cmd_compare(a) -> int:
     lines.append(f"**Verdict: {'PASS' if rep['pass'] else 'FAIL'}**" + (f" — {len(rep['violations'])} violation(s)" if rep["violations"] else ""))
     text = "\n".join(lines)
     if a.out:
-        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.out).write_text(text + "\n", encoding="utf-8", newline="\n")
+        write_text_out(a.out, text + "\n")
     print(text)
     return 0 if rep["pass"] else 1
 
@@ -1270,8 +1280,7 @@ def cmd_report(a) -> int:
         lines.append("")
     text = "\n".join(lines)
     if a.out:
-        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.out).write_text(text + "\n", encoding="utf-8", newline="\n")
+        write_text_out(a.out, text + "\n")
     print(text)
     return 0
 
