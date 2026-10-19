@@ -728,7 +728,14 @@ def list_places(con, search="", province="", bbox=None, limit=500, offset=0, cat
 def stats(con):
     total = con.execute("SELECT COUNT(*) FROM places").fetchone()[0]
     by_status = {r["status"]: r["n"] for r in con.execute("SELECT status,COUNT(*) n FROM places GROUP BY status")}
-    province_count = con.execute("SELECT COUNT(DISTINCT province) FROM places WHERE province != ''").fetchone()[0]
+    # province_code (GSO, point-in-polygon) is the real coverage signal — the text
+    # `province` column is empty on imported rows. Pre-migration DBs lack the
+    # column: report 0 instead of raising.
+    province_count = (
+        con.execute("SELECT COUNT(DISTINCT province_code) FROM places WHERE province_code IS NOT NULL AND province_code != ''").fetchone()[0]
+        if _has_province_code(con)
+        else 0
+    )
     updates = con.execute("SELECT COUNT(*) FROM changes").fetchone()[0]
     return {"total_places": total, "provinces_with_places": province_count, "history_events": updates, "by_status": by_status}
 

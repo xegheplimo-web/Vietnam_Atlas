@@ -72,6 +72,16 @@ py -3 tools/update_report.py --preview reports/_raw/<stamp>/preview.json --prove
 3. Di chuyển `data/atlas.sqlite3` hiện tại sang tên tạm (không xóa ngay), copy backup đè lên `data/atlas.sqlite3`.
 4. Chạy `PRAGMA integrity_check` trên bản vừa restore; phải ra `ok` mới khởi động server.
 
+### Restore runbook
+
+Dùng khi phục hồi **cả hai** DB từ `tools/backup_database.py --all` (cặp `atlas-<ts>.sqlite3` + `gaz-<ts>.sqlite3`; gazetteer bắt buộc cho `/api/admin/resolve` và `/api/places?admin=1`):
+
+1. Dừng server đang chạy trên `data/atlas.sqlite3`.
+2. Copy bản backup vào `data/`: `atlas-<ts>.sqlite3` → `data/atlas.sqlite3`, `gaz-<ts>.sqlite3` → `data/gazetteer.sqlite3` (giữ bản hiện tại dưới tên tạm, không xóa ngay).
+3. Chạy `PRAGMA integrity_check` trên từng file vừa restore; cả hai phải ra `ok`.
+4. Chạy drill: `python tools/restore_drill.py --backup-dir <thư mục chứa bản backup>` — drill copy bản **backup** sang thư mục tạm và smoke trên đó, không đụng master.
+5. Smoke endpoints: `/api/health` (phải có `gazetteer.available=true`), `/api/stats`, `/api/places?search=`, `/api/admin/resolve`.
+
 ## 6. Được bảo vệ
 
 - `protected`: dòng đã có trong Atlas mà sync không sửa/xóa. Ý nghĩa tùy chế độ chạy:
