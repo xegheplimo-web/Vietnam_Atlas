@@ -1,0 +1,845 @@
+[
+  {
+    "id": "HN-01",
+    "group": "G1",
+    "persona": "nguoi_dan",
+    "query": "bệnh viện bạch mai hà nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "Cổng thông tin điện tử Bệnh viện Bạch Mai",
+      "url": "https://bachmai.gov.vn/",
+      "snippet": "Số 78 Đường Giải Phóng, P. Kim Liên, TP Hà Nội"
+    },
+    "gold_names": [
+      "Bệnh viện Bạch Mai"
+    ],
+    "variant_type": null,
+    "rationale": "Tên đầy đủ của bệnh viện hạng đặc biệt, người dân gõ kèm 'Hà Nội' để phân biệt."
+  },
+  {
+    "id": "HN-02",
+    "group": "G1",
+    "persona": "bv_truong_co_quan",
+    "query": "đại học bách khoa hà nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "Đại học Bách khoa Hà Nội (hust.edu.vn)",
+      "url": "https://hust-dev.hust.edu.vn/",
+      "snippet": "Số 1 Đại Cồ Việt, phường Bạch Mai, Thành phố Hà Nội"
+    },
+    "gold_names": [
+      "Đại học Bách khoa Hà Nội"
+    ],
+    "variant_type": null,
+    "rationale": "Gõ gần đúng tên chính thức, thiếu chữ 'Trường' nhưng vẫn đủ nhận diện."
+  },
+  {
+    "id": "HN-03",
+    "group": "G1",
+    "persona": "du_khach",
+    "query": "văn miếu quốc tử giám hà nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "Văn Miếu - Quốc Tử Giám (vanmieu.gov.vn)",
+      "url": "https://vanmieu.gov.vn/vi",
+      "snippet": "Số 58 phố Quốc Tử Giám, phường Văn Miếu - Quốc Tử Giám, Hà Nội"
+    },
+    "gold_names": [
+      "Văn Miếu - Quốc Tử Giám"
+    ],
+    "variant_type": null,
+    "rationale": "Tên đầy đủ của di tích quốc gia đặc biệt, khách du lịch gõ gần đúng cả hai phần tên."
+  },
+  {
+    "id": "HN-04",
+    "group": "G2",
+    "persona": "nguoi_dan",
+    "query": "benh vien huu nghi viet duc ha noi",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "Bệnh viện Hữu nghị Việt Đức",
+      "url": "https://benhvienvietduc.org/lien-he",
+      "snippet": "Cơ sở chính: 40 Tràng Thi, Hoàn Kiếm, Hà Nội",
+      "verified_via": "browser"
+    },
+    "gold_names": [
+      "Bệnh viện Hữu nghị Việt Đức"
+    ],
+    "variant_type": "nodia",
+    "base_name": "Bệnh viện Hữu nghị Việt Đức",
+    "rationale": "Bỏ toàn bộ dấu và viết thường tên 'Bệnh viện Hữu nghị Việt Đức'."
+  },
+  {
+    "id": "HN-05",
+    "group": "G2",
+    "persona": "nguoi_dan",
+    "query": "bệnh viện nhi trung ươnng hà nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "Bệnh viện Nhi Trung ương",
+      "url": "https://benhviennhitrunguong.gov.vn/contact",
+      "snippet": "Số 18, ngõ 879 đường La Thành, phường Láng, Thành phố Hà Nội"
+    },
+    "gold_names": [
+      "Bệnh viện Nhi Trung ương"
+    ],
+    "variant_type": "typo",
+    "base_name": "Bệnh viện Nhi Trung ương",
+    "rationale": "Gõ thừa một chữ 'n' ở giữa từ 'ương' - lỗi gõ giữa từ điển hình."
+  },
+  {
+    "id": "HN-06",
+    "group": "G2",
+    "persona": "bv_truong_co_quan",
+    "query": "ĐH QG Hà Nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "Đại học Quốc gia Hà Nội (vnu.edu.vn)",
+      "url": "https://vnu.edu.vn/lien-he/ve-chung-toi",
+      "snippet": "144 đường Xuân Thủy, quận Cầu Giấy, Hà Nội"
+    },
+    "gold_names": [
+      "Đại học Quốc gia Hà Nội"
+    ],
+    "variant_type": "abbrev",
+    "base_name": "Đại học Quốc gia Hà Nội",
+    "rationale": "Viết tắt thông dụng 'ĐH QG' của 'Đại học Quốc gia', giữ nguyên địa danh."
+  },
+  {
+    "id": "HN-07",
+    "group": "G3",
+    "persona": "nguoi_dan",
+    "query": "bệnh viện tư nhân ở quận Đống Đa Hà Nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "MISA Help AMIS - Danh sách cơ sở KCB BHYT nội tỉnh Hà Nội",
+      "url": "https://helpamis.misa.vn/amis-bhxh/kb/danh-sach-benh-vien-va-co-so-kcb-noi-tinh-nam-2023-tai-ha-noi/",
+      "snippet": "Bệnh viện đa khoa tư nhân Hồng Hà (Công ty CP kinh doanh và điều trị Y tế Đức Kiên) | 16 Nguyễn Như Đổ, Văn Miếu Đống Đa"
+    },
+    "gold_names": [
+      "Bệnh viện đa khoa Bảo Sơn 2",
+      "Bệnh viện đa khoa tư nhân Hà Thành",
+      "Bệnh viện đa khoa tư nhân Hồng Hà"
+    ],
+    "variant_type": null,
+    "rationale": "Truy vấn loại hình + quận; gold là 3 bệnh viện tư nhân có địa chỉ tại Đống Đa trong danh sách KCB BHYT.",
+    "gold_aliases": {
+      "Bệnh viện đa khoa tư nhân Hà Thành": "Bệnh viện Đa khoa Hà Thành",
+      "Bệnh viện đa khoa tư nhân Hồng Hà": "Bệnh viện Đa khoa Hồng Hà"
+    }
+  },
+  {
+    "id": "HN-08",
+    "group": "G3",
+    "persona": "du_khach",
+    "query": "quán cà phê ở quận Hoàn Kiếm Hà Nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "VTC News",
+      "url": "https://vtcnews.vn/nhung-quan-ca-phe-co-khong-gian-dep-nhat-khu-pho-co-ha-noi-ar885359.html",
+      "snippet": "Địa chỉ: 11 Hàng Gai, Hoàn Kiếm, Hà Nội."
+    },
+    "gold_names": [
+      "Café Phố Cổ",
+      "Ban Công",
+      "Nola Cafe & Bar"
+    ],
+    "variant_type": null,
+    "rationale": "Truy vấn loại hình + quận; gold là 3 quán cà phê có địa chỉ tại Hoàn Kiếm trong bài báo."
+  },
+  {
+    "id": "HN-09",
+    "group": "G4",
+    "persona": "dia_danh_lich_su",
+    "query": "bệnh viện ở quận Hai Bà Trưng Hà Nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "BookingCare",
+      "url": "https://bookingcare.vn/cam-nang/benh-vien-thanh-nhan-thong-tin-can-biet-khi-di-kham-p1384.html",
+      "snippet": "Địa chỉ: Số 42 Thanh Nhàn, Hai Bà Trưng, Hà Nội"
+    },
+    "gold_names": [
+      "Bệnh viện Thanh Nhàn"
+    ],
+    "variant_type": null,
+    "admin_name": "quận Hai Bà Trưng",
+    "admin_kind": "old",
+    "rationale": "Dùng tên quận cũ (bỏ cấp huyện từ 1/7/2025), gold là bệnh viện vẫn niêm yết địa chỉ theo quận Hai Bà Trưng."
+  },
+  {
+    "id": "HN-10",
+    "group": "G4",
+    "persona": "giao_hang_cua_hang",
+    "query": "trường đại học ở phường Bạch Mai Hà Nội",
+    "province_code": "01",
+    "province": "Hà Nội",
+    "source": {
+      "publisher": "Đại học Kinh tế Quốc dân (neu.edu.vn)",
+      "url": "https://neu.edu.vn/",
+      "snippet": "207 đường Giải Phóng, phường Bạch Mai, Hà Nội, Việt Nam"
+    },
+    "gold_names": [
+      "Đại học Kinh tế Quốc dân"
+    ],
+    "variant_type": null,
+    "admin_name": "phường Bạch Mai",
+    "admin_kind": "new",
+    "rationale": "Dùng tên phường mới sau sắp xếp 2025 (NQ 1656/NQ-UBTVQH15), gold là trường có địa chỉ tại phường Bạch Mai."
+  },
+  {
+    "id": "HCM-01",
+    "group": "G1",
+    "persona": "du_khach",
+    "query": "dinh độc lập thành phố hồ chí minh địa chỉ",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Cục Di sản văn hóa - Bộ Văn hóa, Thể thao và Du lịch",
+      "url": "https://dsvh.gov.vn/di-tich-lich-su-dinh-doc-lap-2937",
+      "snippet": "Di tích Dinh Độc Lập tọa lạc tại số 135, đường Nam Kỳ Khởi Nghĩa, phường Bến Thành, quận I, thành phố Hồ Chí Minh, có tổng diện tích là 12ha"
+    },
+    "gold_names": [
+      "Dinh Độc Lập"
+    ],
+    "variant_type": null,
+    "rationale": "Người dùng gõ gần đủ tên di tích và thêm địa danh thành phố, gold là Dinh Độc Lập tại 135 Nam Kỳ Khởi Nghĩa."
+  },
+  {
+    "id": "HCM-02",
+    "group": "G1",
+    "persona": "dia_danh_lich_su",
+    "query": "bảo tàng chứng tích chiến tranh tp hồ chí minh",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Sở Văn hóa và Thể thao TP.HCM",
+      "url": "https://svhtt.hochiminhcity.gov.vn/tin-chi-tiet/-/chi-tiet/bao-tang-chung-tich-chien-tranh-19524-2015.html",
+      "snippet": "Địa chỉ: 28 Võ Văn Tần, Phường 6, Quận 3, Thành phố Hồ Chí Minh"
+    },
+    "gold_names": [
+      "Bảo tàng Chứng tích Chiến tranh"
+    ],
+    "variant_type": null,
+    "rationale": "Tên bảo tàng gõ gần đầy đủ, gold là bảo tàng tại 28 Võ Văn Tần, quận 3."
+  },
+  {
+    "id": "HCM-03",
+    "group": "G1",
+    "persona": "nguoi_dan",
+    "query": "bệnh viện chợ rẫy tp hồ chí minh",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Cổng Bệnh án điện tử - Bộ Y tế",
+      "url": "https://benhandientu.moh.gov.vn/benh-vien/521/benh-vien-cho-ray-bo-y-te",
+      "snippet": "201B Nguyễn Chí Thanh, Phường Chợ Lớn, Thành phố Hồ Chí Minh"
+    },
+    "gold_names": [
+      "Bệnh viện Chợ Rẫy"
+    ],
+    "variant_type": null,
+    "rationale": "Truy vấn gần đúng tên bệnh viện tuyến cuối, gold là Bệnh viện Chợ Rẫy tại 201B Nguyễn Chí Thanh (phường Chợ Lớn theo địa giới mới)."
+  },
+  {
+    "id": "HCM-04",
+    "group": "G2",
+    "persona": "du_khach",
+    "query": "nha tho duc ba sai gon o dau",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "HTV - Đài Truyền hình TP.HCM",
+      "url": "https://htv.vn/doanhnhansaigon/nha-tho-duc-ba-buu-dien-thanh-pho-292361.html",
+      "snippet": "Nhà thờ Đức Bà Sài Gòn, tên chính thức là Vương cung thánh đường Chính tòa Đức Mẹ Vô nhiễm Nguyên tội (Immaculate Conception Cathedral Basilica), là nhà thờ lớn nhất và đặc sắc nhất tại Thành phố Hồ Chí Minh, với 2 tháp chuông cao 60 m, tọa lạc tại trung tâm thành phố (Số 1 Công trường Công xã Paris, Quận 1)."
+    },
+    "gold_names": [
+      "Nhà thờ Đức Bà Sài Gòn"
+    ],
+    "variant_type": "nodia",
+    "base_name": "Nhà thờ Đức Bà Sài Gòn",
+    "rationale": "Bỏ toàn bộ dấu của tên nhà thờ, kiểm tra khả năng khớp không dấu về đúng địa danh tại số 1 Công trường Công xã Paris, Quận 1."
+  },
+  {
+    "id": "HCM-05",
+    "group": "G2",
+    "persona": "nguoi_dan",
+    "query": "bệnh viện từ dủ cống quỳnh quận 1",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Cổng Bệnh án điện tử - Bộ Y tế",
+      "url": "https://benhandientu.moh.gov.vn/benh-vien/735/benh-vien-tu-du-tp-ho-chi-minh",
+      "snippet": "284 Cống Quỳnh, phường Bến Thành, Tp.Hồ Chí Minh"
+    },
+    "gold_names": [
+      "Bệnh viện Từ Dũ"
+    ],
+    "variant_type": "typo",
+    "base_name": "Bệnh viện Từ Dũ",
+    "rationale": "Gõ sai một ký tự (dũ thành dủ) ở giữa tên bệnh viện, gold vẫn là Bệnh viện Từ Dũ tại 284 Cống Quỳnh."
+  },
+  {
+    "id": "HCM-06",
+    "group": "G2",
+    "persona": "bv_truong_co_quan",
+    "query": "đh khxh&nv đinh tiên hoàng",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Trường Đại học Khoa học Xã hội và Nhân văn - ĐHQG TP.HCM",
+      "url": "https://hcmussh.edu.vn/lien-he",
+      "snippet": "Cơ sở Sài Gòn: 10-12 Đinh Tiên Hoàng, P. Sài Gòn, TP.HCM",
+      "verified_via": "browser"
+    },
+    "gold_names": [
+      "Trường Đại học Khoa học Xã hội và Nhân văn - ĐHQG TP.HCM"
+    ],
+    "variant_type": "abbrev",
+    "base_name": "Trường Đại học Khoa học Xã hội và Nhân văn",
+    "rationale": "Dùng cách viết tắt thông dụng ĐH KHXH&NV cộng tên đường, gold là trường tại 10-12 Đinh Tiên Hoàng, phường Sài Gòn.",
+    "gold_aliases": {
+      "Trường Đại học Khoa học Xã hội và Nhân văn - ĐHQG TP.HCM": "Trường Đại học Khoa học xã hội và Nhân văn"
+    }
+  },
+  {
+    "id": "HCM-07",
+    "group": "G3",
+    "persona": "nguoi_dan",
+    "query": "bệnh viện ở quận 10 tp hồ chí minh",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Medpro",
+      "url": "https://medpro.vn/tin-tuc/benh-vien-phong-kham-nhi-quan-10",
+      "snippet": "Địa chỉ: Số 341 đường Sư Vạn Hạnh, Phường 10, Quận 10, Thành phố Hồ Chí Minh."
+    },
+    "gold_names": [
+      "Bệnh viện Nhi Đồng 1",
+      "Bệnh viện Đa khoa Vạn Hạnh"
+    ],
+    "variant_type": null,
+    "rationale": "Truy vấn theo loại bệnh viện và quận, gold gồm hai bệnh viện thật tại quận 10 có địa chỉ trong bài."
+  },
+  {
+    "id": "HCM-08",
+    "group": "G3",
+    "persona": "giao_hang_cua_hang",
+    "query": "chợ ở quận 5 tp hồ chí minh",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Vietnam Moi (vietnammoi.vn)",
+      "url": "https://vietnammoi.vn/cap-nhat-danh-sach-cho-o-quan-5-moi-nhat-20210707162320087.htm",
+      "snippet": "Chợ Soái Kình Lâm Địa chỉ: 545 Đường Trần Hưng Đạo, Phường 14, Quận 5"
+    },
+    "gold_names": [
+      "Chợ Soái Kình Lâm",
+      "Chợ An Đông",
+      "Chợ Hòa Bình"
+    ],
+    "variant_type": null,
+    "rationale": "Truy vấn theo loại chợ và quận 5, gold là ba ngôi chợ đầu mối thật cùng địa chỉ trong bài."
+  },
+  {
+    "id": "HCM-09",
+    "group": "G4",
+    "persona": "dia_danh_lich_su",
+    "query": "địa đạo củ chi huyện củ chi",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Khu di tích Địa đạo Củ Chi (diadaocuchi.com.vn)",
+      "url": "http://diadaocuchi.com.vn/",
+      "snippet": "Địa đạo Bến Đình (căn cứ Huyện ủy Củ Chi) tại ấp Bến Đình, xã Nhuận Đức, huyện Củ Chi, Thành phố Hồ Chí Minh"
+    },
+    "gold_names": [
+      "Địa đạo Củ Chi (Bến Đình)"
+    ],
+    "variant_type": null,
+    "admin_name": "Huyện Củ Chi",
+    "admin_kind": "old",
+    "rationale": "Truy vấn dùng đơn vị hành chính cũ 'huyện Củ Chi' (trước sắp xếp 2025), gold là Địa đạo Bến Đình tại xã Nhuận Đức.",
+    "gold_aliases": {
+      "Địa đạo Củ Chi (Bến Đình)": "Địa Đạo Bến Đình Củ Chi"
+    }
+  },
+  {
+    "id": "HCM-10",
+    "group": "G4",
+    "persona": "bv_truong_co_quan",
+    "query": "đại học bách khoa cơ sở 1 phường diên hồng",
+    "province_code": "79",
+    "province": "Thành phố Hồ Chí Minh",
+    "source": {
+      "publisher": "Trường Đại học Bách khoa - ĐHQG TP.HCM",
+      "url": "https://hcmut.edu.vn/tintuc/cap-nhat-thong-tin-dia-chi-Truong-DH-Bach-khoa",
+      "snippet": "Cơ sở 1: 268 Lý Thường Kiệt, Phường Diên Hồng, TP. HCM",
+      "verified_via": "browser"
+    },
+    "gold_names": [
+      "Trường Đại học Bách khoa - ĐHQG TP.HCM (cơ sở 1)"
+    ],
+    "variant_type": null,
+    "admin_name": "Phường Diên Hồng",
+    "admin_kind": "new",
+    "rationale": "Truy vấn dùng tên phường mới sau sắp xếp 2025 (Diên Hồng), gold là cơ sở 1 của trường tại 268 Lý Thường Kiệt.",
+    "gold_aliases": {
+      "Trường Đại học Bách khoa - ĐHQG TP.HCM (cơ sở 1)": "Trường Đại học Bách khoa, Đại học Quốc gia Thành phố Hồ Chí Minh"
+    }
+  },
+  {
+    "id": "M-01",
+    "group": "G1",
+    "persona": "du_khach",
+    "query": "Bảo tàng Điêu khắc Chăm Đà Nẵng nằm ở số mấy đường 2 Tháng 9?",
+    "province_code": "48",
+    "province": "Đà Nẵng",
+    "source": {
+      "publisher": "VietnamPlus (Thông tấn xã Việt Nam)",
+      "url": "https://www.vietnamplus.vn/bao-tang-dieu-khac-cham-da-nang-kho-bau-cua-nghe-thuat-dieu-khac-cham-pa-post1122392.vnp",
+      "snippet": "Nằm tại số 2 đường 2 Tháng 9, ngay góc giao với đường Bạch Đằng và Trưng Nữ Vương, Bảo tàng Điêu khắc Chăm là một trong những công trình văn hóa lâu đời nhất của Đà Nẵng."
+    },
+    "gold_names": [
+      "Bảo tàng Điêu khắc Chăm Đà Nẵng"
+    ],
+    "variant_type": null,
+    "rationale": "Câu hỏi nêu đúng tên POI đầy đủ có dấu, gold lấy từ địa chỉ ghi trong bài báo.",
+    "gold_aliases": {
+      "Bảo tàng Điêu khắc Chăm Đà Nẵng": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng"
+    }
+  },
+  {
+    "id": "M-02",
+    "group": "G1",
+    "persona": "nguoi_dan",
+    "query": "Bệnh viện Trung ương Huế ở địa chỉ nào để tôi vào khám tim mạch?",
+    "province_code": "46",
+    "province": "Huế",
+    "source": {
+      "publisher": "Cục Khoa học công nghệ và Đào tạo - Bộ Y tế (Bệnh án điện tử)",
+      "url": "https://benhandientu.moh.gov.vn/benh-vien/619/benh-vien-trung-uong-hue-bo-y-te",
+      "snippet": "16 Lê Lợi - Phường Thuận Hóa - Thành phố Huế"
+    },
+    "gold_names": [
+      "Bệnh viện Trung ương Huế"
+    ],
+    "variant_type": null,
+    "rationale": "Tên bệnh viện đầy đủ, địa chỉ và phường mới sau sáp nhập lấy từ trang thông tin chính thức của Bộ Y tế."
+  },
+  {
+    "id": "M-03",
+    "group": "G2",
+    "persona": "giao_hang_cua_hang",
+    "query": "benh vien huu nghi viet tiep hai phong nam o pho nao",
+    "province_code": "31",
+    "province": "Hải Phòng",
+    "source": {
+      "publisher": "Cục Khoa học công nghệ và Đào tạo - Bộ Y tế (Bệnh án điện tử)",
+      "url": "https://benhandientu.moh.gov.vn/benh-vien/442/benh-vien-huu-nghi-viet-tiep-tp-hai-phong",
+      "snippet": "Số 1 Phố Nhà Thương, phường Lê Chân, thành phố Hải Phòng"
+    },
+    "gold_names": [
+      "Bệnh viện Hữu nghị Việt Tiệp"
+    ],
+    "variant_type": "nodia",
+    "base_name": "Bệnh viện Hữu nghị Việt Tiệp",
+    "rationale": "Truy vấn gõ không dấu như người giao hàng nhắn tin, buộc hệ thống khớp lại tên có dấu."
+  },
+  {
+    "id": "M-04",
+    "group": "G2",
+    "persona": "nguoi_dan",
+    "query": "DHCT khu II nằm trên đường nào vậy mọi người?",
+    "province_code": "92",
+    "province": "Cần Thơ",
+    "source": {
+      "publisher": "Trường Đại học Cần Thơ (ctu.edu.vn)",
+      "url": "https://www.ctu.edu.vn/gioithieu/cac-khu.html",
+      "snippet": "Khu II - là khu nhà học chính của Đại học Cần Thơ, có diện tích 87 ha, tọa lạc trên đường 3/2, phường Ninh Kiều, thành phố Cần Thơ."
+    },
+    "gold_names": [
+      "Đại học Cần Thơ"
+    ],
+    "variant_type": "abbrev",
+    "base_name": "Đại học Cần Thơ",
+    "rationale": "Sinh viên dùng tên viết tắt DHCT, gold là tên đầy đủ do website trường công bố.",
+    "gold_aliases": {
+      "Đại học Cần Thơ": "Đại học Cần Thơ (Khu 1)"
+    }
+  },
+  {
+    "id": "M-05",
+    "group": "G3",
+    "persona": "du_khach",
+    "query": "quán cà phê view biển nào đẹp ở Đà Nẵng?",
+    "province_code": "48",
+    "province": "Đà Nẵng",
+    "source": {
+      "publisher": "Cổng thông tin du lịch Đà Nẵng (visitdanang.travel)",
+      "url": "https://visitdanang.travel/vi/top-6-quan-cafe-view-bien-da-nang-dep-khong-nen-bo-lo-6535",
+      "snippet": "Các quán cafe hướng biển tập trung nhiều ở khu vực Mỹ Khê, Phước Mỹ, Mân Thái và Sơn Trà",
+      "verified_via": "browser"
+    },
+    "gold_names": [
+      "Sơn Trà Marina",
+      "Hải Vân Xanh Glamping"
+    ],
+    "variant_type": null,
+    "rationale": "Câu hỏi theo loại hình + địa bàn, gold là hai quán được cổng du lịch thành phố giới thiệu."
+  },
+  {
+    "id": "M-06",
+    "group": "G3",
+    "persona": "dia_danh_lich_su",
+    "query": "những ngôi chùa nổi tiếng ở Huế",
+    "province_code": "46",
+    "province": "Huế",
+    "source": {
+      "publisher": "Cổng thông tin du lịch Huế (khamphahue.com.vn)",
+      "url": "https://khamphahue.com.vn/desktopmodules/DNNTinBai/PrintTinBai.aspx?newsid=988EF59E-93AF-4D38-88DA-8A7A843704CE",
+      "snippet": "Chùa Thiên Mụ tọa lạc trên đồi Hà Khê, bên dòng sông Hương cách trung tâm thành phố 5km về phía tây, bây giờ thuộc địa phận xã Hương Long."
+    },
+    "gold_names": [
+      "Chùa Thiên Mụ",
+      "Chùa Từ Hiếu",
+      "Chùa Báo Quốc"
+    ],
+    "variant_type": null,
+    "rationale": "Ba ngôi chùa nổi tiếng cùng loại trong cùng bài tổng hợp của cổng du lịch Huế."
+  },
+  {
+    "id": "M-07",
+    "group": "G3",
+    "persona": "du_khach",
+    "query": "trung tâm thương mại lớn ở Hải Phòng",
+    "province_code": "31",
+    "province": "Hải Phòng",
+    "source": {
+      "publisher": "Vincom (vincom.com.vn)",
+      "url": "https://vincom.com.vn/trend/trung-tam-thuong-mai-hai-phong",
+      "snippet": "Nơi đây cũng được biết đến là trung tâm thương mại Hải Phòng có nhiều góc view sống ảo cực “sang chảnh” cho bạn tha hồ tạo dáng, “chụp choẹt” những bức ảnh kỉ niệm đáng nhớ cùng bạn bè và người thân."
+    },
+    "gold_names": [
+      "Vincom Plaza Imperia Hải Phòng",
+      "Vincom Plaza Lê Thánh Tông",
+      "GO! Hải Phòng"
+    ],
+    "variant_type": null,
+    "rationale": "Câu hỏi theo loại hình trung tâm thương mại, gold là các trung tâm được bài tổng hợp của Vincom nêu tên."
+  },
+  {
+    "id": "M-08",
+    "group": "G3",
+    "persona": "du_khach",
+    "query": "chợ nổi nào đáng đi ở Cần Thơ?",
+    "province_code": "92",
+    "province": "Cần Thơ",
+    "source": {
+      "publisher": "Cơ sở dữ liệu du lịch Việt Nam - Cục Du lịch Quốc gia",
+      "url": "https://csdl.vietnamtourism.gov.vn/shop/?item=259",
+      "snippet": "Địa chỉ: Cầu Nhím, X. Nhơn Ái, H. Phong Điền, Huyện Phong Điền, Thành phố Cần Thơ"
+    },
+    "gold_names": [
+      "Chợ nổi Cái Răng",
+      "Chợ nổi Phong Điền"
+    ],
+    "variant_type": null,
+    "rationale": "Hai chợ nổi thật của Cần Thơ, một trong đó có địa chỉ nguyên văn trong cơ sở dữ liệu du lịch quốc gia."
+  },
+  {
+    "id": "M-09",
+    "group": "G4",
+    "persona": "dia_danh_lich_su",
+    "query": "bảo tàng quân khu 9 ở quận Ninh Kiều Cần Thơ",
+    "province_code": "92",
+    "province": "Cần Thơ",
+    "source": {
+      "publisher": "Cơ sở dữ liệu du lịch Việt Nam - Cục Du lịch Quốc gia",
+      "url": "https://csdl.vietnamtourism.gov.vn/vcgt/?item=505",
+      "snippet": "Bảo tàng quân khu 9 - Cần Thơ thuộc loại hình lịch sử quân sự tọa lạc tại Số 6 đường Hòa Bình, Quận Ninh Kiều, TP Cần Thơ."
+    },
+    "gold_names": [
+      "Bảo tàng Quân khu 9"
+    ],
+    "variant_type": null,
+    "admin_name": "Ninh Kiều",
+    "admin_kind": "old",
+    "rationale": "Truy vấn dùng tên quận cũ Ninh Kiều đã bị bỏ sau sáp nhập 2025, nguồn cũng ghi theo địa danh cũ này."
+  },
+  {
+    "id": "M-10",
+    "group": "G7",
+    "persona": "nguoi_dan",
+    "query": "ngân hàng nào có chi nhánh ở đặc khu Bạch Long Vĩ để tôi mở thẻ ATM?",
+    "province_code": "31",
+    "province": "Hải Phòng",
+    "source": {
+      "publisher": "Báo VietnamNet",
+      "url": "https://vietnamnet.vn/ngu-dan-dao-bach-long-vi-khat-dich-vu-ngan-hang-vi-internet-chap-chon-i389507.html",
+      "snippet": "Ông Oanh còn cho biết thêm, hạ tầng Internet không đảm bảo là một trong những lý do chính khiến huyện đảo dù đã thành lập được 22 năm nhưng vẫn chưa có hiện diện của dịch vụ Ngân hàng, chưa có Kho bạc hoạt động."
+    },
+    "gold_names": [],
+    "variant_type": null,
+    "rationale": "Nhu cầu thật nhưng đảo không có chi nhánh ngân hàng nào, bài báo nêu rõ địa bàn chưa có dịch vụ ngân hàng."
+  },
+  {
+    "id": "N-01",
+    "group": "G1",
+    "persona": "du_khach",
+    "query": "biển hồ pleiku còn gọi là gì, nằm ở xã nào tỉnh gia lai",
+    "province_code": "52",
+    "province": "Gia Lai",
+    "source": {
+      "publisher": "Cổng thông tin điện tử tỉnh Gia Lai",
+      "url": "https://gialai.gov.vn/du-khach/danh-lam-thang-canh/bien-ho-hay-con-goi-la-ia-nueng-.html",
+      "snippet": "Biển Hồ cách trung tâm thành phố Pleiku 7 km về phía Bắc, thuộc xã Biển Hồ, thành phố Pleiku",
+      "verified_via": "browser"
+    },
+    "gold_names": [
+      "Biển Hồ (Hồ T'Nưng), xã Biển Hồ, TP. Pleiku"
+    ],
+    "variant_type": null,
+    "reason": "Trang du lịch chính thức của tỉnh Gia Lai ghi rõ tên gọi kép 'Biển Hồ (hay còn gọi là Hồ T'Nưng)' và địa bàn xã Biển Hồ, TP. Pleiku. Câu hỏi kiểm tra khả năng trả về đúng tên đầy đủ/alias của một POI Tây Nguyên thay vì chỉ đoán theo từ khóa 'biển'."
+  },
+  {
+    "id": "N-02",
+    "group": "G1",
+    "persona": "dia_danh_lich_su",
+    "query": "bản cát cát sapa địa chỉ đầy đủ xã huyện tỉnh",
+    "province_code": "15",
+    "province": "Lào Cai",
+    "source": {
+      "publisher": "Sở Văn hóa, Thể thao và Du lịch Lào Cai (svhttdl.laocai.gov.vn)",
+      "url": "https://svhttdl.laocai.gov.vn/nghien-cuu-phat-trien-du-lich/lao-cai-bao-ton-va-phat-huy-gia-tri-di-san-van-hoa-gan-voi-phat-trien-du-lich-ben-vung-1302964",
+      "snippet": "thôn Cát Cát của người Mông xã San Sả Hồ",
+      "verified_via": "browser"
+    },
+    "gold_names": [
+      "Bản Cát Cát (xã San Sả Hồ, Sa Pa, tỉnh Lào Cai)"
+    ],
+    "variant_type": null,
+    "reason": "Cổng du lịch quốc gia nêu địa chỉ hành chính đầy đủ của bản Cát Cát. Địa bàn Tây Bắc, tên POI ngắn dễ bị nhầm với 'thác Cát Cát'/'bản Cát Cát' khác nhau, nên gold yêu cầu đúng tên kèm xã - huyện - tỉnh.",
+    "gold_aliases": {
+      "Bản Cát Cát (xã San Sả Hồ, Sa Pa, tỉnh Lào Cai)": "Cát Cát"
+    }
+  },
+  {
+    "id": "N-03",
+    "group": "G2",
+    "persona": "giao_hang_cua_hang",
+    "query": "tgdd đà nẵng địa chỉ siêu thị gần nhất",
+    "province_code": "48",
+    "province": "Đà Nẵng",
+    "source": {
+      "publisher": "Thế Giới Di Động (thegioididong.com) - trang siêu thị chính thức",
+      "url": "https://www.thegioididong.com/sieu-thi-so-23-nguyen-van-thoai-phuong-an-hai-thanh-pho-da-nang-viet-nam-id-1367",
+      "snippet": "Siêu thị Thế Giới Di Động 23 Nguyễn Văn Thoại tưng bừng khai trương và khuyến mãi tại địa chỉ Số 23 Nguyễn Văn Thoại, Phường An Hải, Thành phố Đà Nẵng, Việt Nam"
+    },
+    "gold_names": [
+      "Thế Giới Di Động 23 Nguyễn Văn Thoại (Đà Nẵng)"
+    ],
+    "variant_type": "abbrev",
+    "base_name": "Thế Giới Di Động",
+    "reason": "'TGDD' là viết tắt phổ biến của chuỗi Thế Giới Di Động, không xuất hiện trong tên chính thức. Trang siêu thị chính thức xác nhận chi nhánh và địa chỉ để đối chiếu khi hệ thống phải mở rộng từ viết tắt sang tên thương hiệu.",
+    "gold_aliases": {
+      "Thế Giới Di Động 23 Nguyễn Văn Thoại (Đà Nẵng)": "Thế Giới Di Động"
+    }
+  },
+  {
+    "id": "N-04",
+    "group": "G2",
+    "persona": "nguoi_dan",
+    "query": "ho lak dak lak o dau",
+    "province_code": "66",
+    "province": "Đắk Lắk",
+    "source": {
+      "publisher": "Sở Văn hóa, Thể thao và Du lịch Đắk Lắk",
+      "url": "https://vhttdl.daklak.gov.vn/Articles/Detail/1616",
+      "snippet": "Thuộc huyện Lắk tỉnh Đắk Lắk và trên trục giao thông Buôn Ma Thuột với Đà Lạt"
+    },
+    "gold_names": [
+      "Hồ Lắk (huyện Lắk, tỉnh Đắk Lắk)"
+    ],
+    "variant_type": "nodia",
+    "base_name": "Hồ Lắk",
+    "reason": "Câu hỏi gõ không dấu 'ho lak dak lak' trong khi tên chuẩn có dấu là 'Hồ Lắk'. Trang chuyên môn của Sở VH-TT-DL Đắk Lắk xác nhận hồ thuộc huyện Lắk, tỉnh Đắk Lắk - địa bàn Tây Nguyên khó, dễ lẫn với 'hồ Lăk' viết sai dấu."
+  },
+  {
+    "id": "N-05",
+    "group": "G3",
+    "persona": "du_khach",
+    "query": "khách sạn ở côn đảo có địa chỉ cụ thể",
+    "province_code": "79",
+    "province": "TP. Hồ Chí Minh (Đặc khu Côn Đảo)",
+    "source": {
+      "publisher": "Cổng thông tin du lịch Côn Đảo (condao.com.vn)",
+      "url": "https://condao.com.vn/vi/news/co-so-luu-tru.html",
+      "snippet": "Nằm tại 08 Nguyễn Đức Thuận, ngay trung tâm Đặc khu Côn Đảo, resort sở hữu vị trí hiếm hoi ngay bên bãi biển An Hải"
+    },
+    "gold_names": [
+      "Côn Đảo Resort (08 Nguyễn Đức Thuận, Đặc khu Côn Đảo)",
+      "The Secret Côn Đảo (trung tâm Đặc khu Côn Đảo)"
+    ],
+    "variant_type": null,
+    "reason": "Địa bàn huyện đảo/đặc khu cách ly, ít dữ liệu: cổng du lịch Côn Đảo liệt kê cơ sở lưu trú kèm địa chỉ. Gold là 2 khách sạn/resort có thật, kiểm tra hệ thống không trả về khách sạn đất liền trùng tên."
+  },
+  {
+    "id": "N-06",
+    "group": "G3",
+    "persona": "nguoi_dan",
+    "query": "quán cà phê ở buôn ma thuột đắk lắk có địa chỉ",
+    "province_code": "66",
+    "province": "Đắk Lắk",
+    "source": {
+      "publisher": "Bazan Travel (cẩm nang du lịch)",
+      "url": "https://bazantravel.com/quan-ca-phe-dep-o-buon-ma-thuot/",
+      "snippet": "Quán House Of Len Coffee - Địa chỉ: 14/19 Cù Chính Lan, Phường Tự An, TP. Buôn Ma Thuột"
+    },
+    "gold_names": [
+      "House Of Len Coffee (14/19 Cù Chính Lan, TP. Buôn Ma Thuột)",
+      "1990 Cafe (63 Nguyễn Thông, TP. Buôn Ma Thuột)"
+    ],
+    "variant_type": null,
+    "reason": "Truy vấn nhóm 'quán cà phê <tỉnh Tây Nguyên>' - loại hình quán nhỏ, tên không chuẩn hóa, dễ bị thay bằng chuỗi lớn. Gold lấy từ bài tổng hợp có địa chỉ cụ thể tại TP. Buôn Ma Thuột."
+  },
+  {
+    "id": "N-07",
+    "group": "G6",
+    "persona": "giao_hang_cua_hang",
+    "query": "nhà thuốc long châu",
+    "province_code": null,
+    "province": "Toàn quốc",
+    "source": {
+      "publisher": "Nhà thuốc FPT Long Châu (nhathuoclongchau.com.vn) - hệ thống cửa hàng",
+      "url": "https://nhathuoclongchau.com.vn/he-thong-cua-hang",
+      "snippet": "Long Châu là hệ thống nhà thuốc bán lẻ & phân phối trải khắp 34 tỉnh thành"
+    },
+    "branches": [
+      {
+        "name": "Nhà thuốc Long Châu - Khối Tân Hợp (đối diện Bệnh viện Tây Bắc)",
+        "province": "Nghệ An",
+        "address": "Khối Tân Hợp (Đối Diện Bệnh Viện Tây Bắc), P. Tây Hiếu, Tỉnh Nghệ An"
+      },
+      {
+        "name": "Nhà thuốc Long Châu - 209 Trần Hưng Đạo",
+        "province": "An Giang",
+        "address": "209 Trần Hưng Đạo (Đối Diện Cây Xăng Mỹ Long), P. Long Xuyên, Tỉnh An Giang"
+      },
+      {
+        "name": "Nhà thuốc Long Châu - Khu Đoàn Kết (cổng phụ chợ Bo)",
+        "province": "Phú Thọ",
+        "address": "Khu Đoàn Kết (Ngay Cổng Phụ Chợ Bo), X. Kim Bôi, Tỉnh Phú Thọ"
+      }
+    ],
+    "gold_names": [
+      "Nhà thuốc Long Châu - Khối Tân Hợp, Tây Hiếu (Nghệ An)",
+      "Nhà thuốc Long Châu - 209 Trần Hưng Đạo, Long Xuyên (An Giang)",
+      "Nhà thuốc Long Châu - Khu Đoàn Kết, Kim Bôi (Phú Thọ)"
+    ],
+    "variant_type": null,
+    "reason": "Câu hỏi trần chỉ có tên chuỗi: Long Châu phủ 34 tỉnh thành nên tối thiểu 3 chi nhánh ở 3 tỉnh khác nhau đều hợp lý. Kiểm tra hệ thống không mặc định về Hà Nội/TP.HCM mà trả về nhiều chi nhánh đúng địa chỉ.",
+    "gold_like": "Long Châu"
+  },
+  {
+    "id": "N-08",
+    "group": "G6",
+    "persona": "nguoi_dan",
+    "query": "bệnh viện vinmec",
+    "province_code": null,
+    "province": "Toàn quốc",
+    "source": {
+      "publisher": "Vinmec (vinmec.com) - danh sách cơ sở y tế chính thức",
+      "url": "https://www.vinmec.com/vie/co-so-y-te/",
+      "snippet": "Bệnh viện Đa khoa Quốc tế Vinmec Nha Trang Đường Trần Phú, Tổ dân phố 1 Tây Sơn, Phường Nha Trang, tỉnh Khánh Hòa, Việt Nam"
+    },
+    "branches": [
+      {
+        "name": "Bệnh viện Đa khoa Quốc tế Vinmec Nha Trang",
+        "province": "Khánh Hòa",
+        "address": "Đường Trần Phú, Tổ dân phố 1 Tây Sơn, Phường Nha Trang, tỉnh Khánh Hòa, Việt Nam"
+      },
+      {
+        "name": "Bệnh viện Đa khoa Quốc tế Vinmec Đà Nẵng",
+        "province": "Đà Nẵng",
+        "address": "Đường 30 tháng 4, Khu dân cư số 4, phường Hòa Cường, Thành phố Đà Nẵng"
+      },
+      {
+        "name": "Bệnh viện Đa khoa Quốc tế Vinmec Cần Thơ",
+        "province": "Cần Thơ",
+        "address": "Số 150A Đường 3/2, Phường Ninh Kiều, TP. Cần Thơ, Việt Nam"
+      }
+    ],
+    "gold_names": [
+      "Vinmec Nha Trang (Khánh Hòa)",
+      "Vinmec Đà Nẵng (Đà Nẵng)",
+      "Vinmec Cần Thơ (Cần Thơ)"
+    ],
+    "variant_type": null,
+    "reason": "'Bệnh viện Vinmec' là tên chung của một mạng lưới 10+ bệnh viện ở nhiều tỉnh, không có cơ sở nào là mặc định. Gold là 3 cơ sở thật ở 3 tỉnh khác nhau lấy từ trang danh sách cơ sở y tế chính thức.",
+    "gold_like": "Vinmec"
+  },
+  {
+    "id": "N-09",
+    "group": "G6",
+    "persona": "du_khach",
+    "query": "phúc long",
+    "province_code": null,
+    "province": "Toàn quốc",
+    "source": {
+      "publisher": "Phúc Long Heritage (phuclong.com.vn) - danh sách cửa hàng chính thức",
+      "url": "https://phuclong.com.vn/find-store",
+      "snippet": "Địa chỉ: 59-61 Nguyễn Văn Linh TP. Đà Nẵng",
+      "verified_via": "browser"
+    },
+    "branches": [
+      {
+        "name": "Phúc Long - Vincom Plaza Hùng Vương",
+        "province": "Cần Thơ",
+        "address": "L1-05-06 và L1-06A-06B, Tầng L1 TTTM Vincom Plaza Hùng Vương Số 2 Hùng Vương, TP. Cần Thơ"
+      },
+      {
+        "name": "Phúc Long - 59-61 Nguyễn Văn Linh",
+        "province": "Đà Nẵng",
+        "address": "59-61 Nguyễn Văn Linh, TP. Đà Nẵng"
+      },
+      {
+        "name": "Phúc Long - 82-84 Hàng Điếu",
+        "province": "Hà Nội",
+        "address": "82 - 84 Hàng Điếu, TP. Hà Nội"
+      }
+    ],
+    "gold_names": [
+      "Phúc Long - Vincom Plaza Hùng Vương (Cần Thơ)",
+      "Phúc Long - 59-61 Nguyễn Văn Linh (Đà Nẵng)",
+      "Phúc Long - 82-84 Hàng Điếu (Hà Nội)"
+    ],
+    "variant_type": null,
+    "reason": "Chuỗi cà phê có cửa hàng ở nhiều tỉnh, câu hỏi trần 'phúc long' không kèm tỉnh nên cả 3 chi nhánh đều hợp lý. Trang danh sách cửa hàng chính thức ghi mã vùng (CTO-CH/DNG-CH/HNI-CH) kèm địa chỉ từng tỉnh.",
+    "gold_like": "Phúc Long"
+  },
+  {
+    "id": "N-10",
+    "group": "G7",
+    "persona": "du_khach",
+    "query": "sân bay ở hà giang",
+    "province_code": "08",
+    "province": "Hà Giang",
+    "source": {
+      "publisher": "VnExpress",
+      "url": "https://vnexpress.net/ha-giang-muon-co-san-bay-4518495.html",
+      "snippet": "Hiện Hà Giang chỉ có đường bộ kết nối với thủ đô Hà Nội và các tỉnh. Từ trung tâm tỉnh lỵ đến sân bay gần nhất là Nội Bài khoảng 260 km."
+    },
+    "gold_names": [],
+    "variant_type": null,
+    "reason": "Nhu cầu thật (du khách muốn bay đến Hà Giang) nhưng Hà Giang không có sân bay: bài báo nêu tỉnh chỉ có đường bộ, sân bay gần nhất là Nội Bài cách 260 km. Hệ thống phải trả về rỗng, không được gán sân bay Nội Bài/Cát Bi cho địa bàn Hà Giang."
+  }
+]

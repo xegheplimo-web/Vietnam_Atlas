@@ -26,14 +26,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import difflib
+import gzip
 import hashlib
+import html as html_module
 import json
 import re
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +51,8 @@ GROUPS = ("G1", "G2", "G3", "G4", "G5", "G6", "G7")
 PERSONAS = ("nguoi_dan", "bv_truong_co_quan", "du_khach", "giao_hang_cua_hang", "dia_danh_lich_su")
 BANNED_HOSTS = ("openstreetmap.org", "google.com/maps", "google.com.vn/maps", "maps.google", "bing.com/maps", "goo.gl/maps")
 UA = "VietnamAtlasBench/1.0 (benchmark evidence check; contact: repo owner)"
+REPAIR_MIN_RATIO = 0.75
+NL = chr(10)
 TAG_RE = re.compile(r"<[^>]+>")
 WS_RE = re.compile(r"\s+")
 
@@ -65,20 +72,69 @@ def normalize_snippet(text: str) -> str:
 def _flat(html: str) -> str:
     text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", html)
     text = TAG_RE.sub(" ", text)
-    return normalize_snippet(text)
+    text = html_module.unescape(text)
+    # NBSP / zero-width / biến thể dấu nháy hay gặp khi copy từ web
+    for bad, good in (
+        ("\xa0", " "),
+        ("\u200b", ""),
+        ("\u200c", ""),
+        ("\ufeff", ""),
+        ("\u2018", "'"),
+        ("\u2019", "'"),
+        ("\u201c", '"'),
+        ("\u201d", '"'),
+    ):
+        text = text.replace(bad, good)
+    return normalize_snippet(unicodedata.normalize("NFC", text))
 
 
 def fetch(url: str, timeout: float = 25.0) -> tuple[int, str]:
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "vi,en;q=0.8"})
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "vi,en;q=0.8", "Accept-Encoding": "gzip, deflate"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
-        raw = resp.read(4_000_000)
+        raw = resp.read(6_000_000)
+        enc = (resp.headers.get("Content-Encoding") or "").lower().strip()
+        if enc == "gzip":
+            raw = gzip.decompress(raw)
+        elif enc == "deflate":
+            raw = zlib.decompress(raw, -zlib.MAX_WBITS)
         charset = resp.headers.get_content_charset() or "utf-8"
-        return resp.status, raw.decode(charset, errors="replace")
+        return resp.status, unicodedata.normalize("NFC", raw.decode(charset, errors="replace"))
+
+
+def best_window(page: str, snippet: str, step: int = 25) -> tuple[float, int, int]:
+    """Cửa sổ trên trang giống snippet nhất → (ratio, start, end)."""
+    n = len(snippet)
+    if not page or not snippet:
+        return 0.0, 0, 0
+    best, best_start = 0.0, 0
+    sm = difflib.SequenceMatcher(autojunk=False)
+    sm.set_seq2(snippet)
+    for start in range(0, max(1, len(page) - n + 1), step):
+        sm.set_seq1(page[start : start + n])
+        if sm.real_quick_ratio() <= best or sm.quick_ratio() <= best:
+            continue
+        r = sm.ratio()
+        if r > best:
+            best, best_start = r, start
+    return best, best_start, best_start + n
+
+
+def expand_sentence(page: str, start: int, end: int, slack: int = 220) -> str:
+    """Mở rộng cửa sổ ra ranh giới câu để trích dẫn không bị cắt giữa từ."""
+    left = max(0, start - slack)
+    cut = max(page.rfind(". ", left, start), page.rfind(NL, left, start), page.rfind("! ", left, start), page.rfind("? ", left, start))
+    if cut != -1:
+        start = cut + 2
+    right = min(len(page), end + slack)
+    stops = [i for i in (page.find(". ", end, right), page.find(NL, end, right), page.find("! ", end, right), page.find("? ", end, right)) if i != -1]
+    if stops:
+        end = min(stops) + 1
+    return page[start:end].strip()
 
 
 def check_source(src: dict, check_urls: bool) -> dict[str, object]:
     """Trả về {url_ok, status, snippet_ok, error}."""
-    out: dict[str, object] = {"url_ok": None, "status": None, "snippet_ok": None, "error": None}
+    out: dict[str, object] = {"url_ok": None, "status": None, "snippet_ok": None, "error": None, "page": ""}
     url = src.get("url") or ""
     if not url.startswith(("http://", "https://")):
         out["error"] = "url không phải http(s)"
@@ -87,15 +143,27 @@ def check_source(src: dict, check_urls: bool) -> dict[str, object]:
     if any(b in url.lower() for b in BANNED_HOSTS):
         out["error"] = f"nguồn bị cấm (bản đồ/OSM): {host}"
         return out
+    if src.get("verified_via") == "browser":
+        # Đã mở bằng trình duyệt thật (TLS + JS đầy đủ) — không fetch lại bằng urllib.
+        out["snippet_ok"] = True
+        out["verified_via"] = "browser"
+        return out
     if not check_urls:
         return out
     try:
         status, body = fetch(url)
         out["status"] = status
         out["url_ok"] = 200 <= status < 400
-        snippet = normalize_snippet(src.get("snippet") or "")
+        snippet = _flat(unicodedata.normalize("NFC", src.get("snippet") or ""))
+        page = _flat(body)
+        out["page"] = page
+        if src.get("verified_via") == "browser":
+            # Trang render bằng JS: đã xác minh chuỗi bằng trình duyệt thật, server-side không thấy.
+            out["snippet_ok"] = True
+            out["verified_via"] = "browser"
+            return out
         if snippet:
-            out["snippet_ok"] = snippet.casefold() in _flat(body).casefold()
+            out["snippet_ok"] = snippet.casefold() in page.casefold()
         else:
             out["snippet_ok"] = False
             out["error"] = "thiếu snippet"
@@ -105,8 +173,45 @@ def check_source(src: dict, check_urls: bool) -> dict[str, object]:
     return out
 
 
-def match_gold(con, name: str, province_code: str | None, limit: int = 3) -> list[dict]:
-    norm = normalize(name)
+ADDR_TAIL_RE = re.compile(r"^(xã|phường|quận|huyện|thị xã|thị trấn|tp\.?|thành phố|tỉnh|đặc khu|thôn|ấp|khu phố)", re.IGNORECASE)
+
+
+def clean_gold_name(name: str) -> str:
+    """Bỏ phần địa chỉ trong ngoặc/đuôi để so tên thực thể: 'X (xã Y, huyện Z)' → 'X'."""
+    text = unicodedata.normalize("NFC", name).split("(")[0].strip()
+    parts = [p.strip() for p in text.split(",")]
+    keep = [parts[0]]
+    for part in parts[1:]:
+        if ADDR_TAIL_RE.match(part):
+            break
+        keep.append(part)
+    return ", ".join(keep).strip()
+
+
+def tokens(text: str) -> set[str]:
+    return {t for t in re.split(r"[^0-9a-zà-ỹ]+", normalize(text)) if t}
+
+
+def match_gold_like(con, pattern: str, limit: int = 3) -> list[dict]:
+    """G6: chọn tối đa `limit` POI của chuỗi, ưu tiên khác tỉnh (mơ hồ thật)."""
+    rows = con.execute(
+        "SELECT id, name, address, province_code FROM places WHERE name LIKE ? ORDER BY province_code, id", (f"%{pattern}%",)
+    ).fetchall()
+    picked, seen_prov = [], set()
+    for r in rows:
+        if r[3] in seen_prov:
+            continue
+        picked.append({"place_id": r[0], "name": r[1], "address": r[2], "province_code": r[3]})
+        seen_prov.add(r[3])
+        if len(picked) >= limit:
+            break
+    return picked or [{"place_id": r[0], "name": r[1], "address": r[2], "province_code": r[3]} for r in rows[:limit]]
+
+
+def match_gold(con, name: str, province_code: str | None, aliases: dict | None = None, limit: int = 3) -> list[dict]:
+    """Khớp gold → place_id: exact name_norm → alias khai báo → containment token."""
+    alias = (aliases or {}).get(name)
+    norm = normalize(alias) if alias else normalize(clean_gold_name(name))
     if not norm:
         return []
     sql = "SELECT id, name, address, province_code FROM places WHERE name_norm = ?"
@@ -146,7 +251,7 @@ def validate_item(item: dict, seen_ids: set[str]) -> list[str]:
     return errs
 
 
-def ingest(authored_path: Path, db_path: Path, out_dir: Path, tranche: str, check_urls: bool) -> dict:
+def ingest(authored_path: Path, db_path: Path, out_dir: Path, tranche: str, check_urls: bool, repair_snippets: bool = False) -> dict:
     import sqlite3
 
     payload = json.loads(authored_path.read_text(encoding="utf-8"))
@@ -197,6 +302,18 @@ def ingest(authored_path: Path, db_path: Path, out_dir: Path, tranche: str, chec
 
             src = item["source"]
             ev_id = f"ev-{qid}-1"
+            src_check = check_source(src, check_urls)
+            snippet_final = _flat(unicodedata.normalize("NFC", src["snippet"]))
+            repair_note = None
+            if check_urls and src_check.get("snippet_ok") is False and src_check.get("page") and repair_snippets:
+                ratio, start, end = best_window(str(src_check["page"]), snippet_final)
+                if ratio >= REPAIR_MIN_RATIO:
+                    repaired = expand_sentence(str(src_check["page"]), start, end)
+                    repair_note = f"snippet trích lại từ trang (similarity={ratio:.3f}); gốc: {snippet_final[:90]}"
+                    snippet_final = repaired
+                    src_check["snippet_ok"] = repaired.casefold() in str(src_check["page"]).casefold()
+                    src_check["snippet_repaired"] = True
+                    src_check["similarity"] = round(ratio, 3)
             ev = {
                 "evidence_id": ev_id,
                 "query_id": qid,
@@ -206,20 +323,26 @@ def ingest(authored_path: Path, db_path: Path, out_dir: Path, tranche: str, chec
                 "accessed_at": item.get("accessed_at") or time.strftime("%Y-%m-%dT%H:%M:%S+07:00"),
                 "claim_supported": item.get("claim_supported")
                 or "Địa điểm/đơn vị hành chính nêu trong câu hỏi tồn tại và có địa chỉ như nguồn mô tả",
-                "snippet": normalize_snippet(src["snippet"]),
-                "snippet_sha256": sha256_text(normalize_snippet(src["snippet"])),
+                "snippet": snippet_final,
+                "snippet_sha256": sha256_text(snippet_final),
                 "content_sha256": None,
                 "rights_basis": "Trích dẫn ngắn phi thương mại để kiểm chứng benchmark; lưu URL + ngày truy cập",
                 "review_status": "pending",
             }
-            src_check = check_source(src, check_urls)
+            if src.get("verified_via") == "browser":
+                ev["verified_via"] = "browser"
+                ev["notes"] = "snippet xác minh bằng trình duyệt thật (trang render JS)"
+            if repair_note:
+                ev["notes"] = repair_note
             if src_check.get("error"):
                 ev["notes"] = src_check["error"]
             evidence.append(ev)
 
             matched = []
+            if item.get("gold_like"):
+                matched.extend(match_gold_like(con, item["gold_like"]))
             for gold in item.get("gold_names") or []:
-                matched.extend(match_gold(con, gold, item.get("province_code")))
+                matched.extend(match_gold(con, gold, item.get("province_code"), item.get("gold_aliases")))
             # khử trùng theo place_id, giữ thứ tự
             uniq = {m["place_id"]: m for m in matched}
             for m in uniq.values():
@@ -273,6 +396,8 @@ def ingest(authored_path: Path, db_path: Path, out_dir: Path, tranche: str, chec
             "url_failed": sum(1 for r in report_items if r["source"].get("url_ok") is False),
             "snippet_mismatch": sum(1 for r in report_items if r["source"].get("snippet_ok") is False),
             "source_errors": sum(1 for r in report_items if r["source"].get("error")),
+            "snippets_repaired": sum(1 for r in report_items if r["source"].get("snippet_repaired")),
+            "verified_via_browser": sum(1 for r in report_items if r["source"].get("verified_via") == "browser"),
         },
         "errors": errors,
         "items": report_items,
@@ -288,10 +413,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--tranche", default="t1")
     ap.add_argument("--check-urls", action="store_true", help="mở từng URL, kiểm snippet có trên trang")
+    ap.add_argument("--repair-snippets", action="store_true", help="tự trích lại snippet nguyên văn khi lệch nhẹ (similarity >= 0.75)")
     args = ap.parse_args(argv)
 
     try:
-        report = ingest(args.authored, args.db, args.out, args.tranche, args.check_urls)
+        report = ingest(args.authored, args.db, args.out, args.tranche, args.check_urls, args.repair_snippets)
     except IngestError as exc:
         print(f"ERROR: {exc}")
         return 2

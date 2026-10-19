@@ -1,0 +1,395 @@
+{
+  "version": "e3a-dev/v1",
+  "tranche": "t1",
+  "queries": [
+    {
+      "id": "HN-01",
+      "group": "G1",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "bệnh viện bạch mai hà nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "Tên đầy đủ của bệnh viện hạng đặc biệt, người dân gõ kèm 'Hà Nội' để phân biệt."
+    },
+    {
+      "id": "HN-02",
+      "group": "G1",
+      "persona": "bv_truong_co_quan",
+      "split": "dev",
+      "query": "đại học bách khoa hà nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "Gõ gần đúng tên chính thức, thiếu chữ 'Trường' nhưng vẫn đủ nhận diện."
+    },
+    {
+      "id": "HN-03",
+      "group": "G1",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "văn miếu quốc tử giám hà nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "Tên đầy đủ của di tích quốc gia đặc biệt, khách du lịch gõ gần đúng cả hai phần tên."
+    },
+    {
+      "id": "HN-04",
+      "group": "G2",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "benh vien huu nghi viet duc ha noi",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "variant:nodia | base:Bệnh viện Hữu nghị Việt Đức | Bỏ toàn bộ dấu và viết thường tên 'Bệnh viện Hữu nghị Việt Đức'."
+    },
+    {
+      "id": "HN-05",
+      "group": "G2",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "bệnh viện nhi trung ươnng hà nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "variant:typo | base:Bệnh viện Nhi Trung ương | Gõ thừa một chữ 'n' ở giữa từ 'ương' - lỗi gõ giữa từ điển hình."
+    },
+    {
+      "id": "HN-06",
+      "group": "G2",
+      "persona": "bv_truong_co_quan",
+      "split": "dev",
+      "query": "ĐH QG Hà Nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "variant:abbrev | base:Đại học Quốc gia Hà Nội | Viết tắt thông dụng 'ĐH QG' của 'Đại học Quốc gia', giữ nguyên địa danh."
+    },
+    {
+      "id": "HN-07",
+      "group": "G3",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "bệnh viện tư nhân ở quận Đống Đa Hà Nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "Truy vấn loại hình + quận; gold là 3 bệnh viện tư nhân có địa chỉ tại Đống Đa trong danh sách KCB BHYT."
+    },
+    {
+      "id": "HN-08",
+      "group": "G3",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "quán cà phê ở quận Hoàn Kiếm Hà Nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "Truy vấn loại hình + quận; gold là 3 quán cà phê có địa chỉ tại Hoàn Kiếm trong bài báo."
+    },
+    {
+      "id": "HN-09",
+      "group": "G4",
+      "persona": "dia_danh_lich_su",
+      "split": "dev",
+      "query": "bệnh viện ở quận Hai Bà Trưng Hà Nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "admin:old:quận Hai Bà Trưng | Dùng tên quận cũ (bỏ cấp huyện từ 1/7/2025), gold là bệnh viện vẫn niêm yết địa chỉ theo quận Hai Bà Trưng."
+    },
+    {
+      "id": "HN-10",
+      "group": "G4",
+      "persona": "giao_hang_cua_hang",
+      "split": "dev",
+      "query": "trường đại học ở phường Bạch Mai Hà Nội",
+      "regression150": false,
+      "province_code": "01",
+      "notes": "admin:new:phường Bạch Mai | Dùng tên phường mới sau sắp xếp 2025 (NQ 1656/NQ-UBTVQH15), gold là trường có địa chỉ tại phường Bạch Mai."
+    },
+    {
+      "id": "HCM-01",
+      "group": "G1",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "dinh độc lập thành phố hồ chí minh địa chỉ",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "Người dùng gõ gần đủ tên di tích và thêm địa danh thành phố, gold là Dinh Độc Lập tại 135 Nam Kỳ Khởi Nghĩa."
+    },
+    {
+      "id": "HCM-02",
+      "group": "G1",
+      "persona": "dia_danh_lich_su",
+      "split": "dev",
+      "query": "bảo tàng chứng tích chiến tranh tp hồ chí minh",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "Tên bảo tàng gõ gần đầy đủ, gold là bảo tàng tại 28 Võ Văn Tần, quận 3."
+    },
+    {
+      "id": "HCM-03",
+      "group": "G1",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "bệnh viện chợ rẫy tp hồ chí minh",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "Truy vấn gần đúng tên bệnh viện tuyến cuối, gold là Bệnh viện Chợ Rẫy tại 201B Nguyễn Chí Thanh (phường Chợ Lớn theo địa"
+    },
+    {
+      "id": "HCM-04",
+      "group": "G2",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "nha tho duc ba sai gon o dau",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "variant:nodia | base:Nhà thờ Đức Bà Sài Gòn | Bỏ toàn bộ dấu của tên nhà thờ, kiểm tra khả năng khớp không dấu về đúng địa danh tại số 1 Công trường Công xã Paris, Qu"
+    },
+    {
+      "id": "HCM-05",
+      "group": "G2",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "bệnh viện từ dủ cống quỳnh quận 1",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "variant:typo | base:Bệnh viện Từ Dũ | Gõ sai một ký tự (dũ thành dủ) ở giữa tên bệnh viện, gold vẫn là Bệnh viện Từ Dũ tại 284 Cống Quỳnh."
+    },
+    {
+      "id": "HCM-06",
+      "group": "G2",
+      "persona": "bv_truong_co_quan",
+      "split": "dev",
+      "query": "đh khxh&nv đinh tiên hoàng",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "variant:abbrev | base:Trường Đại học Khoa học Xã hội và Nhân văn | Dùng cách viết tắt thông dụng ĐH KHXH&NV cộng tên đường, gold là trường tại 10-12 Đinh Tiên Hoàng, phường Sài Gòn."
+    },
+    {
+      "id": "HCM-07",
+      "group": "G3",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "bệnh viện ở quận 10 tp hồ chí minh",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "Truy vấn theo loại bệnh viện và quận, gold gồm hai bệnh viện thật tại quận 10 có địa chỉ trong bài."
+    },
+    {
+      "id": "HCM-08",
+      "group": "G3",
+      "persona": "giao_hang_cua_hang",
+      "split": "dev",
+      "query": "chợ ở quận 5 tp hồ chí minh",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "Truy vấn theo loại chợ và quận 5, gold là ba ngôi chợ đầu mối thật cùng địa chỉ trong bài."
+    },
+    {
+      "id": "HCM-09",
+      "group": "G4",
+      "persona": "dia_danh_lich_su",
+      "split": "dev",
+      "query": "địa đạo củ chi huyện củ chi",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "admin:old:Huyện Củ Chi | Truy vấn dùng đơn vị hành chính cũ 'huyện Củ Chi' (trước sắp xếp 2025), gold là Địa đạo Bến Đình tại xã Nhuận Đức."
+    },
+    {
+      "id": "HCM-10",
+      "group": "G4",
+      "persona": "bv_truong_co_quan",
+      "split": "dev",
+      "query": "đại học bách khoa cơ sở 1 phường diên hồng",
+      "regression150": false,
+      "province_code": "79",
+      "notes": "admin:new:Phường Diên Hồng | Truy vấn dùng tên phường mới sau sắp xếp 2025 (Diên Hồng), gold là cơ sở 1 của trường tại 268 Lý Thường Kiệt."
+    },
+    {
+      "id": "M-01",
+      "group": "G1",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "Bảo tàng Điêu khắc Chăm Đà Nẵng nằm ở số mấy đường 2 Tháng 9?",
+      "regression150": false,
+      "province_code": "48",
+      "notes": "Câu hỏi nêu đúng tên POI đầy đủ có dấu, gold lấy từ địa chỉ ghi trong bài báo."
+    },
+    {
+      "id": "M-02",
+      "group": "G1",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "Bệnh viện Trung ương Huế ở địa chỉ nào để tôi vào khám tim mạch?",
+      "regression150": false,
+      "province_code": "46",
+      "notes": "Tên bệnh viện đầy đủ, địa chỉ và phường mới sau sáp nhập lấy từ trang thông tin chính thức của Bộ Y tế."
+    },
+    {
+      "id": "M-03",
+      "group": "G2",
+      "persona": "giao_hang_cua_hang",
+      "split": "dev",
+      "query": "benh vien huu nghi viet tiep hai phong nam o pho nao",
+      "regression150": false,
+      "province_code": "31",
+      "notes": "variant:nodia | base:Bệnh viện Hữu nghị Việt Tiệp | Truy vấn gõ không dấu như người giao hàng nhắn tin, buộc hệ thống khớp lại tên có dấu."
+    },
+    {
+      "id": "M-04",
+      "group": "G2",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "DHCT khu II nằm trên đường nào vậy mọi người?",
+      "regression150": false,
+      "province_code": "92",
+      "notes": "variant:abbrev | base:Đại học Cần Thơ | Sinh viên dùng tên viết tắt DHCT, gold là tên đầy đủ do website trường công bố."
+    },
+    {
+      "id": "M-05",
+      "group": "G3",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "quán cà phê view biển nào đẹp ở Đà Nẵng?",
+      "regression150": false,
+      "province_code": "48",
+      "notes": "Câu hỏi theo loại hình + địa bàn, gold là hai quán được cổng du lịch thành phố giới thiệu."
+    },
+    {
+      "id": "M-06",
+      "group": "G3",
+      "persona": "dia_danh_lich_su",
+      "split": "dev",
+      "query": "những ngôi chùa nổi tiếng ở Huế",
+      "regression150": false,
+      "province_code": "46",
+      "notes": "Ba ngôi chùa nổi tiếng cùng loại trong cùng bài tổng hợp của cổng du lịch Huế."
+    },
+    {
+      "id": "M-07",
+      "group": "G3",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "trung tâm thương mại lớn ở Hải Phòng",
+      "regression150": false,
+      "province_code": "31",
+      "notes": "Câu hỏi theo loại hình trung tâm thương mại, gold là các trung tâm được bài tổng hợp của Vincom nêu tên."
+    },
+    {
+      "id": "M-08",
+      "group": "G3",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "chợ nổi nào đáng đi ở Cần Thơ?",
+      "regression150": false,
+      "province_code": "92",
+      "notes": "Hai chợ nổi thật của Cần Thơ, một trong đó có địa chỉ nguyên văn trong cơ sở dữ liệu du lịch quốc gia."
+    },
+    {
+      "id": "M-09",
+      "group": "G4",
+      "persona": "dia_danh_lich_su",
+      "split": "dev",
+      "query": "bảo tàng quân khu 9 ở quận Ninh Kiều Cần Thơ",
+      "regression150": false,
+      "province_code": "92",
+      "notes": "admin:old:Ninh Kiều | Truy vấn dùng tên quận cũ Ninh Kiều đã bị bỏ sau sáp nhập 2025, nguồn cũng ghi theo địa danh cũ này."
+    },
+    {
+      "id": "M-10",
+      "group": "G7",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "ngân hàng nào có chi nhánh ở đặc khu Bạch Long Vĩ để tôi mở thẻ ATM?",
+      "regression150": false,
+      "province_code": "31",
+      "notes": "Nhu cầu thật nhưng đảo không có chi nhánh ngân hàng nào, bài báo nêu rõ địa bàn chưa có dịch vụ ngân hàng."
+    },
+    {
+      "id": "N-01",
+      "group": "G1",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "biển hồ pleiku còn gọi là gì, nằm ở xã nào tỉnh gia lai",
+      "regression150": false,
+      "province_code": "52"
+    },
+    {
+      "id": "N-02",
+      "group": "G1",
+      "persona": "dia_danh_lich_su",
+      "split": "dev",
+      "query": "bản cát cát sapa địa chỉ đầy đủ xã huyện tỉnh",
+      "regression150": false,
+      "province_code": "15"
+    },
+    {
+      "id": "N-03",
+      "group": "G2",
+      "persona": "giao_hang_cua_hang",
+      "split": "dev",
+      "query": "tgdd đà nẵng địa chỉ siêu thị gần nhất",
+      "regression150": false,
+      "province_code": "48",
+      "notes": "variant:abbrev | base:Thế Giới Di Động"
+    },
+    {
+      "id": "N-04",
+      "group": "G2",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "ho lak dak lak o dau",
+      "regression150": false,
+      "province_code": "66",
+      "notes": "variant:nodia | base:Hồ Lắk"
+    },
+    {
+      "id": "N-05",
+      "group": "G3",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "khách sạn ở côn đảo có địa chỉ cụ thể",
+      "regression150": false,
+      "province_code": "79"
+    },
+    {
+      "id": "N-06",
+      "group": "G3",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "quán cà phê ở buôn ma thuột đắk lắk có địa chỉ",
+      "regression150": false,
+      "province_code": "66"
+    },
+    {
+      "id": "N-07",
+      "group": "G6",
+      "persona": "giao_hang_cua_hang",
+      "split": "dev",
+      "query": "nhà thuốc long châu",
+      "regression150": false
+    },
+    {
+      "id": "N-08",
+      "group": "G6",
+      "persona": "nguoi_dan",
+      "split": "dev",
+      "query": "bệnh viện vinmec",
+      "regression150": false
+    },
+    {
+      "id": "N-09",
+      "group": "G6",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "phúc long",
+      "regression150": false
+    },
+    {
+      "id": "N-10",
+      "group": "G7",
+      "persona": "du_khach",
+      "split": "dev",
+      "query": "sân bay ở hà giang",
+      "regression150": false,
+      "province_code": "08"
+    }
+  ]
+}
