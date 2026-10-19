@@ -17,7 +17,7 @@ from urllib.request import Request, urlopen
 
 from server.app import make_handler, satellite_layer_config
 from server.live import LiveChanges
-from server.store import init_db, list_places, normalize, save_place, session
+from server.store import init_db, list_places, normalize, save_place, session, stats
 
 
 class AtlasTest(unittest.TestCase):
@@ -1008,6 +1008,34 @@ class AtlasTest(unittest.TestCase):
             code, data = self.request("/api/provinces")
         self.assertEqual(code, 200)
         self.assertFalse(data["boundary_available"])
+
+    def test_38_stats_counts_province_code(self):
+        # /api/stats bug C1: the text `province` column is empty on the real corpus —
+        # coverage must be counted on province_code (GSO), never on the text column.
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "stats.sqlite3"
+            init_db(db)
+            with session(db) as con:
+                for i, code in enumerate((None, "", "79", "79", "01")):
+                    con.execute(
+                        "INSERT INTO places(id,name,lat,lon,province,province_code,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                        (f"s{i}", f"POI {i}", 21.0, 105.0, "", code, "2026-01-01", "2026-01-01"),
+                    )
+                self.assertEqual(stats(con)["provinces_with_places"], 2)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            # Pre-migration DB (no province_code column): report 0, not an exception.
+            db = Path(tmp) / "legacy.sqlite3"
+            con = sqlite3.connect(str(db))
+            try:
+                con.execute("CREATE TABLE places (id TEXT PRIMARY KEY, status TEXT NOT NULL DEFAULT 'unverified', province TEXT NOT NULL DEFAULT '')")
+                con.execute("CREATE TABLE changes (seq INTEGER PRIMARY KEY)")
+                con.execute("INSERT INTO places(id, province) VALUES ('s0', 'Hà Nội')")
+                con.commit()
+            finally:
+                con.close()
+            with session(db) as con:
+                self.assertEqual(stats(con)["provinces_with_places"], 0)
 
 
 if __name__ == "__main__":
