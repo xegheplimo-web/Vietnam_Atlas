@@ -3,6 +3,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 ATLAS_HOST=0.0.0.0 ATLAS_PORT=8
 WORKDIR /app
 COPY server ./server
 COPY web ./web
+# Admin resolver + its whole import chain (import_gazetteer provides name_norm;
+# its xlrd/openpyxl imports are optional-guarded so no heavy deps are needed).
+COPY tools/resolve_admin.py ./tools/resolve_admin.py
+COPY tools/import_gazetteer.py ./tools/import_gazetteer.py
 COPY data/provinces_34.json ./data/provinces_34.json
 COPY data/province_mergers_2025.json ./data/province_mergers_2025.json
 COPY data/provinces ./data/provinces

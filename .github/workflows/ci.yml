@@ -76,6 +76,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Build image
         run: docker build -t vietnam-atlas:ci .
+      - name: Check admin resolver import chain in image
+        run: docker run --rm vietnam-atlas:ci python -c "from server.app import _admin_resolver; _admin_resolver(); print('RESOLVER_OK')"
       - name: Run container and check /api/health
         run: |
           docker run -d --name atlas-ci -p 127.0.0.1:8765:8765 vietnam-atlas:ci
@@ -90,7 +92,18 @@ jobs:
             exit 1
           fi
           cat health.json
-          python3 -c "import json; d=json.load(open('health.json')); assert d.get('ok') is True, d"
+          python3 -c "
+          import json
+          d = json.load(open('health.json'))
+          assert d.get('ok') is True, d
+          assert isinstance(d.get('gazetteer', {}).get('available'), bool), d
+          "
+      - name: Check /api/admin/resolve degrades with gazetteer_missing
+        run: |
+          status=$(curl -s -o resolve.json -w "%{http_code}" -G http://127.0.0.1:8765/api/admin/resolve --data-urlencode "q=Hoàn Kiếm")
+          cat resolve.json
+          test "$status" = "503"
+          python3 -c "import json; d=json.load(open('resolve.json')); assert d.get('code') == 'gazetteer_missing', d"
       - name: Remove container
         if: always()
         run: docker rm -f atlas-ci || true

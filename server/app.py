@@ -142,6 +142,22 @@ def _admin_resolve(search, gazetteer_db):
         return None
 
 
+def _gazetteer_health(gazetteer_db):
+    """Readiness probe for /api/health: exists → open read-only → admin_unit readable."""
+    path = Path(gazetteer_db)
+    if not path.exists():
+        return {"available": False, "reason": "missing"}
+    try:
+        con = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+        try:
+            con.execute("SELECT 1 FROM admin_unit LIMIT 1").fetchone()
+        finally:
+            con.close()
+    except (OSError, sqlite3.Error):
+        return {"available": False, "reason": "unreadable"}
+    return {"available": True, "reason": "ok"}
+
+
 def _admin_narrow_code(res):
     """Province code (current generation) to narrow places by, or None when unproven.
 
@@ -256,7 +272,7 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token="", gazetteer_db=None):
                 if path == "/api/health":
                     with session(db_path) as c:
                         c.execute("SELECT 1")
-                    return self.json(200, {"ok": True, "storage": "sqlite"})
+                    return self.json(200, {"ok": True, "storage": "sqlite", "gazetteer": _gazetteer_health(gazetteer_db)})
                 if path == "/api/stats":
                     with session(db_path) as c:
                         return self.json(200, stats(c))
@@ -271,11 +287,11 @@ def make_handler(db_path=DEFAULT_DB, web_dir=None, token="", gazetteer_db=None):
                     if as_of and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", as_of):
                         raise ValueError("as_of phải là YYYY-MM-DD")
                     if not gazetteer_db.exists():
-                        return self.json(503, {"error": "Gazetteer chưa được build (xem tools/import_gazetteer.py)"})
+                        return self.json(503, {"error": "Gazetteer chưa được build (xem tools/import_gazetteer.py)", "code": "gazetteer_missing"})
                     try:
                         result = _admin_resolver().resolve(q, db_path=gazetteer_db, as_of=as_of)
                     except (OSError, sqlite3.Error):
-                        return self.json(503, {"error": "Không đọc được gazetteer"})
+                        return self.json(503, {"error": "Không đọc được gazetteer", "code": "gazetteer_unreadable"})
                     return self.json(200, result.to_dict())
                 if path == "/api/places" or path == "/api/export.geojson":
                     search = (params.get("search") or [""])[0]
