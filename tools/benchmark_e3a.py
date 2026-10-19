@@ -1324,7 +1324,20 @@ def cmd_validate(a) -> int:
 
 
 # ---------------------------------------------------------------------------
+def _configure_stdio() -> None:
+    """Console Windows mặc định cp1252 ⇒ print tiếng Việt/→ sẽ crash. Ép UTF-8, không bao giờ raise."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
+
+
 def main(argv=None) -> int:
+    _configure_stdio()
     p = argparse.ArgumentParser(description="E3a benchmark harness — đo lường, không sửa search, không LLM trong đường chạy")
     sub = p.add_subparsers(dest="cmd", required=True)
 

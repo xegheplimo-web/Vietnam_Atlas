@@ -9,7 +9,10 @@ the G8 master-SHA guard, the GET-only HTTP guard, and a 1-query smoke run.
 
 import importlib.util
 import json
+import os
 import sqlite3
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -411,6 +414,67 @@ class JudgeImportTest(unittest.TestCase):
                 encoding="utf-8",
             )
             self.assertEqual(be3a.main(["judge-import", "--judgments", str(bad), "--queries", str(FIXTURES / "queries.json"), "--out", str(out)]), 1)
+
+
+class CliEncodingTest(unittest.TestCase):
+    """C2 hotfix: Windows consoles default to cp1252 — the CLI must force UTF-8 stdio.
+
+    Subprocess-level (not in-process main()) so PYTHONIOENCODING applies exactly as
+    on the windows-latest CI runner.
+    """
+
+    @staticmethod
+    def _run_cp1252(args):
+        return subprocess.run(
+            [sys.executable, str(ROOT / "tools" / "benchmark_e3a.py"), *args],
+            check=False,
+            env={**os.environ, "PYTHONIOENCODING": "cp1252"},
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+    def test_cli_survives_cp1252_console(self):
+        with tempfile.TemporaryDirectory() as tdir:
+            # Fixture paths are pure ASCII, so validate's PASS output would still
+            # encode on cp1252. Run via a non-ASCII dir so the printed path is
+            # unencodable — otherwise this test could not catch a reverted fix.
+            uni = Path(tdir) / "đường_dẫn"
+            uni.mkdir()
+            queries = uni / "queries.json"
+            qrels = uni / "qrels.jsonl"
+            queries.write_bytes((FIXTURES / "queries.json").read_bytes())
+            qrels.write_bytes((FIXTURES / "qrels.jsonl").read_bytes())
+            proc = self._run_cp1252(["validate", "--queries", str(queries), "--qrels", str(qrels)])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+
+    def test_cli_judge_import_cp1252(self):
+        with tempfile.TemporaryDirectory() as tdir:
+            tmp = Path(tdir)
+            good = tmp / "good.jsonl"
+            good.write_text(
+                json.dumps(
+                    {
+                        "query_id": "q001",
+                        "place_id": "fix-hn-bv-01",
+                        "grade": 3,
+                        "judged_by": "h",
+                        "judgment_status": "verified",
+                        "evidence_ids": ["e1"],
+                    }
+                )
+                + "\n"
+                + json.dumps(
+                    {"query_id": "q001", "coverage_audit": "present", "judged_by": "h", "judgment_status": "verified", "evidence_ids": ["e1"]}
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            out = tmp / "qrels.jsonl"
+            proc = self._run_cp1252(["judge-import", "--judgments", str(good), "--queries", str(FIXTURES / "queries.json"), "--out", str(out)])
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertTrue(out.is_file())
 
 
 if __name__ == "__main__":
